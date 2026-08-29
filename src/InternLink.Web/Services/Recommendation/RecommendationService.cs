@@ -153,7 +153,8 @@ public class RecommendationService : IRecommendationService
         DeadLine = candidate.DeadLine,
         MatchedSkillCount = candidate.MatchedSkillCount,
         RequiredSkillCount = candidate.RequiredSkillCount,
-        MatchPercentage = Math.Clamp((int)Math.Round(score * 100), 0, 100),
+        // Away-from-zero keeps a .5 percentage rounding up; Math.Round defaults to banker's rounding.
+        MatchPercentage = Math.Clamp((int)Math.Round(score * 100, MidpointRounding.AwayFromZero), 0, 100),
         Reason = string.Empty
     };
 
