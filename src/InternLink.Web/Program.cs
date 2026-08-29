@@ -1,14 +1,24 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Data;
 using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Repositories.Implementation;
+using InternLink.Web.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add services to the container.
-builder.Services.AddControllersWithViews();
+// 1. Add services to the container. AutoValidateAntiforgeryToken makes every POST antiforgery-protected by default.
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+
+// Antiforgery header aligns with the fetch wrapper (wwwroot/js/api.js) sending X-CSRF-TOKEN.
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
 // 2. Register ApplicationDbContext on the hand-authored schema
 var connectionString = builder.Configuration.GetConnectionString("InternLinkDb")
@@ -38,11 +48,41 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// Revalidate the security stamp every 5 minutes so suspends/role changes kill live sessions promptly.
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.FromMinutes(5);
+});
+
+// Classic cookie auth for this same-origin MVC app (no JWT).
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/Denied";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+});
+
 // 4. Register Repositories (Scoped)
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+
+// Email sender: log confirmation links to console in Development, send via SMTP otherwise.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IAppEmailSender, DevConsoleEmailSender>();
+}
+else
+{
+    builder.Services.AddSingleton<IAppEmailSender, SmtpEmailSender>();
+}
 
 var app = builder.Build();
 
