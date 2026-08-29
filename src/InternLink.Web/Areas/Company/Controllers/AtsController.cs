@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Helpers;
 using InternLink.Web.Models.Enums;
 using InternLink.Web.Repositories.Interface;
+using InternLink.Web.Services.SkillGap;
 using InternLink.Web.ViewModels;
 
 namespace InternLink.Web.Areas.Company.Controllers;
@@ -10,13 +11,19 @@ namespace InternLink.Web.Areas.Company.Controllers;
 public class AtsController : CompanyControllerBase
 {
     private readonly IApplicationRepository _applicationRepository;
+    private readonly ISkillGapRepository _skillGapRepository;
+    private readonly ISkillGapService _skillGapService;
     private readonly ILogger<AtsController> _logger;
 
     public AtsController(
         IApplicationRepository applicationRepository,
+        ISkillGapRepository skillGapRepository,
+        ISkillGapService skillGapService,
         ILogger<AtsController> logger)
     {
         _applicationRepository = applicationRepository;
+        _skillGapRepository = skillGapRepository;
+        _skillGapService = skillGapService;
         _logger = logger;
     }
 
@@ -142,5 +149,37 @@ public class AtsController : CompanyControllerBase
         }
 
         return File(stream, "application/pdf", fileName);
+    }
+
+    /// <summary>
+    /// Same shared panel the student sees. The student is resolved from the company's OWN application,
+    /// so a company can never analyse a candidate who did not apply to one of its jobs.
+    /// </summary>
+    [HttpGet]
+    [Route("Company/Ats/Applications/{id:guid}/SkillGap")]
+    public async Task<IActionResult> SkillGap(Guid id, CancellationToken ct)
+    {
+        var companyId = await GetCompanyIdAsync(ct);
+        if (companyId is null)
+        {
+            return NotFound();
+        }
+
+        var scope = await _skillGapRepository.GetApplicationScopeAsync(id, companyId.Value, ct);
+        if (scope is null)
+        {
+            return NotFound();
+        }
+
+        var result = await _skillGapService.AnalyzeAsync(
+            scope.StudentId,
+            scope.JobId,
+            SkillGapPerspective.Company,
+            ct);
+
+        result.StudentName = scope.StudentName;
+        result.JobTitle = scope.JobTitle;
+
+        return PartialView("_SkillGapPanel", result);
     }
 }
