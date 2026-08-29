@@ -210,7 +210,19 @@ public class ResumeAnalysisService : IResumeAnalysisService
         var info = data.PersonalInfo;
 
         builder.AppendLine($"Name: {info.FullName}");
+        builder.AppendLine($"Email: {info.Email}");
+        builder.AppendLine($"Phone: {info.Phone}");
         builder.AppendLine($"Location: {info.Location}");
+
+        // Contact links must be listed explicitly, otherwise the model reports them as missing.
+        var links = new[] { info.LinkedIn, info.GitHub, info.Portfolio }
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .ToList();
+        if (links.Count > 0)
+        {
+            builder.AppendLine($"Links: {string.Join(", ", links)}");
+        }
+
         if (!string.IsNullOrWhiteSpace(info.Summary))
         {
             builder.AppendLine($"Summary: {info.Summary}");
@@ -221,7 +233,7 @@ public class ResumeAnalysisService : IResumeAnalysisService
             builder.AppendLine("Education:");
             foreach (var e in data.Education)
             {
-                builder.AppendLine($"- {e.Degree} in {e.FieldOfStudy}, {e.Institution} ({e.StartDate}-{e.EndDate}). {e.Highlights}");
+                builder.AppendLine($"- {e.Degree} in {e.FieldOfStudy}, {e.Institution} ({DateRange(e.StartDate, e.EndDate, e.IsCurrent)}). GPA {e.Gpa}. {e.Highlights}");
             }
         }
 
@@ -230,7 +242,7 @@ public class ResumeAnalysisService : IResumeAnalysisService
             builder.AppendLine("Experience:");
             foreach (var x in data.Experience)
             {
-                builder.AppendLine($"- {x.Role} at {x.Company} ({x.StartDate}-{x.EndDate}): {x.Description} {x.Highlights}");
+                builder.AppendLine($"- {x.Role} at {x.Company} ({DateRange(x.StartDate, x.EndDate, x.IsCurrent)}): {x.Description} {x.Highlights}");
             }
         }
 
@@ -245,11 +257,14 @@ public class ResumeAnalysisService : IResumeAnalysisService
 
         if (data.Skills.Count > 0)
         {
-            builder.AppendLine($"Skills: {string.Join(", ", data.Skills.Select(s => $"{s.SkillName} ({s.ProficiencyLevel}/5)"))}");
+            builder.AppendLine($"Skills: {string.Join(", ", data.Skills.Select(s => s.SkillName))}");
         }
 
         return builder.ToString();
     }
+
+    private static string DateRange(string start, string end, bool isCurrent) =>
+        isCurrent ? $"{start} to Present" : $"{start} to {end}";
 
     private sealed class SuggestionBatch
     {
