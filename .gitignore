@@ -33,5 +33,10 @@ coverage/
 
 ## Temporary & local storage
 /scratch/
-C:\InternLinkData\
+C:\InternLinkData/
 /resumes/
+
+## Build Prompts & Documentation Exports
+InternLink_Build_Prompts_v3.md
+InternLink_Build_Prompts_v3.pdf
+*.pdf

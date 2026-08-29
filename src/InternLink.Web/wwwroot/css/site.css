@@ -470,3 +470,150 @@ body {
     color: var(--il-primary-700);
     background-color: #fff;
 }
+
+/* ============================================================================
+   Wizard & Stepper Styles (Prompt 11: Resume Builder)
+   ========================================================================== */
+.wizard-stepper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.wizard-step-indicator {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    border-radius: var(--il-radius);
+    color: #64748b;
+    font-size: .875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.wizard-step-indicator:hover {
+    background-color: var(--il-primary-50);
+    color: var(--il-primary-700);
+}
+
+.wizard-step-indicator.active {
+    color: var(--il-primary-700);
+    background-color: var(--il-primary-50);
+    font-weight: 600;
+}
+
+.wizard-step-indicator.completed {
+    color: var(--il-primary-600);
+}
+
+.step-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    color: #475569;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.wizard-step-indicator.active .step-circle {
+    background-color: var(--il-primary-600);
+    color: #ffffff;
+}
+
+.wizard-step-indicator.completed .step-circle {
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.transition-hover {
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.transition-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* ============================================================================
+   Application Funnel & Status Styles (Prompt 12 & ATS)
+   ========================================================================== */
+.app-funnel-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    padding: 1rem 0;
+}
+
+.app-funnel-stepper::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 24px;
+    right: 24px;
+    height: 3px;
+    background-color: #e2e8f0;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.funnel-node {
+    position: relative;
+    z-index: 2;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    text-align: center;
+}
+
+.funnel-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    font-weight: 600;
+    border: 2px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #64748b;
+}
+
+.funnel-node.active .funnel-dot {
+    border-color: var(--il-primary-600);
+    background-color: var(--il-primary-600);
+    color: #ffffff;
+}
+
+.funnel-node.completed .funnel-dot {
+    border-color: #10b981;
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.funnel-node.rejected .funnel-dot {
+    border-color: #ef4444;
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.funnel-label {
+    font-size: .75rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.funnel-node.active .funnel-label {
+    color: var(--il-primary-700);
+    font-weight: 600;
+}
+

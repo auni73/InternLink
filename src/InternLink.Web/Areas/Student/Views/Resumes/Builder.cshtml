@@ -1,0 +1,250 @@
+@model InternLink.Web.ViewModels.ResumeBuilderViewModel
+@{
+    ViewData["Title"] = "Resume Builder";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header & Action Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-area="Student" asp-controller="Resumes" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h2 class="h4 fw-bold text-slate-800 mb-0">Interactive Resume Builder</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Design your industry-ready resume with progressive auto-saving.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div id="saveStatusIndicator" class="small text-muted">
+                <i class="bi bi-check2-circle text-success me-1"></i> Ready
+            </div>
+            <button type="button" id="wizardSaveBtn" class="btn btn-outline-primary btn-sm px-3">
+                <i class="bi bi-cloud-arrow-up me-1"></i> Save Draft
+            </button>
+            @if (Model.IsFinalized)
+            {
+                <a asp-area="Student" asp-controller="Resumes" asp-action="Download" asp-route-id="@Model.ResumeId" 
+                   class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-download me-1"></i> Download PDF
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Stepper Navigation -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-3">
+            <div class="wizard-stepper d-flex justify-content-between flex-wrap gap-2">
+                <div class="wizard-step-indicator active" data-step-index="0">
+                    <span class="step-circle">1</span>
+                    <span class="step-label">Personal Info</span>
+                </div>
+                <div class="wizard-step-indicator" data-step-index="1">
+                    <span class="step-circle">2</span>
+                    <span class="step-label">Education</span>
+                </div>
+                <div class="wizard-step-indicator" data-step-index="2">
+                    <span class="step-circle">3</span>
+                    <span class="step-label">Experience</span>
+                </div>
+                <div class="wizard-step-indicator" data-step-index="3">
+                    <span class="step-circle">4</span>
+                    <span class="step-label">Skills</span>
+                </div>
+                <div class="wizard-step-indicator" data-step-index="4">
+                    <span class="step-circle">5</span>
+                    <span class="step-label">Review & Finalize</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step Panels Container -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+
+            <!-- STEP 1: Personal Info -->
+            <div class="wizard-step-panel" data-step="personal-info">
+                <h5 class="fw-bold text-slate-800 mb-3 border-bottom pb-2">
+                    <i class="bi bi-person-badge text-primary me-2"></i>Personal & Contact Information
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="pi_fullName" class="form-control" value="@Model.Data.PersonalInfo.FullName" placeholder="e.g. Sarah Jenkins" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" id="pi_email" class="form-control" value="@Model.Data.PersonalInfo.Email" placeholder="e.g. sarah.jenkins@university.edu" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Phone Number</label>
+                        <input type="text" id="pi_phone" class="form-control" value="@Model.Data.PersonalInfo.Phone" placeholder="e.g. +880 1712 345678" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Location</label>
+                        <input type="text" id="pi_location" class="form-control" value="@Model.Data.PersonalInfo.Location" placeholder="e.g. Dhaka, Bangladesh" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">LinkedIn Profile URL</label>
+                        <input type="text" id="pi_linkedIn" class="form-control" value="@Model.Data.PersonalInfo.LinkedIn" placeholder="linkedin.com/in/username" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">GitHub Profile URL</label>
+                        <input type="text" id="pi_gitHub" class="form-control" value="@Model.Data.PersonalInfo.GitHub" placeholder="github.com/username" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Portfolio / Website</label>
+                        <input type="text" id="pi_portfolio" class="form-control" value="@Model.Data.PersonalInfo.Portfolio" placeholder="https://myportfolio.dev" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Executive Summary / Objective</label>
+                        <textarea id="pi_summary" rows="4" class="form-control" placeholder="Targeted career objective highlighting your primary technical domains and problem-solving drive...">@Model.Data.PersonalInfo.Summary</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Education -->
+            <div class="wizard-step-panel d-none" data-step="education">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h5 class="fw-bold text-slate-800 mb-0">
+                        <i class="bi bi-mortarboard text-primary me-2"></i>Academic History
+                    </h5>
+                    <button type="button" id="btnAddEducation" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Add Degree / School
+                    </button>
+                </div>
+                <div id="educationItemsList">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- STEP 3: Experience -->
+            <div class="wizard-step-panel d-none" data-step="experience">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h5 class="fw-bold text-slate-800 mb-0">
+                        <i class="bi bi-briefcase text-primary me-2"></i>Work & Internship Experience
+                    </h5>
+                    <button type="button" id="btnAddExperience" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Add Experience
+                    </button>
+                </div>
+                <div id="experienceItemsList">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- STEP 4: Skills -->
+            <div class="wizard-step-panel d-none" data-step="skills">
+                <h5 class="fw-bold text-slate-800 mb-3 border-bottom pb-2">
+                    <i class="bi bi-tools text-primary me-2"></i>Technical & Domain Skills
+                </h5>
+
+                <div class="card bg-light-subtle border p-3 rounded-3 mb-4">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Select Skill</label>
+                            <select id="skillPickerSelect" class="form-select form-select-sm">
+                                <option value="">-- Choose a recognized skill --</option>
+                                @foreach (var skill in Model.AvailableSkills)
+                                {
+                                    <option value="@skill.Id">@skill.SkillName (@skill.DomainClassification)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Proficiency (1=Novice, 5=Expert)</label>
+                            <select id="skillProficiencyInput" class="form-select form-select-sm">
+                                <option value="1">1 - Novice / Beginner</option>
+                                <option value="2">2 - Basic Familiarity</option>
+                                <option value="3" selected>3 - Intermediate / Competent</option>
+                                <option value="4">4 - Advanced</option>
+                                <option value="5">5 - Expert / Master</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" id="btnAddSkill" class="btn btn-sm btn-primary w-100">
+                                <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fw-medium text-muted small mb-2">Added Skills (Synced to Relational Profile):</div>
+                <div id="selectedSkillsList">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- STEP 5: Review & Finalize -->
+            <div class="wizard-step-panel d-none" data-step="review">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h5 class="fw-bold text-slate-800 mb-0">
+                        <i class="bi bi-check2-circle text-primary me-2"></i>Review & PDF Generation
+                    </h5>
+                </div>
+                <p class="text-muted small mb-3">Review your accumulated information below. Finalizing will generate the official PDF on disk and make it ready for instant internship applications.</p>
+                
+                <div id="reviewSummaryContainer">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Navigation Footer -->
+        <div class="card-footer bg-white border-top py-3 d-flex justify-content-between">
+            <button type="button" id="wizardPrevBtn" class="btn btn-outline-secondary px-4" disabled>
+                <i class="bi bi-arrow-left me-1"></i> Previous
+            </button>
+
+            <div class="d-flex gap-2">
+                <button type="button" id="wizardNextBtn" class="btn btn-primary px-4">
+                    Next <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+                <button type="button" id="wizardFinalizeBtn" class="btn btn-success px-4 d-none">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> Finalize & Generate PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import { ResumeWizard } from '/js/wizard.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data));
+            const availableSkills = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AvailableSkills.Select(s => new { s.Id, s.SkillName })));
+
+            const wizard = new ResumeWizard({
+                resumeId: '@Model.ResumeId',
+                initialData: rawData,
+                availableSkills: availableSkills
+            });
+
+            // Populate initial education items
+            if (rawData.education && rawData.education.length > 0) {
+                rawData.education.forEach(edu => wizard.addEducationItem(edu));
+            } else {
+                wizard.addEducationItem(); // Default 1 empty row
+            }
+
+            // Populate initial experience items
+            if (rawData.experience && rawData.experience.length > 0) {
+                rawData.experience.forEach(exp => wizard.addExperienceItem(exp));
+            }
+
+            // Populate initial skills items
+            if (rawData.skills && rawData.skills.length > 0) {
+                rawData.skills.forEach(s => wizard.addSkillItem(s.skillId, s.skillName, s.proficiencyLevel));
+            }
+        });
+    </script>
+}
