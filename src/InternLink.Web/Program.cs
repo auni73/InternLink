@@ -90,6 +90,10 @@ builder.Services.AddScoped<IResumeRepository, ResumeRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<ICounselorRepository, CounselorRepository>();
+
+// Markdown Sanitization & Rendering Service (with DisableHtml)
+builder.Services.AddSingleton<InternLink.Web.Services.IMarkdownService, InternLink.Web.Services.MarkdownService>();
 
 // Storage & Resume PDF Services
 builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, InternLink.Web.Services.Storage.DiskFileStorage>();

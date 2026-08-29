@@ -1,0 +1,98 @@
+@model InternLink.Web.ViewModels.StudentAdvisingNotesViewModel
+@{
+    ViewData["Title"] = "My Career Advising Notes";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
+                    <i class="bi bi-journal-check me-1"></i>Career Advisory
+                </span>
+                <span class="text-muted small">|</span>
+                <span class="text-muted small fw-medium">@Model.Feedbacks.Count Session Notes</span>
+            </div>
+            <h2 class="fw-bold mb-0 text-slate-800">My Career Advising Notes</h2>
+        </div>
+        <a asp-area="Student" asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-person me-1"></i>Back to My Profile
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-800">
+                        <i class="bi bi-chat-left-quote-fill text-primary me-2"></i>Advising Session Feedback
+                    </h5>
+                    <span class="badge bg-light text-dark border">
+                        @Model.Feedbacks.Count Total Notes
+                    </span>
+                </div>
+
+                <div class="card-body p-4">
+                    @if (Model.Feedbacks != null && Model.Feedbacks.Count > 0)
+                    {
+                        <div class="d-flex flex-column gap-4">
+                            @foreach (var note in Model.Feedbacks)
+                            {
+                                <div class="card border rounded-3 shadow-sm">
+                                    <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-bold text-slate-800"><i class="bi bi-person-badge-fill text-primary me-1"></i>@note.CounselorName</span>
+                                            <span class="text-muted small">(@note.CounselorEmail)</span>
+                                        </div>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-calendar-event me-1"></i>Meeting: @note.MeetingDate.ToString("MMM dd, yyyy")
+                                        </span>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <partial name="_MarkdownContent" model="note.NarrativeMarkdown" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-text text-muted display-4"></i>
+                            <h5 class="fw-semibold text-slate-700 mt-3 mb-1">No Advising Notes Yet</h5>
+                            <p class="text-muted small mb-0">
+                                Once you meet with a university career counselor, your meeting notes, resume feedback, and action items will appear here.
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-primary text-white">
+                <h5 class="fw-bold mb-2">
+                    <i class="bi bi-lightbulb-fill me-2"></i>Career Advisory Tips
+                </h5>
+                <p class="small text-white-50 mb-3">
+                    University counselors provide personalized guidance on resume enhancement, technical interview preparation, and internship applications.
+                </p>
+                <div class="border-top border-white-50 pt-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span class="small">Review action items after each session</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span class="small">Keep your resume dynamic profile up to date</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span class="small">Take skill assessments to verify proficiencies</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

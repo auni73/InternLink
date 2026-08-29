@@ -1,0 +1,13 @@
+@model string?
+@inject InternLink.Web.Services.IMarkdownService MarkdownService
+
+@if (!string.IsNullOrWhiteSpace(Model))
+{
+    <div class="markdown-content text-break">
+        @Html.Raw(MarkdownService.RenderToHtml(Model))
+    </div>
+}
+else
+{
+    <span class="text-muted fst-italic">No content provided.</span>
+}
