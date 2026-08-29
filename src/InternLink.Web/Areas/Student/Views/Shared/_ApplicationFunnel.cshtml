@@ -1,0 +1,88 @@
+@model InternLink.Web.Models.Enums.ApplicationStatus
+@using InternLink.Web.Helpers
+@using InternLink.Web.Models.Enums
+
+@{
+    var currentStep = Model.GetStepIndex();
+    var isRejected = Model == ApplicationStatus.Rejected;
+    var isOffered = Model == ApplicationStatus.Offered;
+}
+
+<div class="app-funnel-stepper">
+    <!-- Node 1: Applied -->
+    <div class="funnel-node @(currentStep >= 0 ? "completed" : "") @(Model == ApplicationStatus.Applied ? "active" : "")">
+        <div class="funnel-dot">
+            @if (currentStep > 0)
+            {
+                <i class="bi bi-check-lg"></i>
+            }
+            else
+            {
+                <span>1</span>
+            }
+        </div>
+        <div class="funnel-label">Applied</div>
+    </div>
+
+    <!-- Node 2: Screened -->
+    <div class="funnel-node @(currentStep > 1 ? "completed" : "") @(Model == ApplicationStatus.Screened ? "active" : "")">
+        <div class="funnel-dot">
+            @if (currentStep > 1)
+            {
+                <i class="bi bi-check-lg"></i>
+            }
+            else
+            {
+                <span>2</span>
+            }
+        </div>
+        <div class="funnel-label">Screened</div>
+    </div>
+
+    <!-- Node 3: Scheduled -->
+    <div class="funnel-node @(currentStep > 2 ? "completed" : "") @(Model == ApplicationStatus.Scheduled ? "active" : "")">
+        <div class="funnel-dot">
+            @if (currentStep > 2)
+            {
+                <i class="bi bi-check-lg"></i>
+            }
+            else
+            {
+                <span>3</span>
+            }
+        </div>
+        <div class="funnel-label">Scheduled</div>
+    </div>
+
+    <!-- Node 4: Terminal Branch (Offered vs Rejected vs Pending Decision) -->
+    <div class="funnel-node @(isOffered ? "completed" : "") @(isRejected ? "rejected" : "") @(currentStep == 3 ? "active" : "")">
+        <div class="funnel-dot">
+            @if (isOffered)
+            {
+                <i class="bi bi-trophy-fill text-white"></i>
+            }
+            else if (isRejected)
+            {
+                <i class="bi bi-x-lg text-white"></i>
+            }
+            else
+            {
+                <span>4</span>
+            }
+        </div>
+        <div class="funnel-label">
+            @if (isOffered)
+            {
+                <span class="text-success fw-bold">Offered</span>
+            }
+            else if (isRejected)
+            {
+                <span class="text-danger fw-bold">Rejected</span>
+            }
+            else
+            {
+                <span>Decision</span>
+            }
+        </div>
+    </div>
+</div>

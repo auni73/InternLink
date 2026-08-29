@@ -94,6 +94,9 @@ builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, Inte
 builder.Services.AddSingleton<InternLink.Web.Services.Resume.IPdfRenderer, InternLink.Web.Services.Resume.QuestPdfResumeRenderer>();
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeService, InternLink.Web.Services.Resume.ResumeService>();
 
+// Full-Text Search capability service
+builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, InternLink.Web.Helpers.FtsCapabilityService>();
+
 // Per-area dashboard services (server-rendered stat cards).
 builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
 builder.Services.AddScoped<ICompanyDashboardService, CompanyDashboardService>();

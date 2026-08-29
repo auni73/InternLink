@@ -1,0 +1,149 @@
+@model InternLink.Web.ViewModels.JobListViewModel
+@using InternLink.Web.Models.Enums
+@{
+    ViewData["Title"] = "Browse Internships";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-slate-800 mb-1">Browse Internships</h2>
+            <p class="text-muted mb-0">Search through approved postings with FTS lexical matching and skill alignment.</p>
+        </div>
+    </div>
+
+    @if (Model.IsFtsFallback)
+    {
+        <div class="alert alert-warning alert-dismissible fade show small py-2 mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <span>Full-Text Search is currently running in standard keyword fallback mode.</span>
+            <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search & Filter Bar -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <form method="get" asp-area="Student" asp-controller="Jobs" asp-action="Index" class="row g-3 align-items-center">
+                <div class="col-lg-5 col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="Keyword" value="@Model.Filter.Keyword" class="form-control border-start-0 ps-0" placeholder="Search by title, technology, or keywords..." />
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <select name="LocationType" class="form-select">
+                        <option value="">All Work Arrangements</option>
+                        <option value="0" selected="@(Model.Filter.LocationType == LocationType.Remote)">Remote</option>
+                        <option value="1" selected="@(Model.Filter.LocationType == LocationType.OnSite)">On-Site</option>
+                        <option value="2" selected="@(Model.Filter.LocationType == LocationType.Hybrid)">Hybrid</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <div class="form-check form-switch pt-1">
+                        <input class="form-check-input" type="checkbox" name="RelevantToMe" value="true" id="relevantSwitch" @(Model.Filter.RelevantToMe ? "checked" : "") />
+                        <label class="form-check-label small fw-medium" for="relevantSwitch">Matched to My Skills</label>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(Model.Filter.Keyword) || Model.Filter.LocationType.HasValue || Model.Filter.RelevantToMe)
+                    {
+                        <a asp-area="Student" asp-controller="Jobs" asp-action="Index" class="btn btn-outline-secondary" title="Clear Filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Jobs Grid -->
+    @if (Model.Jobs != null && Model.Jobs.Count > 0)
+    {
+        <div class="row g-4 mb-4">
+            @foreach (var job in Model.Jobs)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border rounded-3 transition-hover d-flex flex-column">
+                        <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-light text-primary border mb-2">
+                                        <i class="bi bi-geo-alt me-1"></i>@job.LocationType
+                                    </span>
+                                    <h5 class="card-title fw-bold text-slate-800 mb-1">@job.Title</h5>
+                                    <div class="text-muted small fw-medium">
+                                        <i class="bi bi-building me-1 text-slate-400"></i>@job.CompanyName
+                                        @if (!string.IsNullOrWhiteSpace(job.IndustrySector))
+                                        {
+                                            <span> • @job.IndustrySector</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="my-3">
+                                <div class="small fw-semibold text-muted mb-2">Required Skills:</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (job.RequiredSkills != null && job.RequiredSkills.Count > 0)
+                                    {
+                                        @foreach (var skill in job.RequiredSkills.Take(4))
+                                        {
+                                            <span class="badge bg-light text-dark border">@skill.SkillName</span>
+                                        }
+                                        @if (job.RequiredSkills.Count > 4)
+                                        {
+                                            <span class="badge bg-light text-muted border">+@(job.RequiredSkills.Count - 4) more</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">General Software Engineering</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                                <span class="small @(job.IsUrgent ? "text-danger fw-bold" : "text-muted")">
+                                    <i class="bi @(job.IsUrgent ? "bi-exclamation-triangle-fill" : "bi-calendar3") me-1"></i>
+                                    @job.DeadlineFormatted
+                                </span>
+
+                                <div class="d-flex gap-2">
+                                    @if (job.HasApplied)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-2 px-3">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Applied
+                                        </span>
+                                    }
+                                    <a asp-area="Student" asp-controller="Jobs" asp-action="Details" asp-route-id="@job.Id" 
+                                       class="btn btn-sm btn-outline-primary px-3">
+                                        View Details <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center">
+            <partial name="_Pagination" model='new PaginationViewModel { Page = Model.CurrentPage, PageSize = Model.PageSize, TotalCount = Model.TotalCount }' />
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0 rounded-3 p-4">
+            <partial name="_EmptyState" model='new EmptyStateViewModel("bi-search", "No matching internships found", "Try adjusting your search keywords, work arrangement filters, or clear skill-matching restrictions.", "Browse All Jobs", Url.Action("Index", "Jobs", new { area = "Student" }))' />
+        </div>
+    }
+</div>
