@@ -66,3 +66,57 @@ public class StubResumeService : InternLink.Web.Services.Resume.IResumeService
     public Task<(bool Success, string? DocumentPath, string? ErrorMessage)> FinalizeResumeAsync(Guid resumeId, Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<(Stream? Stream, string FileName)> OpenDownloadStreamAsync(Guid resumeId, Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
 }
+
+/// <summary>In-memory mock interview store, scoped by student exactly like the SQL repository.</summary>
+public class FakeMockInterviewRepository : IMockInterviewRepository
+{
+    public List<MockInterviewSession> Sessions { get; } = [];
+    public int TranscriptWrites { get; private set; }
+
+    public Task CreateSessionAsync(MockInterviewSession session, CancellationToken ct = default)
+    {
+        Sessions.Add(session);
+        return Task.CompletedTask;
+    }
+
+    public Task<MockInterviewSession?> GetSessionAsync(Guid sessionId, Guid studentId, CancellationToken ct = default) =>
+        Task.FromResult(Sessions.FirstOrDefault(s => s.Id == sessionId && s.StudentId == studentId));
+
+    public Task<bool> UpdateTranscriptAsync(Guid sessionId, Guid studentId, string transcriptJson, CancellationToken ct = default)
+    {
+        var session = Sessions.FirstOrDefault(s =>
+            s.Id == sessionId && s.StudentId == studentId && s.Status == MockInterviewStatus.InProgress);
+
+        if (session is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        session.TranscriptJson = transcriptJson;
+        TranscriptWrites++;
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> CompleteSessionAsync(Guid sessionId, Guid studentId, string reportJson, CancellationToken ct = default)
+    {
+        var session = Sessions.FirstOrDefault(s =>
+            s.Id == sessionId && s.StudentId == studentId && s.Status == MockInterviewStatus.InProgress);
+
+        if (session is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        session.ReportJson = reportJson;
+        session.Status = MockInterviewStatus.Completed;
+        session.CompletedAt = DateTimeOffset.UtcNow;
+        return Task.FromResult(true);
+    }
+
+    public Task<IReadOnlyList<MockInterviewSession>> GetStudentSessionsAsync(Guid studentId, int take, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<MockInterviewSession>>(
+            Sessions.Where(s => s.StudentId == studentId)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(take)
+                .ToList());
+}

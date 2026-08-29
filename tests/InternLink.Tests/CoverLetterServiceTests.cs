@@ -256,5 +256,12 @@ public class CoverLetterServiceTests
 
             return Task.FromResult(new GeminiResponse("Generated letter body.", 200, 320, 0.0013m));
         }
+
+        public Task<GeminiResponse> GenerateChatAsync(
+            string systemPrompt,
+            IReadOnlyList<ChatMessage> history,
+            IntegrationFeature feature,
+            Guid userId,
+            CancellationToken ct = default) => throw new NotSupportedException();
     }
 }

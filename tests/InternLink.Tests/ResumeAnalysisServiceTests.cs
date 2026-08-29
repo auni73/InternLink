@@ -260,6 +260,13 @@ public class ResumeAnalysisServiceTests
             var content = Responses.Count > 0 ? Responses.Dequeue() : "{}";
             return Task.FromResult(new GeminiResponse(content, 100, 50, 0.0002m));
         }
+
+        public Task<GeminiResponse> GenerateChatAsync(
+            string systemPrompt,
+            IReadOnlyList<ChatMessage> history,
+            IntegrationFeature feature,
+            Guid userId,
+            CancellationToken ct = default) => throw new NotSupportedException();
     }
 
     private sealed class FakeJobRepositoryForAnalysis : IJobRepository
