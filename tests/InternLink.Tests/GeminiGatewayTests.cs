@@ -50,8 +50,8 @@ public class GeminiGatewayTests
         var handler = new FakeHttpMessageHandler((_, _) => Respond(HttpStatusCode.OK, SuccessBody));
         var (client, _, pool) = BuildClient(handler, "key-one,key-two");
 
-        pool.ReportQuotaExceeded(0);
-        pool.ReportQuotaExceeded(1);
+        pool.ReportKeyFailure(0);
+        pool.ReportKeyFailure(1);
 
         var ex = await Assert.ThrowsAsync<AiServiceException>(() =>
             client.GenerateAsync("system", "user", IntegrationFeature.SkillGap, Guid.NewGuid(), false));
@@ -92,6 +92,28 @@ public class GeminiGatewayTests
         Assert.Equal(result.EstimatedCostUsd, entry.TokenCost);
         // The user prompt can carry resume PII and must never reach the ledger.
         Assert.DoesNotContain("PII resume text", entry.PromptContext);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_RotatesPastInvalidKey_WhenFirstKeyIsRejected()
+    {
+        const string invalidKeyBody = """
+        { "error": { "code": 400, "status": "INVALID_ARGUMENT",
+          "details": [ { "reason": "API_KEY_INVALID" } ] } }
+        """;
+
+        var handler = new FakeHttpMessageHandler((_, callIndex) => callIndex == 0
+            ? Respond(HttpStatusCode.BadRequest, invalidKeyBody)
+            : Respond(HttpStatusCode.OK, SuccessBody));
+
+        var (client, ledger, _) = BuildClient(handler, "garbage-key,key-two");
+
+        var result = await client.GenerateAsync("system", "user", IntegrationFeature.CoverLetter, Guid.NewGuid(), false);
+
+        Assert.Equal("Generated answer.", result.Content);
+        Assert.Equal("garbage-key", handler.ReceivedApiKeys[0]);
+        Assert.Equal("key-two", handler.ReceivedApiKeys[1]);
+        Assert.Single(ledger.Entries);
     }
 
     [Fact]
@@ -158,7 +180,7 @@ public class GeminiGatewayTests
         var options = Options.Create(new GeminiOptions
         {
             ApiKeys = apiKeys,
-            Model = "gemini-2.5-flash",
+            Model = "gemini-3.6-flash",
             RetryBaseDelayMilliseconds = 0
         });
 

@@ -11,8 +11,8 @@ public interface IGeminiKeyPool
     /// <summary>Round-robins to the next key that is not cooling down.</summary>
     bool TryLease(out GeminiKeyLease lease);
 
-    /// <summary>Parks a key that returned 429/quota-exceeded so the next attempt rotates past it.</summary>
-    void ReportQuotaExceeded(int keyIndex);
+    /// <summary>Parks a key that failed for a key-scoped reason (429, 401/403, invalid key) so the next attempt rotates past it.</summary>
+    void ReportKeyFailure(int keyIndex);
 }
 
 public class GeminiKeyPool : IGeminiKeyPool
@@ -80,7 +80,7 @@ public class GeminiKeyPool : IGeminiKeyPool
         return false;
     }
 
-    public void ReportQuotaExceeded(int keyIndex)
+    public void ReportKeyFailure(int keyIndex)
     {
         if (keyIndex < 0 || keyIndex >= _keys.Length)
         {
@@ -94,7 +94,7 @@ public class GeminiKeyPool : IGeminiKeyPool
 
         // Index only — the key value must never reach a log sink.
         _logger.LogWarning(
-            "Gemini key #{KeyIndex} exceeded quota; cooling down for {CooldownSeconds}s and rotating.",
+            "Gemini key #{KeyIndex} failed for a key-scoped reason; cooling down for {CooldownSeconds}s and rotating.",
             keyIndex,
             _cooldown.TotalSeconds);
     }

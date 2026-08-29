@@ -29,7 +29,7 @@ public class GeminiKeyPoolTests
     {
         var (pool, _) = BuildPool("a,b");
 
-        pool.ReportQuotaExceeded(0);
+        pool.ReportKeyFailure(0);
 
         Assert.True(pool.TryLease(out var lease));
         Assert.Equal("b", lease.ApiKey);
@@ -40,8 +40,8 @@ public class GeminiKeyPoolTests
     {
         var (pool, _) = BuildPool("a,b");
 
-        pool.ReportQuotaExceeded(0);
-        pool.ReportQuotaExceeded(1);
+        pool.ReportKeyFailure(0);
+        pool.ReportKeyFailure(1);
 
         Assert.False(pool.TryLease(out _));
     }
@@ -51,7 +51,7 @@ public class GeminiKeyPoolTests
     {
         var (pool, time) = BuildPool("a");
 
-        pool.ReportQuotaExceeded(0);
+        pool.ReportKeyFailure(0);
         Assert.False(pool.TryLease(out _));
 
         time.Advance(TimeSpan.FromSeconds(61));
@@ -79,7 +79,7 @@ public class GeminiKeyPoolTests
     {
         var (pool, _) = BuildPool("a");
 
-        pool.ReportQuotaExceeded(7);
+        pool.ReportKeyFailure(7);
 
         Assert.True(pool.TryLease(out _));
     }

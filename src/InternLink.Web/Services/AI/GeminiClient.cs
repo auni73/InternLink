@@ -120,10 +120,9 @@ public class GeminiClient : IGeminiClient
                 var body = await response.Content.ReadAsStringAsync(ct);
 
                 // Only inspect the body on failures: a successful generation may legitimately contain the word "quota".
-                if (response.StatusCode == HttpStatusCode.TooManyRequests ||
-                    (!response.IsSuccessStatusCode && IsQuotaExceeded(body)))
+                if (!response.IsSuccessStatusCode && IsKeyScopedFailure(response.StatusCode, body))
                 {
-                    _keyPool.ReportQuotaExceeded(lease.Index);
+                    _keyPool.ReportKeyFailure(lease.Index);
                     continue;
                 }
 
@@ -242,9 +241,22 @@ public class GeminiClient : IGeminiClient
             GeminiPricing.Estimate(promptTokens, completionTokens));
     }
 
-    private static bool IsQuotaExceeded(string body) =>
-        body.Contains("RESOURCE_EXHAUSTED", StringComparison.OrdinalIgnoreCase) ||
-        body.Contains("quota", StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// Distinguishes failures caused by the key itself — which another key may survive — from
+    /// request-level failures that would fail identically on every key.
+    /// </summary>
+    private static bool IsKeyScopedFailure(HttpStatusCode status, string body)
+    {
+        if (status is HttpStatusCode.TooManyRequests or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        {
+            return true;
+        }
+
+        // A revoked or mistyped key surfaces as 400 INVALID_ARGUMENT with this reason.
+        return body.Contains("API_KEY_INVALID", StringComparison.OrdinalIgnoreCase)
+            || body.Contains("RESOURCE_EXHAUSTED", StringComparison.OrdinalIgnoreCase)
+            || body.Contains("quota", StringComparison.OrdinalIgnoreCase);
+    }
 
     private async Task RecordLedgerAsync(
         string systemPrompt,
