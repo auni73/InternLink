@@ -10,6 +10,7 @@ public class Company
     public string? CorporateWebsite { get; set; }
     public string IndustrySector { get; set; } = string.Empty;
     public VerificationStatus VerificationStatus { get; set; } = VerificationStatus.Pending;
+    public string? AdminRejectionReason { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // Navigation properties
