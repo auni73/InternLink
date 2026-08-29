@@ -86,6 +86,13 @@ builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IOtpRepository, OtpRepository>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IResumeRepository, ResumeRepository>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+
+// Storage & Resume PDF Services (reusable for Prompt 11, Prompt 23)
+builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, InternLink.Web.Services.Storage.DiskFileStorage>();
+builder.Services.AddSingleton<InternLink.Web.Services.Resume.IPdfRenderer, InternLink.Web.Services.Resume.QuestPdfResumeRenderer>();
+builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeService, InternLink.Web.Services.Resume.ResumeService>();
 
 // Per-area dashboard services (server-rendered stat cards).
 builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
