@@ -1,0 +1,53 @@
+@using System.Security.Claims
+@using InternLink.Web.Models
+@using InternLink.Web.Models.Enums
+@inject InternLink.Web.Repositories.Interface.ICompanyRepository CompanyRepository
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+
+    // Resolve once per request; every Company page shows the verification banner.
+    Company? company = null;
+    if (Context.Items.TryGetValue("CompanyEntity", out var cached) && cached is Company cachedCompany)
+    {
+        company = cachedCompany;
+    }
+    else if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+    {
+        company = await CompanyRepository.GetByUserIdAsync(userId);
+        if (company is not null)
+        {
+            Context.Items["CompanyEntity"] = company;
+        }
+    }
+}
+
+@if (company is not null)
+{
+    switch (company.VerificationStatus)
+    {
+        case VerificationStatus.Pending:
+            <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-hourglass-split"></i>
+                <div><strong>Verification pending.</strong> Your company profile is awaiting admin review. Job postings stay hidden until you are verified.</div>
+            </div>
+            break;
+        case VerificationStatus.Verified:
+            <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-patch-check-fill"></i>
+                <div><strong>Verified.</strong> @company.CompanyName is a verified employer on InternLink.</div>
+            </div>
+            break;
+        case VerificationStatus.Rejected:
+            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-x-octagon-fill"></i>
+                <div><strong>Verification rejected.</strong> Please review your company details and contact the administrators.</div>
+            </div>
+            break;
+    }
+}
+
+@RenderBody()
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

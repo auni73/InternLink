@@ -1,16 +1,21 @@
 @using System.Security.Claims
+@model AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
     var displayName = User.Identity?.Name;
     var role = User.FindFirstValue(ClaimTypes.Role);
 }
 
-<div class="container py-4">
-    <div class="p-5 mb-4 bg-light rounded-3">
-        <div class="container-fluid py-3">
-            <h1 class="display-5 fw-bold">Admin Portal</h1>
-            <p class="fs-4">Welcome, @displayName</p>
-            <p class="text-muted mb-0">Signed in as role: <strong>@role</strong></p>
-        </div>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Welcome, @displayName</h1>
+    <p class="text-muted mb-0">Signed in as <strong>@role</strong>. Items waiting on you.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-sm-6 col-lg-4">
+        <partial name="_StatCard" view-data='new ViewDataDictionary(ViewData) { { "Icon", "bi-building-check" }, { "Label", "Companies awaiting verification" }, { "Value", Model.PendingCompaniesCount }, { "Url", "/Admin/Companies" } }' />
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <partial name="_StatCard" view-data='new ViewDataDictionary(ViewData) { { "Icon", "bi-clipboard-check" }, { "Label", "Jobs awaiting approval" }, { "Value", Model.PendingJobsCount }, { "Url", "/Admin/Jobs" } }' />
     </div>
 </div>

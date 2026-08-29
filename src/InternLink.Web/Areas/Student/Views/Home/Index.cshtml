@@ -1,16 +1,31 @@
 @using System.Security.Claims
+@model StudentDashboardViewModel
 @{
     ViewData["Title"] = "Student Dashboard";
     var displayName = User.Identity?.Name;
     var role = User.FindFirstValue(ClaimTypes.Role);
 }
 
-<div class="container py-4">
-    <div class="p-5 mb-4 bg-light rounded-3">
-        <div class="container-fluid py-3">
-            <h1 class="display-5 fw-bold">Student Portal</h1>
-            <p class="fs-4">Welcome, @displayName</p>
-            <p class="text-muted mb-0">Signed in as role: <strong>@role</strong></p>
-        </div>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Welcome, @displayName</h1>
+    <p class="text-muted mb-0">Signed in as <strong>@role</strong>. Here's where your internship search stands.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+        <partial name="_StatCard" view-data='new ViewDataDictionary(ViewData) { { "Icon", "bi-file-earmark-text" }, { "Label", "Applications submitted" }, { "Value", Model.ApplicationsCount } }' />
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <partial name="_StatCard" view-data='new ViewDataDictionary(ViewData) { { "Icon", "bi-file-person" }, { "Label", "Finalized resumes" }, { "Value", Model.FinalizedResumesCount } }' />
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <partial name="_StatCard" view-data='new ViewDataDictionary(ViewData) { { "Icon", "bi-patch-check" }, { "Label", "Verified skills" }, { "Value", Model.VerifiedSkillsCount } }' />
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Recent applications</h2>
+        <partial name="_EmptyState" model='new EmptyStateViewModel { Icon = "bi-inbox", Title = "No recent applications", Message = "Applications you submit will show up here.", CtaText = "Browse jobs", CtaUrl = "/Student/Jobs" }' />
     </div>
 </div>
