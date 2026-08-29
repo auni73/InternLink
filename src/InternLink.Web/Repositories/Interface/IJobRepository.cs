@@ -1,5 +1,6 @@
 using InternLink.Web.Models;
 using InternLink.Web.Models.Enums;
+using InternLink.Web.Services.Vectors;
 using InternLink.Web.ViewModels;
 
 namespace InternLink.Web.Repositories.Interface;
@@ -22,4 +23,8 @@ public interface IJobRepository
     Task<Guid> CreateJobWithSkillsAsync(Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default);
     Task<bool> UpdateJobWithSkillsAsync(Guid jobId, Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default);
     Task<bool> CloseJobAsync(Guid jobId, Guid companyId, CancellationToken ct = default);
+
+    // Vector indexing support
+    Task<JobVectorSource?> GetJobVectorSourceAsync(Guid jobId, CancellationToken ct = default);
+    Task<IReadOnlyList<Guid>> GetApprovedOpenJobIdsAsync(CancellationToken ct = default);
 }

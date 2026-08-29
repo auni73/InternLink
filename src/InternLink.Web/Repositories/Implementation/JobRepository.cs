@@ -6,6 +6,7 @@ using InternLink.Web.Helpers;
 using InternLink.Web.Models;
 using InternLink.Web.Models.Enums;
 using InternLink.Web.Repositories.Interface;
+using InternLink.Web.Services.Vectors;
 using InternLink.Web.ViewModels;
 
 namespace InternLink.Web.Repositories.Implementation;
@@ -501,6 +502,84 @@ public class JobRepository : IJobRepository
 
         return rows > 0;
     }
+
+    public async Task<JobVectorSource?> GetJobVectorSourceAsync(Guid jobId, CancellationToken ct = default)
+    {
+        var jobIdParam = new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId };
+
+        const string jobSql = @"
+            SELECT 
+                j.Id AS JobId,
+                j.CompanyId,
+                j.Title,
+                j.CoreDescription,
+                j.SelectionCriteria,
+                j.LocationType,
+                j.DeadLine
+            FROM dbo.Jobs j
+            WHERE j.Id = @jobId";
+
+        var row = await _db.Database
+            .SqlQueryRaw<JobVectorSourceRowResult>(jobSql, jobIdParam)
+            .FirstOrDefaultAsync(ct);
+
+        if (row is null)
+        {
+            return null;
+        }
+
+        var skillsParam = new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId };
+
+        const string skillsSql = @"
+            SELECT s.Id AS SkillId, s.SkillName, js.RequiredImportanceWeight AS Weight
+            FROM dbo.JobSkills js
+            INNER JOIN dbo.Skills s ON js.SkillId = s.Id
+            WHERE js.JobId = @jobId
+            ORDER BY js.RequiredImportanceWeight DESC, s.SkillName ASC";
+
+        var skills = await _db.Database
+            .SqlQueryRaw<JobSkillWeightRowResult>(skillsSql, skillsParam)
+            .ToListAsync(ct);
+
+        return new JobVectorSource
+        {
+            JobId = row.JobId,
+            CompanyId = row.CompanyId,
+            Title = row.Title,
+            CoreDescription = row.CoreDescription,
+            SelectionCriteria = row.SelectionCriteria,
+            LocationType = row.LocationType,
+            DeadLine = row.DeadLine,
+            SkillIds = skills.Select(s => s.SkillId).ToList(),
+            SkillNames = skills.Select(s => s.SkillName).ToList()
+        };
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetApprovedOpenJobIdsAsync(CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT j.Id AS Value
+            FROM dbo.Jobs j
+            WHERE j.IsApproved = 1 
+              AND j.IsClosed = 0 
+              AND j.DeadLine >= SYSDATETIMEOFFSET()
+            ORDER BY j.CreatedAt DESC";
+
+        return await _db.Database
+            .SqlQueryRaw<Guid>(sql)
+            .ToListAsync(ct);
+    }
+}
+
+public class JobVectorSourceRowResult
+{
+    public Guid JobId { get; set; }
+    public Guid CompanyId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string CoreDescription { get; set; } = string.Empty;
+    public string SelectionCriteria { get; set; } = string.Empty;
+    public byte LocationType { get; set; }
+    public DateTimeOffset DeadLine { get; set; }
 }
 
 // Helper POCOs for SqlQuery mapping
