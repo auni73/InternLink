@@ -1,12 +1,15 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Data;
 using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Repositories.Implementation;
+using InternLink.Web.Services.Auth;
 using InternLink.Web.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,16 +83,36 @@ builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IOtpRepository, OtpRepository>();
 
-// Email sender: log confirmation links to console in Development, send via SMTP otherwise.
+// OTP second factor: repository-backed service with an injectable clock for testability.
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddSingleton<PendingLoginTokenService>();
+
+// Email sender: write OTP codes/links to console in Development, send via MailKit SMTP otherwise.
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddSingleton<IAppEmailSender, DevConsoleEmailSender>();
+    builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
 }
 else
 {
-    builder.Services.AddSingleton<IAppEmailSender, SmtpEmailSender>();
+    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
 }
+
+// Fixed-window rate limiting on the auth POST endpoints (Login/VerifyOtp/ResendOtp): 10/min/IP.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
 
 var app = builder.Build();
 
@@ -144,6 +167,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using InternLink.Web.Data;
 using InternLink.Web.Helpers;
 using InternLink.Web.Models;
 using InternLink.Web.Models.Enums;
+using InternLink.Web.Services.Auth;
 using InternLink.Web.Services.Email;
 using InternLink.Web.ViewModels;
 
@@ -13,23 +15,32 @@ namespace InternLink.Web.Controllers;
 [AllowAnonymous]
 public class AccountController : Controller
 {
+    private const string PendingLoginCookie = "InternLink.PendingLogin";
+    private static readonly TimeSpan PendingLoginLifetime = TimeSpan.FromMinutes(10);
+
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly ApplicationDbContext _db;
-    private readonly IAppEmailSender _emailSender;
+    private readonly IEmailSender _emailSender;
+    private readonly IOtpService _otpService;
+    private readonly PendingLoginTokenService _pendingLogin;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<AppUser> userManager,
         SignInManager<AppUser> signInManager,
         ApplicationDbContext db,
-        IAppEmailSender emailSender,
+        IEmailSender emailSender,
+        IOtpService otpService,
+        PendingLoginTokenService pendingLogin,
         ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _db = db;
         _emailSender = emailSender;
+        _otpService = otpService;
+        _pendingLogin = pendingLogin;
         _logger = logger;
     }
 
@@ -127,7 +138,7 @@ public class AccountController : Controller
             new { userId = user.Id, token },
             Request.Scheme);
 
-        await _emailSender.SendEmailAsync(
+        await _emailSender.SendAsync(
             user.Email!,
             "Confirm your InternLink account",
             $"Please confirm your account by clicking this link: <a href=\"{confirmationLink}\">Confirm email</a>",
@@ -171,7 +182,8 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(LoginViewModel model)
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> Login(LoginViewModel model, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
@@ -192,7 +204,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Password check only — OTP second factor and SignInAsync happen after (see below).
+        // Password check only — no auth cookie is issued here. OTP must pass first.
         var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
 
         if (result.IsLockedOut)
@@ -213,12 +225,59 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // [OTP step placeholder] — Prompt 8 inserts the email OTP second factor here, between
-        // the password check and SignInAsync. Do not collapse this back into PasswordSignInAsync.
+        // Second factor: issue an email OTP and hand off to VerifyOtp. SignInAsync happens only after OTP passes.
+        await _otpService.SendAsync(user.Id, user.Email!, ct);
+        var pendingToken = _pendingLogin.Create(user.Id, model.RememberMe);
+        Response.Cookies.Append(PendingLoginCookie, pendingToken, BuildPendingCookieOptions());
 
-        await _signInManager.SignInAsync(user, isPersistent: model.RememberMe);
+        return RedirectToAction(nameof(VerifyOtp), new { returnUrl = model.ReturnUrl });
+    }
 
-        // Honor a local returnUrl (e.g. a deep link that triggered the login redirect) before role routing.
+    // ------------------------------------------------------------------ OTP second factor
+
+    [HttpGet]
+    public IActionResult VerifyOtp(string? returnUrl = null)
+    {
+        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out _, out _))
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new VerifyOtpViewModel { ReturnUrl = returnUrl });
+    }
+
+    [HttpPost]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> VerifyOtp(VerifyOtpViewModel model, CancellationToken ct)
+    {
+        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out var userId, out var remember))
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var result = await _otpService.VerifyAsync(userId, model.Code, ct);
+        if (result != OtpVerifyResult.Success)
+        {
+            // Generic message: never reveal whether the code was wrong vs expired.
+            ModelState.AddModelError(string.Empty, "Invalid or expired code.");
+            return View(model);
+        }
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null || !user.IsActive)
+        {
+            Response.Cookies.Delete(PendingLoginCookie);
+            return RedirectToAction(nameof(Login));
+        }
+
+        Response.Cookies.Delete(PendingLoginCookie);
+        await _signInManager.SignInAsync(user, isPersistent: remember);
+
         if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
         {
             return Redirect(model.ReturnUrl);
@@ -226,6 +285,39 @@ public class AccountController : Controller
 
         var roles = await _userManager.GetRolesAsync(user);
         return RedirectToRoleDashboard(roles);
+    }
+
+    [HttpPost]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResendOtp(string? returnUrl, CancellationToken ct)
+    {
+        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out var userId, out _))
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        var model = new VerifyOtpViewModel { ReturnUrl = returnUrl };
+        var result = await _otpService.ResendAsync(userId, user.Email!, ct);
+        if (result == OtpResendResult.TooSoon)
+        {
+            ModelState.AddModelError(string.Empty, "Please wait 30 seconds before requesting another code.");
+        }
+        else if (result == OtpResendResult.Sent)
+        {
+            TempData["OtpInfo"] = "A new verification code has been sent.";
+        }
+        else
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(nameof(VerifyOtp), model);
     }
 
     // ------------------------------------------------------------------ Logout
@@ -246,6 +338,15 @@ public class AccountController : Controller
         Response.StatusCode = StatusCodes.Status403Forbidden;
         return View();
     }
+
+    private CookieOptions BuildPendingCookieOptions() => new()
+    {
+        HttpOnly = true,
+        SameSite = SameSiteMode.Lax,
+        Secure = Request.IsHttps,
+        IsEssential = true,
+        Expires = DateTimeOffset.UtcNow.Add(PendingLoginLifetime)
+    };
 
     private IActionResult RedirectToRoleDashboard(IList<string> roles)
     {
