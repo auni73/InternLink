@@ -1,0 +1,241 @@
+@model InternLink.Web.ViewModels.JobDetailViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb & Nav -->
+    <div class="mb-3">
+        <a asp-area="Student" asp-controller="Jobs" asp-action="Index" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left me-1"></i>Back to Internships
+        </a>
+    </div>
+
+    <!-- Header Card -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-8">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="badge bg-light text-primary border">
+                            <i class="bi bi-geo-alt me-1"></i>@Model.LocationType
+                        </span>
+                        <span class="badge @(Model.IsUrgent ? "bg-danger-subtle text-danger border border-danger-subtle" : "bg-light text-muted border")">
+                            <i class="bi @(Model.IsUrgent ? "bi-clock-fill" : "bi-calendar3") me-1"></i>
+                            @Model.DeadlineFormatted
+                        </span>
+                    </div>
+
+                    <h2 class="h3 fw-bold text-slate-800 mb-1">@Model.Title</h2>
+                    <div class="text-muted fw-medium d-flex flex-wrap align-items-center gap-3 mt-2">
+                        <span><i class="bi bi-building me-1 text-primary"></i>@Model.CompanyName</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.IndustrySector))
+                        {
+                            <span>• <i class="bi bi-tag me-1 text-primary"></i>@Model.IndustrySector</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.CorporateWebsite))
+                        {
+                            <span>• <a href="@Model.CorporateWebsite" target="_blank" rel="noopener noreferrer" class="text-decoration-none"><i class="bi bi-globe me-1"></i>Website <i class="bi bi-box-arrow-up-right small"></i></a></span>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4 text-lg-end">
+                    @if (Model.HasApplied)
+                    {
+                        <button class="btn btn-success px-4 py-2" disabled>
+                            <i class="bi bi-check-circle-fill me-2"></i>Already Applied
+                        </button>
+                    }
+                    else
+                    {
+                        @if (Model.FinalizedResumes == null || Model.FinalizedResumes.Count == 0)
+                        {
+                            <div class="d-inline-block text-start">
+                                <button class="btn btn-primary px-4 py-2" disabled>
+                                    <i class="bi bi-send me-2"></i>Apply Now
+                                </button>
+                                <div class="form-text text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>No finalized resume found. 
+                                    <a asp-area="Student" asp-controller="Resumes" asp-action="Builder" class="fw-semibold text-primary">Create or finalize one</a>.
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-primary px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#applyModal">
+                                <i class="bi bi-send me-2"></i>Apply for Internship
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="row g-4">
+        <!-- Main Description -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-slate-800 mb-3 border-bottom pb-2">
+                        <i class="bi bi-file-text text-primary me-2"></i>Role Overview & Description
+                    </h5>
+                    <div class="text-slate-700 lh-base" style="white-space: pre-line;">
+                        @Model.CoreDescription
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.SelectionCriteria))
+                    {
+                        <h5 class="fw-bold text-slate-800 mt-4 mb-3 border-bottom pb-2">
+                            <i class="bi bi-list-check text-primary me-2"></i>Selection Criteria & Requirements
+                        </h5>
+                        <div class="text-slate-700 lh-base" style="white-space: pre-line;">
+                            @Model.SelectionCriteria
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Skills & Details -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-semibold">Required & Valued Competencies</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.RequiredSkills != null && Model.RequiredSkills.Count > 0)
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var skill in Model.RequiredSkills)
+                            {
+                                <div class="border rounded-3 p-3 bg-light-subtle">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-slate-800">@skill.SkillName</span>
+                                        <span class="badge @(skill.ImportanceWeight >= 4 ? "bg-danger" : "bg-primary") rounded-pill">
+                                            Weight: @skill.ImportanceWeight/5
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar @(skill.ImportanceWeight >= 4 ? "bg-danger" : "bg-primary")" 
+                                             role="progressbar" 
+                                             style="width: @(skill.ImportanceWeight * 20)%;" 
+                                             aria-valuenow="@skill.ImportanceWeight" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="5"></div>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        @(skill.ImportanceWeight switch {
+                                            5 => "Critical / Must-Have",
+                                            4 => "Core Requirement",
+                                            3 => "Strongly Preferred",
+                                            2 => "Valued Advantage",
+                                            _ => "Nice to Have"
+                                        })
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">General skills specified in the description.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Modal -->
+@if (Model.FinalizedResumes != null && Model.FinalizedResumes.Count > 0)
+{
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">
+                        <i class="bi bi-send text-primary me-2"></i>Apply for @Model.Title
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="jobApplicationForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Attached Resume <span class="text-danger">*</span></label>
+                            <select id="applyResumeSelect" class="form-select" required>
+                                @foreach (var res in Model.FinalizedResumes)
+                                {
+                                    <option value="@res.Id">@res.FullName (Updated @res.LastModified.ToString("MMM dd, yyyy"))</option>
+                                }
+                            </select>
+                            <div class="form-text small">Your finalized PDF resume will be attached to this application.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Optional Cover Letter / Note to Hiring Manager</label>
+                            <textarea id="applyCoverLetterInput" rows="4" class="form-control" placeholder="Explain why you are excited about this opportunity and highlight relevant achievements..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top py-3">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="submitApplicationBtn" class="btn btn-primary px-4">
+                        Submit Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script type="module">
+        import { api } from '/js/api.js';
+
+        const submitBtn = document.getElementById('submitApplicationBtn');
+        const modalEl = document.getElementById('applyModal');
+        const resumeSelect = document.getElementById('applyResumeSelect');
+        const coverLetterInput = document.getElementById('applyCoverLetterInput');
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                const resumeId = resumeSelect?.value;
+                if (!resumeId) {
+                    if (window.showToast) window.showToast('Please select a resume.', 'warning');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Submitting...';
+
+                try {
+                    const result = await api.post('/Student/Jobs/@Model.Id/Apply', {
+                        resumeId: resumeId,
+                        coverLetterText: coverLetterInput?.value || null
+                    });
+
+                    if (window.showToast) {
+                        window.showToast(result.message || 'Application submitted!', 'success');
+                    }
+
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    setTimeout(() => {
+                        window.location.href = '/Student/Applications';
+                    }, 1000);
+                } catch (error) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit Application';
+
+                    if (window.showToast) {
+                        window.showToast(error.message || 'Failed to apply.', 'danger');
+                    }
+                }
+            });
+        }
+    </script>
+}
