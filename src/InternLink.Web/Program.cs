@@ -134,6 +134,7 @@ builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, Inte
 builder.Services.AddSingleton<InternLink.Web.Services.Resume.IPdfRenderer, InternLink.Web.Services.Resume.QuestPdfResumeRenderer>();
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeService, InternLink.Web.Services.Resume.ResumeService>();
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeAnalysisService, InternLink.Web.Services.Resume.ResumeAnalysisService>();
+builder.Services.AddScoped<InternLink.Web.Services.CoverLetter.ICoverLetterService, InternLink.Web.Services.CoverLetter.CoverLetterService>();
 
 // Full-Text Search capability service
 builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, InternLink.Web.Helpers.FtsCapabilityService>();
