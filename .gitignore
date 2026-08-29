@@ -1,0 +1,37 @@
+## Build and binary directories
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio & Rider / IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+## User Secrets & Local Config
+secrets.json
+appsettings.Development.local.json
+appsettings.local.json
+
+## OS Generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Testing & Coverage
+TestResults/
+*.trx
+coverage/
+*.coverage
+
+## Temporary & local storage
+/scratch/
+C:\InternLinkData\
+/resumes/
