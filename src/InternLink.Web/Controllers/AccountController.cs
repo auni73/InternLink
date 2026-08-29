@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Data;
 using InternLink.Web.Helpers;
 using InternLink.Web.Models;
@@ -69,64 +70,76 @@ public class AccountController : Controller
             CreatedAt = DateTimeOffset.UtcNow
         };
 
-        // User row + linked profile row must both commit or both roll back.
-        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        // EnableRetryOnFailure forbids raw user-initiated transactions; the whole
+        // user+profile unit must run inside the execution strategy as one retriable block.
+        var strategy = _db.Database.CreateExecutionStrategy();
+        IdentityResult? createResult = null;
         try
         {
-            var createResult = await _userManager.CreateAsync(user, model.Password);
-            if (!createResult.Succeeded)
+            await strategy.ExecuteAsync(async () =>
             {
-                foreach (var error in createResult.Errors)
+                // User row + linked profile row must both commit or both roll back.
+                await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+
+                createResult = await _userManager.CreateAsync(user, model.Password);
+                if (!createResult.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    await transaction.RollbackAsync(ct);
+                    return;
                 }
-                await transaction.RollbackAsync(ct);
-                return View(model);
-            }
 
-            if (model.Role == RegistrationRole.Student)
-            {
-                await _userManager.AddToRoleAsync(user, "Student");
-                _db.Students.Add(new Student
+                if (model.Role == RegistrationRole.Student)
                 {
-                    UserId = user.Id,
-                    FirstName = model.FirstName!.Trim(),
-                    LastName = model.LastName!.Trim(),
-                    InstitutionalId = model.InstitutionalId!.Trim(),
-                    Department = model.Department!.Trim(),
-                    CGPA = model.CGPA!.Value,
-                    CreatedAt = DateTimeOffset.UtcNow
-                });
-            }
-            else
-            {
-                await _userManager.AddToRoleAsync(user, "Company");
-                _db.Companies.Add(new Company
+                    await _userManager.AddToRoleAsync(user, "Student");
+                    _db.Students.Add(new Student
+                    {
+                        UserId = user.Id,
+                        FirstName = model.FirstName!.Trim(),
+                        LastName = model.LastName!.Trim(),
+                        InstitutionalId = model.InstitutionalId!.Trim(),
+                        Department = model.Department!.Trim(),
+                        CGPA = model.CGPA!.Value,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                }
+                else
                 {
-                    UserId = user.Id,
-                    CompanyName = model.CompanyName!.Trim(),
-                    IndustrySector = model.IndustrySector!.Trim(),
-                    CorporateWebsite = string.IsNullOrWhiteSpace(model.CorporateWebsite) ? null : model.CorporateWebsite.Trim(),
-                    VerificationStatus = VerificationStatus.Pending,
-                    CreatedAt = DateTimeOffset.UtcNow
-                });
-            }
+                    await _userManager.AddToRoleAsync(user, "Company");
+                    _db.Companies.Add(new Company
+                    {
+                        UserId = user.Id,
+                        CompanyName = model.CompanyName!.Trim(),
+                        IndustrySector = model.IndustrySector!.Trim(),
+                        CorporateWebsite = string.IsNullOrWhiteSpace(model.CorporateWebsite) ? null : model.CorporateWebsite.Trim(),
+                        VerificationStatus = VerificationStatus.Pending,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                }
 
-            await _db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+                await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            });
         }
         catch (Exception ex) when (DbExceptionMapper.IsUniqueConstraintViolation(ex))
         {
-            await transaction.RollbackAsync(ct);
             _logger.LogWarning(ex, "Registration failed on a unique constraint for {Email}.", model.Email);
             ModelState.AddModelError(string.Empty, "An account with these details already exists.");
             return View(model);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(ct);
             _logger.LogError(ex, "Registration failed unexpectedly for {Email}.", model.Email);
             ModelState.AddModelError(string.Empty, "Registration could not be completed. Please try again.");
+            return View(model);
+        }
+
+        // Identity validation failures (duplicate email, weak password) surface as field errors.
+        if (createResult is null || !createResult.Succeeded)
+        {
+            foreach (var error in createResult?.Errors ?? Enumerable.Empty<IdentityError>())
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
             return View(model);
         }
 
