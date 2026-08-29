@@ -9,6 +9,9 @@ public class Company
     public string CompanyName { get; set; } = string.Empty;
     public string? CorporateWebsite { get; set; }
     public string IndustrySector { get; set; } = string.Empty;
+
+    // INVARIANT: VerificationStatus is modified exclusively by Administrators.
+    // Companies cannot mutate their own verification state during profile updates.
     public VerificationStatus VerificationStatus { get; set; } = VerificationStatus.Pending;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
