@@ -16,4 +16,7 @@ public class GeminiOptions
     public int TimeoutSeconds { get; set; } = 30;
 
     public int KeyCooldownSeconds { get; set; } = 60;
+
+    /// <summary>Base delay for the jittered exponential retry backoff. Tests set this to 0.</summary>
+    public int RetryBaseDelayMilliseconds { get; set; } = 1000;
 }

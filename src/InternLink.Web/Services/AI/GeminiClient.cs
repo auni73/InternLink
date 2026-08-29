@@ -55,7 +55,7 @@ public class GeminiClient : IGeminiClient
                 MaxRetryAttempts = 2,
                 BackoffType = DelayBackoffType.Exponential,
                 UseJitter = true,
-                Delay = TimeSpan.FromSeconds(1),
+                Delay = TimeSpan.FromMilliseconds(Math.Max(0, _options.RetryBaseDelayMilliseconds)),
                 OnRetry = args =>
                 {
                     args.Outcome.Result?.Dispose();
@@ -119,7 +119,9 @@ public class GeminiClient : IGeminiClient
             {
                 var body = await response.Content.ReadAsStringAsync(ct);
 
-                if (response.StatusCode == HttpStatusCode.TooManyRequests || IsQuotaExceeded(body))
+                // Only inspect the body on failures: a successful generation may legitimately contain the word "quota".
+                if (response.StatusCode == HttpStatusCode.TooManyRequests ||
+                    (!response.IsSuccessStatusCode && IsQuotaExceeded(body)))
                 {
                     _keyPool.ReportQuotaExceeded(lease.Index);
                     continue;
