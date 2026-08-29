@@ -28,7 +28,8 @@ public class JobIndexQueue : IJobIndexQueue
         _logger = logger;
         _channel = Channel.CreateBounded<JobIndexCommand>(new BoundedChannelOptions(1000)
         {
-            FullMode = BoundedChannelFullMode.DropWrite,
+            // Wait + TryWrite means "report full immediately"; DropWrite would silently discard and still report success.
+            FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,
             SingleWriter = false
         });
