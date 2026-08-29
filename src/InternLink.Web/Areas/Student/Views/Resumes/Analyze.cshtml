@@ -1,0 +1,55 @@
+@model InternLink.Web.ViewModels.ResumeAnalysisPageViewModel
+@{
+    ViewData["Title"] = "Resume ATS Review";
+}
+
+<div class="container-fluid py-4" id="resumeAnalysis" data-analyze-url="@Url.Action("Analyze", "Resumes", new { area = "Student", id = Model.ResumeId })">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
+                    <i class="bi bi-clipboard-data me-1"></i>ATS Review
+                </span>
+                @if (!Model.IsFinalized)
+                {
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 rounded-pill">Draft</span>
+                }
+            </div>
+            <h2 class="fw-bold mb-0 text-slate-800">Resume Analysis@(string.IsNullOrWhiteSpace(Model.CandidateName) ? "" : $" — {Model.CandidateName}")</h2>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i><span>Back to Resumes</span>
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-8">
+                    <label for="targetJobSelect" class="form-label fw-semibold">Target role <span class="text-muted fw-normal">(optional)</span></label>
+                    <select id="targetJobSelect" class="form-select">
+                        <option value="">General analysis — no specific posting</option>
+                        @foreach (var job in Model.TargetJobs)
+                        {
+                            <option value="@job.JobId">@job.Title — @job.CompanyName</option>
+                        }
+                    </select>
+                    <div class="form-text">Choosing a role tailors the score and unlocks rewrite suggestions.</div>
+                </div>
+                <div class="col-lg-4 d-grid">
+                    <button id="runAnalysisBtn" type="button" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-stars"></i><span>Analyze Resume</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="analysisResult" hidden></div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import '/js/resume-analysis.js';
+    </script>
+}
