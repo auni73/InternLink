@@ -21,6 +21,27 @@ public class AssessmentQuestionProvider : IAssessmentQuestionProvider
             var filePath = Path.Combine(contentRootPath, "Data", "SeedData", "assessment-questions.json");
             if (!File.Exists(filePath))
             {
+                var current = new DirectoryInfo(contentRootPath);
+                while (current != null)
+                {
+                    var candidate1 = Path.Combine(current.FullName, "src", "InternLink.Web", "Data", "SeedData", "assessment-questions.json");
+                    if (File.Exists(candidate1))
+                    {
+                        filePath = candidate1;
+                        break;
+                    }
+                    var candidate2 = Path.Combine(current.FullName, "Data", "SeedData", "assessment-questions.json");
+                    if (File.Exists(candidate2))
+                    {
+                        filePath = candidate2;
+                        break;
+                    }
+                    current = current.Parent;
+                }
+            }
+
+            if (!File.Exists(filePath))
+            {
                 _logger.LogWarning("Assessment questions file not found at: {FilePath}", filePath);
                 return;
             }
