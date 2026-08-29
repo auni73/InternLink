@@ -149,6 +149,32 @@
     </div>
 </div>
 
+<!-- Skill Gap Analysis -->
+<div class="container-fluid pb-4">
+    <div class="card border-0 shadow-sm rounded-3"
+         id="skillGapCard"
+         data-skill-gap-url="@Url.Action("Index", "SkillGap", new { area = "Student", jobId = Model.Id })">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold text-slate-800 mb-1">
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i>Skill Gap Analysis
+                    </h5>
+                    <p class="text-secondary small mb-0">
+                        See exactly which required skills you already have, and what to learn for the rest.
+                    </p>
+                </div>
+                <button type="button" id="loadSkillGapBtn" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-clipboard-data"></i><span>Analyze My Fit</span>
+                </button>
+            </div>
+
+            <div id="skillGapStatus" class="alert alert-warning mt-3 d-none" role="alert"></div>
+            <div id="skillGapContent" class="mt-4" hidden></div>
+        </div>
+    </div>
+</div>
+
 <!-- AI Cover Letter -->
 <div class="container-fluid pb-4">
     <div class="card border-0 shadow-sm rounded-3"
@@ -255,6 +281,7 @@
 @section Scripts {
     <script type="module">
         import '/js/cover-letter.js';
+        import '/js/skill-gap.js';
         import { api } from '/js/api.js';
 
         const submitBtn = document.getElementById('submitApplicationBtn');

@@ -68,8 +68,7 @@ public class StubResumeService : InternLink.Web.Services.Resume.IResumeService
 }
 
 /// <summary>In-memory mock interview store, scoped by student exactly like the SQL repository.</summary>
-public class FakeMockInterviewRepository : IMockInterviewRepository
-{
+public class FakeMockInterviewRepository : IMockInterviewRepository{
     public List<MockInterviewSession> Sessions { get; } = [];
     public int TranscriptWrites { get; private set; }
 
@@ -119,4 +118,19 @@ public class FakeMockInterviewRepository : IMockInterviewRepository
                 .OrderByDescending(s => s.CreatedAt)
                 .Take(take)
                 .ToList());
+}
+
+public class StubSkillGapRepository : ISkillGapRepository
+{
+    public List<JobRequiredSkillRow> Required { get; } = [];
+    public List<StudentHeldSkillRow> Held { get; } = [];
+
+    public Task<IReadOnlyList<JobRequiredSkillRow>> GetJobRequiredSkillsAsync(Guid jobId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<JobRequiredSkillRow>>(Required);
+
+    public Task<IReadOnlyList<StudentHeldSkillRow>> GetStudentHeldSkillsAsync(Guid studentId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<StudentHeldSkillRow>>(Held);
+
+    public virtual Task<ApplicationSkillGapScope?> GetApplicationScopeAsync(Guid applicationId, Guid companyId, CancellationToken ct = default) =>
+        throw new NotSupportedException();
 }
