@@ -14,6 +14,7 @@ using InternLink.Web.Services.AI;
 using InternLink.Web.Services.Auth;
 using InternLink.Web.Services.Dashboard;
 using InternLink.Web.Services.Email;
+using InternLink.Web.Services.Vectors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +106,20 @@ builder.Services.AddHttpClient<IGeminiClient, GeminiClient>((sp, client) =>
     client.BaseAddress = new Uri(gemini.BaseAddress);
     client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gemini.TimeoutSeconds));
 });
+builder.Services.AddHttpClient<IEmbeddingClient, GeminiEmbeddingClient>((sp, client) =>
+{
+    var gemini = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
+    client.BaseAddress = new Uri(gemini.BaseAddress);
+    client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gemini.TimeoutSeconds));
+});
+
+// Job vector index. The store is a singleton because the Qdrant client multiplexes one gRPC channel.
+builder.Services.Configure<QdrantOptions>(builder.Configuration.GetSection(QdrantOptions.SectionName));
+builder.Services.AddSingleton<QdrantJobVectorStore>();
+builder.Services.AddSingleton<IJobVectorStore>(sp => sp.GetRequiredService<QdrantJobVectorStore>());
+builder.Services.AddSingleton<IVectorSearch>(sp => sp.GetRequiredService<QdrantJobVectorStore>());
+builder.Services.AddSingleton<IJobIndexQueue, JobIndexQueue>();
+builder.Services.AddHostedService<JobVectorIndexer>();
 
 // Markdown Sanitization & Rendering Service (with DisableHtml)
 builder.Services.AddSingleton<InternLink.Web.Services.IMarkdownService, InternLink.Web.Services.MarkdownService>();
