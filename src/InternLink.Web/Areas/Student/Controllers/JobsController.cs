@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Helpers;
 using InternLink.Web.Repositories.Interface;
+using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Resume;
 using InternLink.Web.ViewModels;
 
@@ -13,6 +14,7 @@ public class JobsController : StudentControllerBase
     private readonly IResumeRepository _resumeRepository;
     private readonly IResumeService _resumeService;
     private readonly IFtsCapabilityService _ftsCapabilityService;
+    private readonly IRecommendationService _recommendationService;
     private readonly ILogger<JobsController> _logger;
 
     public JobsController(
@@ -21,6 +23,7 @@ public class JobsController : StudentControllerBase
         IResumeRepository resumeRepository,
         IResumeService resumeService,
         IFtsCapabilityService ftsCapabilityService,
+        IRecommendationService recommendationService,
         ILogger<JobsController> logger)
     {
         _jobRepository = jobRepository;
@@ -28,7 +31,23 @@ public class JobsController : StudentControllerBase
         _resumeRepository = resumeRepository;
         _resumeService = resumeService;
         _ftsCapabilityService = ftsCapabilityService;
+        _recommendationService = recommendationService;
         _logger = logger;
+    }
+
+    /// <summary>Loaded by a separate fetch after the main list renders, so AI latency never blocks browsing.</summary>
+    [HttpGet]
+    [Route("Student/Jobs/Recommended")]
+    public async Task<IActionResult> Recommended(CancellationToken ct)
+    {
+        var studentId = await GetStudentIdAsync(ct);
+        if (studentId is null)
+        {
+            return NotFound(new { error = "Student profile not found." });
+        }
+
+        var result = await _recommendationService.GetRecommendedJobsAsync(studentId.Value, ct);
+        return Json(result);
     }
 
     [HttpGet]

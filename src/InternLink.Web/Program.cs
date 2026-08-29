@@ -14,6 +14,7 @@ using InternLink.Web.Services.AI;
 using InternLink.Web.Services.Auth;
 using InternLink.Web.Services.Dashboard;
 using InternLink.Web.Services.Email;
+using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Vectors;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -120,6 +121,10 @@ builder.Services.AddSingleton<IJobVectorStore>(sp => sp.GetRequiredService<Qdran
 builder.Services.AddSingleton<IVectorSearch>(sp => sp.GetRequiredService<QdrantJobVectorStore>());
 builder.Services.AddSingleton<IJobIndexQueue, JobIndexQueue>();
 builder.Services.AddHostedService<JobVectorIndexer>();
+
+// Recommendations cache per student for an hour; the key hashes their skill set so edits bust it.
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 // Markdown Sanitization & Rendering Service (with DisableHtml)
 builder.Services.AddSingleton<InternLink.Web.Services.IMarkdownService, InternLink.Web.Services.MarkdownService>();
