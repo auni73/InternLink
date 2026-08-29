@@ -15,4 +15,11 @@ public interface IJobRepository
         bool isFtsAvailable, 
         CancellationToken ct = default);
     Task<JobDetailViewModel?> GetApprovedJobDetailAsync(Guid id, Guid? studentId, CancellationToken ct = default);
+
+    // Company Job Management (Single query with COUNT subquery, atomic transactions)
+    Task<IReadOnlyList<CompanyJobListItemViewModel>> GetCompanyJobsAsync(Guid companyId, CancellationToken ct = default);
+    Task<CompanyJobEditViewModel?> GetCompanyJobForEditAsync(Guid jobId, Guid companyId, CancellationToken ct = default);
+    Task<Guid> CreateJobWithSkillsAsync(Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default);
+    Task<bool> UpdateJobWithSkillsAsync(Guid jobId, Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default);
+    Task<bool> CloseJobAsync(Guid jobId, Guid companyId, CancellationToken ct = default);
 }

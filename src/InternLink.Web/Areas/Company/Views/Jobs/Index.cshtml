@@ -1,0 +1,229 @@
+@model IReadOnlyList<InternLink.Web.ViewModels.CompanyJobListItemViewModel>
+@using InternLink.Web.Models.Enums
+@{
+    ViewData["Title"] = "Job Postings";
+    var verificationStatus = ViewBag.VerificationStatus as VerificationStatus? ?? VerificationStatus.Pending;
+    var isVerified = verificationStatus == VerificationStatus.Verified;
+
+    var totalJobs = Model?.Count ?? 0;
+    var liveJobs = Model?.Count(j => j.StatusBadgeText == "Live") ?? 0;
+    var pendingJobs = Model?.Count(j => j.StatusBadgeText == "Pending Approval") ?? 0;
+    var totalApplicants = Model?.Sum(j => j.ApplicantCount) ?? 0;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-slate-800">Job & Internship Postings</h2>
+            <p class="text-muted mb-0">Create, manage, and monitor company career vacancies and incoming student applications.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary px-4 d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-plus-circle"></i> Post New Vacancy
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!isVerified)
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-3 shadow-sm rounded-3 mb-4">
+            <i class="bi bi-shield-exclamation fs-3 text-warning-emphasis"></i>
+            <div class="flex-grow-1">
+                <strong>Organization Verification Required:</strong> Your company profile is currently pending administrative review. You can view existing postings, but creating or modifying vacancies requires active verification.
+            </div>
+            <a asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-outline-dark text-nowrap">View Status</a>
+        </div>
+    }
+
+    <!-- Stat Counter Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-primary-subtle text-primary rounded-3">
+                        <i class="bi bi-briefcase fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Postings</div>
+                        <div class="fs-4 fw-bold text-slate-800">@totalJobs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-success-subtle text-success rounded-3">
+                        <i class="bi bi-check2-circle fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Live Postings</div>
+                        <div class="fs-4 fw-bold text-slate-800">@liveJobs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3">
+                        <i class="bi bi-hourglass-split fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Pending Approval</div>
+                        <div class="fs-4 fw-bold text-slate-800">@pendingJobs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-info-subtle text-info rounded-3">
+                        <i class="bi bi-people fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Applicants</div>
+                        <div class="fs-4 fw-bold text-slate-800">@totalApplicants</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Postings Table Card -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-semibold">All Postings</h5>
+            <span class="text-muted small">@totalJobs items listed</span>
+        </div>
+        <div class="card-body p-0">
+            @if (Model != null && Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Job Title</th>
+                                <th>Workplace</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Applicants</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var job in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-slate-800">@job.Title</div>
+                                        <div class="text-muted small">Posted @job.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi @(job.LocationType == LocationType.Remote ? "bi-laptop" : job.LocationType == LocationType.Hybrid ? "bi-building-gear" : "bi-geo-alt") me-1"></i>
+                                            @job.LocationType
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-medium @(job.DeadLine < DateTimeOffset.UtcNow ? "text-danger" : "text-slate-700")">
+                                            @job.DeadLine.ToString("MMM dd, yyyy")
+                                        </div>
+                                        @if (job.DeadLine < DateTimeOffset.UtcNow)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger small">Expired</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @job.StatusBadgeClass px-3 py-1 rounded-pill">
+                                            @job.StatusBadgeText
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Pipeline" asp-action="Index" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill text-decoration-none">
+                                            <i class="bi bi-people-fill me-1"></i>@job.ApplicantCount @(job.ApplicantCount == 1 ? "applicant" : "applicants")
+                                        </a>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Edit" asp-route-id="@job.JobId" class="btn btn-outline-secondary" title="Edit posting">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            @if (!job.IsClosed)
+                                            {
+                                                <button type="button" class="btn btn-outline-danger trigger-close-job-btn" 
+                                                        data-bs-toggle="modal" data-bs-target="#closeJobModal"
+                                                        data-job-id="@job.JobId" data-job-title="@job.Title"
+                                                        title="Close posting">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-briefcase text-slate-300 display-4"></i>
+                    <h5 class="fw-semibold text-slate-700 mt-3 mb-1">No Job Postings Yet</h5>
+                    <p class="text-muted small mb-3">Publish your first internship vacancy to begin receiving student applications.</p>
+                    <a asp-action="Create" class="btn btn-primary px-4">
+                        <i class="bi bi-plus-circle me-1"></i>Create First Job Posting
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Close Job Confirmation Modal -->
+<div class="modal fade" id="closeJobModal" tabindex="-1" aria-labelledby="closeJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-danger" id="closeJobModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Close Job Posting
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-3 text-slate-700">
+                    Are you sure you want to close <strong id="closeJobModalTitle">this job posting</strong>?
+                </p>
+                <div class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis small rounded-3 mb-0">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    <strong>Important:</strong> Closing this posting immediately removes it from student job search. All existing applicant records, resumes, and scheduled interview meetings will remain intact and accessible in your ATS Pipeline.
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <form id="closeJobConfirmForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-x-circle me-1"></i>Confirm & Close Posting
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/company-jobs.js" asp-append-version="true"></script>
+}
