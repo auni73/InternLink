@@ -1,0 +1,14 @@
+@model EmptyStateViewModel
+@* Never render empty lists as a blank void — show an icon, message, and an optional CTA. *@
+<div class="text-center text-muted py-5">
+    <i class="bi @Model.Icon" style="font-size: 2.5rem;"></i>
+    <h2 class="h5 mt-3 mb-1">@Model.Title</h2>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="mb-3">@Model.Message</p>
+    }
+    @if (!string.IsNullOrEmpty(Model.CtaText) && !string.IsNullOrEmpty(Model.CtaUrl))
+    {
+        <a class="btn btn-primary" href="@Model.CtaUrl">@Model.CtaText</a>
+    }
+</div>

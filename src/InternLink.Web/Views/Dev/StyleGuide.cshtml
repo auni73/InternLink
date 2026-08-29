@@ -1,0 +1,149 @@
+@{
+    ViewData["Title"] = "Style Guide";
+    var primaryShades = new[] { "50", "100", "200", "300", "400", "500", "600", "700", "800", "900" };
+    var accentShades = new[] { "50", "100", "200", "300", "400", "500", "600", "700", "800", "900" };
+}
+
+<h1 class="mb-1">Style Guide</h1>
+<p class="text-muted">The shared visual language. Review this before building feature pages.</p>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Palette</h2>
+    <p class="fw-semibold mb-1">Primary — deep teal</p>
+    <div class="d-flex flex-wrap mb-3">
+        @foreach (var s in primaryShades)
+        {
+            <div class="text-center me-2 mb-2">
+                <div style="width:72px;height:56px;border-radius:.5rem;border:1px solid rgba(0,0,0,.08);background:var(--il-primary-@s);"></div>
+                <small class="text-muted">@s</small>
+            </div>
+        }
+    </div>
+    <p class="fw-semibold mb-1">Accent — warm amber</p>
+    <div class="d-flex flex-wrap">
+        @foreach (var s in accentShades)
+        {
+            <div class="text-center me-2 mb-2">
+                <div style="width:72px;height:56px;border-radius:.5rem;border:1px solid rgba(0,0,0,.08);background:var(--il-accent-@s);"></div>
+                <small class="text-muted">@s</small>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Type scale</h2>
+    <div class="card"><div class="card-body">
+        <h1>Heading 1 — Sora</h1>
+        <h2>Heading 2 — Sora</h2>
+        <h3>Heading 3 — Sora</h3>
+        <h4>Heading 4 — Sora</h4>
+        <h5>Heading 5 — Sora</h5>
+        <p class="mb-1">Body text — Inter. The quick brown fox jumps over the lazy dog.</p>
+        <p class="text-muted mb-0"><small>Muted small text — Inter.</small></p>
+    </div></div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Buttons</h2>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-accent">Accent</button>
+        <button class="btn btn-outline-primary">Outline</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-primary" disabled>Disabled</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <button class="btn btn-primary btn-sm">Small</button>
+        <button class="btn btn-primary">Default</button>
+        <button class="btn btn-primary btn-lg">Large</button>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Badges</h2>
+    <span class="badge text-bg-primary">Primary</span>
+    <span class="badge text-bg-accent">Accent</span>
+    <span class="badge text-bg-secondary">Secondary</span>
+    <span class="role-badge">Student</span>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Cards</h2>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card"><div class="card-body">
+                <h3 class="h6"><i class="bi bi-briefcase bi-dense me-1"></i>Card title</h3>
+                <p class="text-muted mb-0">One elevation style: border + subtle shadow.</p>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Forms</h2>
+    <div class="row g-3" style="max-width:520px;">
+        <div class="col-12">
+            <label class="form-label">Text input</label>
+            <input class="form-control" placeholder="Type here" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Valid</label>
+            <input class="form-control is-valid" value="Looks good" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Invalid</label>
+            <input class="form-control is-invalid" value="Wrong" />
+            <div class="invalid-feedback">This field has an error.</div>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Select</label>
+            <select class="form-select"><option>Option A</option><option>Option B</option></select>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Empty state</h2>
+    <div class="card"><div class="card-body">
+        <partial name="_EmptyState" model="@(new EmptyStateViewModel { Icon = "bi-inbox", Title = "No items yet", Message = "When data arrives it shows here.", CtaText = "Primary action", CtaUrl = "#" })" />
+    </div></div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 mb-3">Toasts &amp; api.js antiforgery check</h2>
+    <div class="d-flex flex-wrap gap-2">
+        <button id="toastBtn" class="btn btn-primary">Show toast</button>
+        <button id="csrfOk" class="btn btn-accent">POST via api.js (with token)</button>
+        <button id="csrfBad" class="btn btn-outline-primary">POST raw fetch (no token)</button>
+    </div>
+    <p class="text-muted small mt-2 mb-0">The middle button attaches X-CSRF-TOKEN and should succeed; the right button omits it and should be rejected.</p>
+</section>
+
+@section Scripts {
+    <script type="module">
+        import { api } from '/js/api.js';
+
+        document.getElementById('toastBtn').addEventListener('click', function () {
+            window.showToast('This is a design-system toast.', 'success');
+        });
+
+        document.getElementById('csrfOk').addEventListener('click', async function () {
+            try {
+                const result = await api.post('/dev/echo', { message: 'hello' });
+                window.showToast('api.js POST ok: ' + JSON.stringify(result), 'success');
+            } catch (e) {
+                window.showToast('api.js POST failed: ' + e.message, 'danger');
+            }
+        });
+
+        document.getElementById('csrfBad').addEventListener('click', async function () {
+            const res = await fetch('/dev/echo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'hello' })
+            });
+            window.showToast('Raw fetch (no token) status: ' + res.status, res.ok ? 'warning' : 'success');
+        });
+    </script>
+}

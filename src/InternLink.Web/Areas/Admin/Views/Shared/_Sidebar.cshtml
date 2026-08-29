@@ -1,0 +1,11 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string c) => string.Equals(controller, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+<nav class="nav flex-column gap-1">
+    <a class="nav-link @Active("Home")" asp-area="Admin" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a class="nav-link @Active("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="bi bi-people"></i>User Moderation</a>
+    <a class="nav-link @Active("Companies")" asp-area="Admin" asp-controller="Companies" asp-action="Index"><i class="bi bi-building-check"></i>Company Approvals</a>
+    <a class="nav-link @Active("Jobs")" asp-area="Admin" asp-controller="Jobs" asp-action="Index"><i class="bi bi-clipboard-check"></i>Job Approvals</a>
+    <a class="nav-link @Active("Analytics")" asp-area="Admin" asp-controller="Analytics" asp-action="Index"><i class="bi bi-graph-up"></i>Analytics</a>
+</nav>
