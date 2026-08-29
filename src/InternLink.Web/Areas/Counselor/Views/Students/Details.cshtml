@@ -271,15 +271,16 @@
                         </h5>
                         <form asp-action="Feedback" asp-route-id="@Model.Student.Id" method="post">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" asp-for="NewFeedback.StudentId" />
+                            @* Use explicit name= (not asp-for) so the POST binds to CounselorFeedbackCreateViewModel
+                               directly, not the nested NewFeedback.XXX path from the parent model *@
+                            <input type="hidden" name="StudentId" value="@Model.Student.Id" />
 
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label asp-for="NewFeedback.MeetingDate" class="form-label fw-semibold text-slate-700">Meeting Date</label>
-                                    <input asp-for="NewFeedback.MeetingDate" type="date" class="form-control bg-white" 
+                                    <label for="meetingDateInput" class="form-label fw-semibold text-slate-700">Meeting Date</label>
+                                    <input id="meetingDateInput" name="MeetingDate" type="date" class="form-control bg-white" 
                                            value="@Model.NewFeedback.MeetingDate.ToString("yyyy-MM-dd")" required />
                                     <span class="text-muted small">Counselors may log past or scheduled advising meetings.</span>
-                                    <span asp-validation-for="NewFeedback.MeetingDate" class="text-danger small d-block"></span>
                                 </div>
 
                                 <div class="col-md-8 text-end d-flex align-items-end justify-content-end">
@@ -287,14 +288,13 @@
                                 </div>
 
                                 <div class="col-lg-6">
-                                    <label asp-for="NewFeedback.NarrativeMarkdown" class="form-label fw-semibold text-slate-700">
+                                    <label for="narrativeMarkdownInput" class="form-label fw-semibold text-slate-700">
                                         Feedback Notes (Markdown Enabled)
                                     </label>
-                                    <textarea id="narrativeMarkdownInput" asp-for="NewFeedback.NarrativeMarkdown" 
+                                    <textarea id="narrativeMarkdownInput" name="NarrativeMarkdown"
                                               rows="8" class="form-control bg-white font-monospace" 
                                               placeholder="Write advising notes, recommendations, resume action items, or interview preparation tips in Markdown... (e.g. ## Action Items&#10;- Polish ASP.NET Core project&#10;- Practice mock interview questions)"
                                               maxlength="5000" required></textarea>
-                                    <span asp-validation-for="NewFeedback.NarrativeMarkdown" class="text-danger small d-block"></span>
                                 </div>
 
                                 <div class="col-lg-6">
@@ -302,7 +302,7 @@
                                     <div id="markdownPreviewContainer" class="p-3 bg-white border rounded-3 overflow-auto" style="min-height: 200px; max-height: 240px;">
                                         <em class="text-muted">Live preview will appear here as you type...</em>
                                     </div>
-                                    <span class="text-muted small">Note: Raw HTML & scripts are automatically escaped for security.</span>
+                                    <span class="text-muted small">Note: Raw HTML &amp; scripts are automatically escaped for security.</span>
                                 </div>
 
                                 <div class="col-12 text-end">
