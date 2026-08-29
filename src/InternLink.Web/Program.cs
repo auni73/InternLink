@@ -89,7 +89,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IResumeRepository, ResumeRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
-builder.Services.AddScoped<IAdminModerationRepository, AdminModerationRepository>();
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
 // Storage & Resume PDF Services
 builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, InternLink.Web.Services.Storage.DiskFileStorage>();
