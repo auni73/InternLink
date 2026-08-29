@@ -23,6 +23,11 @@ public class CompanyAtsBoardViewModel
     public IReadOnlyList<CompanyAtsApplicantItemViewModel> RejectedCards =>
         Applications.Where(a => a.Status == ApplicationStatus.Rejected).ToList();
 
+    public int AppliedCount => AppliedCards.Count;
+    public int ScreenedCount => ScreenedCards.Count;
+    public int ScheduledCount => ScheduledCards.Count;
+    public int OfferedCount => OfferedCards.Count;
+    public int RejectedCount => RejectedCards.Count;
     public int TotalApplicants => Applications.Count;
 }
 

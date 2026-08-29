@@ -1,0 +1,161 @@
+@model InternLink.Web.ViewModels.CompanyAtsApplicantItemViewModel
+@using InternLink.Web.Helpers
+@using InternLink.Web.Models.Enums
+
+<div class="card border rounded-3 p-3 mb-2 shadow-xs ats-applicant-card bg-white position-relative" 
+     id="app-card-@Model.ApplicationId" 
+     data-application-id="@Model.ApplicationId"
+     data-status="@Model.Status"
+     data-candidate-name="@Model.StudentName"
+     data-job-title="@Model.JobTitle">
+
+    <!-- Card Header: Student Name & Detail Trigger -->
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <div>
+            <h6 class="fw-bold mb-0 text-slate-800 text-truncate" style="max-width: 180px;">
+                <a href="javascript:void(0)" class="text-decoration-none text-slate-800 view-applicant-details-btn" data-app-id="@Model.ApplicationId">
+                    @Model.StudentName
+                </a>
+            </h6>
+            <div class="text-muted small text-truncate" style="max-width: 180px;" title="@Model.JobTitle">
+                <i class="bi bi-briefcase me-1"></i>@Model.JobTitle
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-light border p-1 rounded-2 view-applicant-details-btn text-muted" 
+                data-app-id="@Model.ApplicationId" title="View Application Details">
+            <i class="bi bi-eye"></i>
+        </button>
+    </div>
+
+    <!-- Metadata: Dept, CGPA & Verified Skills -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small">
+        <span class="badge bg-light text-slate-700 border">
+            <i class="bi bi-mortarboard me-1"></i>@Model.Department
+        </span>
+        <span class="badge bg-light text-slate-700 border">
+            CGPA: @Model.CGPA.ToString("0.00")
+        </span>
+        @if (Model.VerifiedSkillCount > 0)
+        {
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-patch-check-fill me-1"></i>@Model.VerifiedSkillCount Verified
+            </span>
+        }
+        else
+        {
+            <span class="badge bg-light text-muted border">
+                0 Verified
+            </span>
+        }
+    </div>
+
+    <!-- Interview Info Chip (if scheduled) -->
+    <div class="interview-info-chip @(Model.Status == ApplicationStatus.Scheduled && Model.InterviewDateTime.HasValue ? "" : "d-none") mb-2">
+        <div class="p-2 bg-warning-subtle rounded-2 small border border-warning-subtle text-warning-emphasis">
+            <div class="fw-semibold d-flex align-items-center gap-1 mb-1">
+                <i class="bi bi-camera-video-fill"></i>
+                <span class="interview-time-text">
+                    @(Model.InterviewDateTime?.ToString("MMM dd, yyyy 'at' hh:mm tt 'UTC'"))
+                </span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.MeetingLink))
+            {
+                <a href="@Model.MeetingLink" target="_blank" rel="noopener noreferrer" class="text-warning-emphasis text-truncate d-block small interview-link-text">
+                    <i class="bi bi-link-45deg"></i>@Model.MeetingLink
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Card Footer: Submitted Date & Advance Action Dropdown -->
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+        <div class="text-muted small" style="font-size: 0.75rem;">
+            <i class="bi bi-clock me-1"></i>@Model.SubmittedAt.ToString("MMM dd, yyyy")
+        </div>
+
+        <div class="card-advance-menu-container">
+            @if (Model.Status == ApplicationStatus.Applied)
+            {
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle py-0 px-2 fw-medium" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Advance
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 trigger-advance-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-target-status="Screened">
+                                <i class="bi bi-search text-primary"></i>Screen Candidate
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 text-danger trigger-advance-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-target-status="Rejected">
+                                <i class="bi bi-x-circle text-danger"></i>Reject Application
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else if (Model.Status == ApplicationStatus.Screened)
+            {
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-warning dropdown-toggle py-0 px-2 fw-medium" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Advance
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 trigger-schedule-modal-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-candidate-name="@Model.StudentName" data-job-title="@Model.JobTitle">
+                                <i class="bi bi-calendar-event text-warning"></i>Schedule Interview
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 text-danger trigger-advance-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-target-status="Rejected">
+                                <i class="bi bi-x-circle text-danger"></i>Reject Application
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else if (Model.Status == ApplicationStatus.Scheduled)
+            {
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-success dropdown-toggle py-0 px-2 fw-medium" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Advance
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 small">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 trigger-advance-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-target-status="Offered">
+                                <i class="bi bi-check-circle-fill text-success"></i>Extend Offer
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 text-danger trigger-advance-btn" href="javascript:void(0)" 
+                               data-app-id="@Model.ApplicationId" data-target-status="Rejected">
+                                <i class="bi bi-x-circle text-danger"></i>Reject Application
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else if (Model.Status == ApplicationStatus.Offered)
+            {
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small rounded-pill">
+                    <i class="bi bi-check-lg me-1"></i>Offer Extended
+                </span>
+            }
+            else if (Model.Status == ApplicationStatus.Rejected)
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 small rounded-pill">
+                    <i class="bi bi-x-lg me-1"></i>Not Selected
+                </span>
+            }
+        </div>
+    </div>
+</div>
