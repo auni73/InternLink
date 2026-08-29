@@ -42,7 +42,11 @@ public class DashboardRepository : IDashboardRepository
                  WHERE j.CompanyId = @cid AND j.IsApproved = 1 AND j.IsClosed = 0 AND j.DeadLine >= SYSDATETIMEOFFSET()) AS OpenJobsCount,
                 (SELECT COUNT(*) FROM dbo.Applications a
                  INNER JOIN dbo.Jobs j ON j.Id = a.JobId
-                 WHERE j.CompanyId = @cid) AS TotalApplicantsCount";
+                 WHERE j.CompanyId = @cid) AS TotalApplicantsCount,
+                c.VerificationStatus,
+                c.AdminRejectionReason
+            FROM dbo.Companies c
+            WHERE c.Id = @cid";
 
         return await _db.Database
             .SqlQueryRaw<CompanyDashboardViewModel>(sql, cidParam)
