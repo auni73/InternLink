@@ -141,4 +141,5 @@ public class StudentProfileViewModel
     public string? Interests { get; set; }
 
     public IReadOnlyList<StudentSkill> CurrentSkills { get; set; } = new List<StudentSkill>();
+    public IReadOnlyList<Guid> VerifiedSkillIds { get; set; } = new List<Guid>();
 }

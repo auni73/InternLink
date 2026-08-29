@@ -7,11 +7,16 @@ namespace InternLink.Web.Areas.Student.Controllers;
 public class ProfileController : StudentControllerBase
 {
     private readonly IStudentRepository _studentRepository;
+    private readonly IAssessmentRepository _assessmentRepository;
     private readonly ILogger<ProfileController> _logger;
 
-    public ProfileController(IStudentRepository studentRepository, ILogger<ProfileController> logger)
+    public ProfileController(
+        IStudentRepository studentRepository, 
+        IAssessmentRepository assessmentRepository,
+        ILogger<ProfileController> logger)
     {
         _studentRepository = studentRepository;
+        _assessmentRepository = assessmentRepository;
         _logger = logger;
     }
 
@@ -31,6 +36,7 @@ public class ProfileController : StudentControllerBase
         }
 
         var skills = await _studentRepository.GetStudentSkillsAsync(studentId.Value, ct);
+        var verifiedSkillIds = await _assessmentRepository.GetVerifiedSkillIdsAsync(studentId.Value, ct);
 
         var viewModel = new StudentProfileViewModel
         {
@@ -42,7 +48,8 @@ public class ProfileController : StudentControllerBase
             Department = student.Department,
             Biography = student.Biography,
             Interests = student.Interests,
-            CurrentSkills = skills
+            CurrentSkills = skills,
+            VerifiedSkillIds = verifiedSkillIds
         };
 
         return View(viewModel);
@@ -74,6 +81,7 @@ public class ProfileController : StudentControllerBase
         {
             model.InstitutionalId = existing.InstitutionalId;
             model.CurrentSkills = await _studentRepository.GetStudentSkillsAsync(studentId.Value, ct);
+            model.VerifiedSkillIds = await _assessmentRepository.GetVerifiedSkillIdsAsync(studentId.Value, ct);
             return View(model);
         }
 
