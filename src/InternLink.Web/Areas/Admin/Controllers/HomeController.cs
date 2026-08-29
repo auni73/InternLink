@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InternLink.Web.Areas.Admin.Controllers;
 
-[Area("Admin")]
-public class HomeController : Controller
+public class HomeController : AdminControllerBase
 {
     public IActionResult Index()
     {

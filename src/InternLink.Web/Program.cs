@@ -54,6 +54,13 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.FromMinutes(5);
 });
 
+// Per-role authorization policies consumed by each Area's base controller.
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("StudentOnly", policy => policy.RequireRole("Student"))
+    .AddPolicy("CompanyOnly", policy => policy.RequireRole("Company"))
+    .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
+    .AddPolicy("CounselorOnly", policy => policy.RequireRole("Counselor"));
+
 // Classic cookie auth for this same-origin MVC app (no JWT).
 builder.Services.ConfigureApplicationCookie(options =>
 {

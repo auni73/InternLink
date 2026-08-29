@@ -1,12 +1,16 @@
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Student Dashboard";
+    var displayName = User.Identity?.Name;
+    var role = User.FindFirstValue(ClaimTypes.Role);
 }
 
 <div class="container py-4">
     <div class="p-5 mb-4 bg-light rounded-3">
         <div class="container-fluid py-3">
             <h1 class="display-5 fw-bold">Student Portal</h1>
-            <p class="col-md-8 fs-4">Welcome to InternLink Student Area.</p>
+            <p class="fs-4">Welcome, @displayName</p>
+            <p class="text-muted mb-0">Signed in as role: <strong>@role</strong></p>
         </div>
     </div>
 </div>

@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InternLink.Web.Areas.Student.Controllers;
 
-[Area("Student")]
-public class HomeController : Controller
+public class HomeController : StudentControllerBase
 {
     public IActionResult Index()
     {
