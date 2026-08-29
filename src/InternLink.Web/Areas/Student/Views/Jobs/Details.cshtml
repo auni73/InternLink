@@ -149,6 +149,67 @@
     </div>
 </div>
 
+<!-- AI Cover Letter -->
+<div class="container-fluid pb-4">
+    <div class="card border-0 shadow-sm rounded-3"
+         id="coverLetterCard"
+         data-generate-url="@Url.Action("Generate", "CoverLetter", new { area = "Student", jobId = Model.Id })"
+         data-save-url="@Url.Action("Save", "CoverLetter", new { area = "Student", jobId = Model.Id })">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h3 class="h6 fw-bold text-slate-800 mb-1">
+                        <i class="bi bi-envelope-paper text-primary me-2"></i>Cover Letter
+                    </h3>
+                    <p class="text-muted small mb-0">Draft a letter tailored to this posting, edit it, then save it explicitly.</p>
+                </div>
+                <button type="button" id="generateCoverLetterBtn" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-stars"></i><span>Generate Cover Letter</span>
+                </button>
+            </div>
+
+            <div id="coverLetterSkeleton" class="mt-4 placeholder-glow" hidden>
+                <span class="placeholder col-12 mb-2"></span>
+                <span class="placeholder col-11 mb-2"></span>
+                <span class="placeholder col-12 mb-2"></span>
+                <span class="placeholder col-9 mb-2"></span>
+                <span class="placeholder col-10"></span>
+            </div>
+
+            <div id="coverLetterEditor" class="mt-4" hidden>
+                <label for="coverLetterText" class="form-label fw-semibold">Your letter</label>
+                <textarea id="coverLetterText" class="form-control" rows="14"
+                          aria-describedby="coverLetterWordCount"></textarea>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+                    <span id="coverLetterWordCount" class="text-muted small">0 words</span>
+                    <span id="coverLetterStatus" class="small" role="status" aria-live="polite"></span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button type="button" id="regenerateCoverLetterBtn" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-repeat"></i><span>Regenerate</span>
+                    </button>
+                    <button type="button" id="saveCoverLetterBtn" class="btn btn-success d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-save"></i><span>Save to Application</span>
+                    </button>
+                    <form method="post"
+                          asp-area="Student" asp-controller="CoverLetter" asp-action="Download" asp-route-jobId="@Model.Id"
+                          id="coverLetterDownloadForm" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="finalText" id="coverLetterDownloadField" />
+                        <button type="submit" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-pdf"></i><span>Download as PDF</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="form-text mt-2">
+                    Nothing is attached to your application until you press <strong>Save to Application</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Apply Modal -->
 @if (Model.FinalizedResumes != null && Model.FinalizedResumes.Count > 0)
 {
@@ -193,6 +254,7 @@
 
 @section Scripts {
     <script type="module">
+        import '/js/cover-letter.js';
         import { api } from '/js/api.js';
 
         const submitBtn = document.getElementById('submitApplicationBtn');

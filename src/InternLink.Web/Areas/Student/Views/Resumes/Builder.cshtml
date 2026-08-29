@@ -216,12 +216,17 @@
 </div>
 
 @section Scripts {
+    @{
+        // Web defaults emit camelCase. The wizard reads camelCase keys and silently renders nothing for
+        // collections it cannot find, and its per-step autosave then persists those empties over stored data.
+        var wizardJsonOptions = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+    }
     <script type="module">
         import { ResumeWizard } from '/js/wizard.js';
 
         document.addEventListener('DOMContentLoaded', () => {
-            const rawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data));
-            const availableSkills = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AvailableSkills.Select(s => new { s.Id, s.SkillName })));
+            const rawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data, wizardJsonOptions));
+            const availableSkills = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AvailableSkills.Select(s => new { s.Id, s.SkillName }), wizardJsonOptions));
 
             const wizard = new ResumeWizard({
                 resumeId: '@Model.ResumeId',
