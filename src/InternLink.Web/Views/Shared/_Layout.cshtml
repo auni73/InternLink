@@ -54,7 +54,7 @@
                             <li><span class="dropdown-item-text small text-muted">@User.Identity!.Name</span></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                                     <button type="submit" class="dropdown-item">
                                         <i class="bi bi-box-arrow-right bi-dense me-2"></i>Sign out
                                     </button>
@@ -65,8 +65,8 @@
                 }
                 else
                 {
-                    <a class="nav-link text-body" asp-controller="Account" asp-action="Login">Log in</a>
-                    <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">Get Started <i class="bi bi-arrow-right bi-dense"></i></a>
+                    <a class="nav-link text-body" asp-area="" asp-controller="Account" asp-action="Login">Log in</a>
+                    <a class="btn btn-primary btn-sm" asp-area="" asp-controller="Account" asp-action="Register">Get Started <i class="bi bi-arrow-right bi-dense"></i></a>
                 }
             </div>
         </nav>

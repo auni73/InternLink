@@ -366,12 +366,17 @@ public class AccountController : Controller
 
     // ------------------------------------------------------------------ Logout
 
+    [HttpGet]
     [HttpPost]
-    [Authorize]
+    [Route("Account/Logout")]
+    [Route("Company/Account/Logout")]
+    [Route("Student/Account/Logout")]
+    [Route("Admin/Account/Logout")]
+    [Route("Counselor/Account/Logout")]
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Index", "Home", new { area = "" });
     }
 
     // ------------------------------------------------------------------ Access denied
