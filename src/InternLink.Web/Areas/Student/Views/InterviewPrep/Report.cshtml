@@ -1,0 +1,104 @@
+@model InternLink.Web.ViewModels.MockInterviewReportViewModel
+@{
+    ViewData["Title"] = "Interview Report";
+    var duration = Model.CompletedAt.HasValue ? Model.CompletedAt.Value - Model.CreatedAt : (TimeSpan?)null;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-1 rounded-pill mb-2">
+                <i class="bi bi-clipboard-check me-1"></i>Coaching report
+            </span>
+            <h2 class="fw-bold mb-1 text-slate-800">@Model.Role</h2>
+            <div class="small text-secondary">
+                @Model.CreatedAt.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                @if (duration.HasValue)
+                {
+                    <span>· @($"{(int)duration.Value.TotalMinutes} min")</span>
+                }
+                · @Model.Transcript.Count turns
+            </div>
+        </div>
+        <a asp-action="Mock" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-repeat"></i><span>Practise again</span>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-slate-800"><i class="bi bi-bullseye me-2 text-primary"></i>How you did</h6>
+                </div>
+                <div class="card-body p-4">
+                    <p class="mb-0 lh-lg">@Model.Report.AccuracySummary</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-slate-800"><i class="bi bi-diagram-3 me-2 text-warning"></i>Where the reasoning slipped</h6>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Report.LogicGaps.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">No reasoning gaps were flagged for this interview.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var gap in Model.Report.LogicGaps)
+                            {
+                                <li class="mb-2 lh-lg">@gap</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-slate-800"><i class="bi bi-lightbulb me-2 text-success"></i>What to work on next</h6>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.Report.ImprovementSuggestions.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">No suggestions were produced for this interview.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0 ps-3">
+                            @foreach (var suggestion in Model.Report.ImprovementSuggestions)
+                            {
+                                <li class="mb-2 lh-lg">@suggestion</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-slate-800"><i class="bi bi-chat-left-text me-2 text-secondary"></i>Full transcript</h6>
+                </div>
+                <div class="card-body p-3 p-lg-4">
+                    <div class="chat-log">
+                        @foreach (var turn in Model.Transcript)
+                        {
+                            var fromStudent = turn.Speaker == InternLink.Web.ViewModels.TranscriptSpeakers.Student;
+                            <div class="chat-row @(fromStudent ? "from-student" : "from-interviewer")">
+                                <div>
+                                    <div class="chat-speaker">@(fromStudent ? "You" : "Interviewer")</div>
+                                    <div class="chat-bubble">@turn.Text</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

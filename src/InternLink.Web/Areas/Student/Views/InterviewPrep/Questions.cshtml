@@ -1,0 +1,63 @@
+@model InternLink.Web.ViewModels.QuestionBankPageViewModel
+@{
+    ViewData["Title"] = "Interview Question Bank";
+}
+
+<div class="container-fluid py-4"
+     id="questionBank"
+     data-questions-url="@Url.Action("GenerateQuestions", "InterviewPrep", new { area = "Student" })">
+
+    <div class="mb-4">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill mb-2">
+            <i class="bi bi-mortarboard me-1"></i>Interview Prep
+        </span>
+        <h2 class="fw-bold mb-1 text-slate-800">Question Bank</h2>
+        <p class="text-secondary mb-0">Build a practice set tailored to the role you are chasing.</p>
+    </div>
+
+    @await Html.PartialAsync("_PrepTabs")
+
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4">
+                    <label for="questionRole" class="form-label fw-semibold">Role</label>
+                    <input id="questionRole" type="text" class="form-control" maxlength="100"
+                           placeholder="e.g. Backend .NET Intern" value="@Model.DefaultRole" />
+                </div>
+                <div class="col-lg-5">
+                    <label for="questionJob" class="form-label fw-semibold">
+                        Target posting <span class="text-muted fw-normal">(optional)</span>
+                    </label>
+                    <select id="questionJob" class="form-select">
+                        <option value="">General questions for this role</option>
+                        @foreach (var job in Model.TargetJobs)
+                        {
+                            <option value="@job.JobId">@job.Title — @job.CompanyName</option>
+                        }
+                    </select>
+                    <div class="form-text">Picking a posting pulls the questions towards its stated requirements.</div>
+                </div>
+                <div class="col-lg-3 d-grid">
+                    <button id="generateQuestionsBtn" type="button"
+                            class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-stars"></i><span>Generate Questions</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="questionStatus" class="alert d-none" role="alert"></div>
+
+    <div id="questionResults" hidden>
+        <ul class="nav nav-tabs mb-3" id="questionCategoryTabs" role="tablist"></ul>
+        <div class="tab-content" id="questionCategoryPanes"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import '/js/interview-questions.js';
+    </script>
+}
