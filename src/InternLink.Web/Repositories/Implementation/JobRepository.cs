@@ -602,6 +602,107 @@ public class JobRepository : IJobRepository
             .SqlQueryRaw<Guid>(sql, userIdParam)
             .ToListAsync(ct);
     }
+
+    // Shared projection for both recommendation paths: display fields plus the relational
+    // skill-overlap counts the hybrid score needs.
+    private const string CandidateProjectionSql = @"
+        SELECT 
+            j.Id AS JobId,
+            j.Title,
+            c.CompanyName,
+            j.LocationType,
+            j.DeadLine,
+            (SELECT COUNT(*) FROM dbo.JobSkills js WHERE js.JobId = j.Id) AS RequiredSkillCount,
+            (SELECT COUNT(*) 
+             FROM dbo.JobSkills js2 
+             INNER JOIN dbo.StudentSkills ss ON js2.SkillId = ss.SkillId AND ss.StudentId = @studentId
+             WHERE js2.JobId = j.Id) AS MatchedSkillCount,
+            (SELECT TOP (1) s.SkillName 
+             FROM dbo.JobSkills js3
+             INNER JOIN dbo.StudentSkills ss2 ON js3.SkillId = ss2.SkillId AND ss2.StudentId = @studentId
+             INNER JOIN dbo.Skills s ON js3.SkillId = s.Id
+             WHERE js3.JobId = j.Id
+             ORDER BY js3.RequiredImportanceWeight DESC, s.SkillName ASC) AS TopMatchedSkillName,
+            CAST(CASE WHEN EXISTS (
+                SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
+            ) THEN 1 ELSE 0 END AS bit) AS HasApplied
+        FROM dbo.Jobs j
+        INNER JOIN dbo.Companies c ON j.CompanyId = c.Id";
+
+    public async Task<IReadOnlyList<RecommendationCandidate>> GetRecommendationCandidatesAsync(
+        IReadOnlyList<Guid> jobIds,
+        Guid studentId,
+        CancellationToken ct = default)
+    {
+        if (jobIds.Count == 0)
+        {
+            return [];
+        }
+
+        // Build a parameterized IN list; ids are never inlined into the statement text.
+        var parameters = new List<SqlParameter>
+        {
+            new("@studentId", SqlDbType.UniqueIdentifier) { Value = studentId }
+        };
+
+        var placeholders = new List<string>(jobIds.Count);
+        for (var i = 0; i < jobIds.Count; i++)
+        {
+            var name = $"@job{i}";
+            placeholders.Add(name);
+            parameters.Add(new SqlParameter(name, SqlDbType.UniqueIdentifier) { Value = jobIds[i] });
+        }
+
+        var sql = $@"
+            {CandidateProjectionSql}
+            WHERE j.Id IN ({string.Join(", ", placeholders)})
+              AND j.IsApproved = 1 
+              AND j.IsClosed = 0 
+              AND j.DeadLine >= SYSDATETIMEOFFSET()";
+
+        var rows = await _db.Database
+            .SqlQueryRaw<RecommendationCandidateRowResult>(sql, parameters.ToArray())
+            .ToListAsync(ct);
+
+        return rows.Select(MapCandidate).ToList();
+    }
+
+    public async Task<IReadOnlyList<RecommendationCandidate>> GetSkillOverlapRankedJobsAsync(
+        Guid studentId,
+        int take,
+        CancellationToken ct = default)
+    {
+        var studentIdParam = new SqlParameter("@studentId", SqlDbType.UniqueIdentifier) { Value = studentId };
+        var takeParam = new SqlParameter("@take", SqlDbType.Int) { Value = Math.Max(1, take) };
+
+        var sql = $@"
+            SELECT TOP (@take) * FROM (
+                {CandidateProjectionSql}
+                WHERE j.IsApproved = 1 
+                  AND j.IsClosed = 0 
+                  AND j.DeadLine >= SYSDATETIMEOFFSET()
+            ) AS ranked
+            ORDER BY ranked.MatchedSkillCount DESC, ranked.DeadLine ASC";
+
+        var rows = await _db.Database
+            .SqlQueryRaw<RecommendationCandidateRowResult>(sql, studentIdParam, takeParam)
+            .ToListAsync(ct);
+
+        return rows.Select(MapCandidate).ToList();
+    }
+
+    private static RecommendationCandidate MapCandidate(RecommendationCandidateRowResult r) => new()
+    {
+        JobId = r.JobId,
+        Title = r.Title,
+        CompanyName = r.CompanyName,
+        LocationType = (LocationType)r.LocationType,
+        DeadLine = r.DeadLine,
+        RequiredSkillCount = r.RequiredSkillCount,
+        MatchedSkillCount = r.MatchedSkillCount,
+        TopMatchedSkillName = r.TopMatchedSkillName,
+        HasApplied = r.HasApplied
+    };
 }
 
 public class JobVectorSourceRowResult
@@ -613,6 +714,19 @@ public class JobVectorSourceRowResult
     public string SelectionCriteria { get; set; } = string.Empty;
     public byte LocationType { get; set; }
     public DateTimeOffset DeadLine { get; set; }
+}
+
+public class RecommendationCandidateRowResult
+{
+    public Guid JobId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string CompanyName { get; set; } = string.Empty;
+    public byte LocationType { get; set; }
+    public DateTimeOffset DeadLine { get; set; }
+    public int RequiredSkillCount { get; set; }
+    public int MatchedSkillCount { get; set; }
+    public string? TopMatchedSkillName { get; set; }
+    public bool HasApplied { get; set; }
 }
 
 // Helper POCOs for SqlQuery mapping
