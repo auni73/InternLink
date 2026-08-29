@@ -93,6 +93,7 @@ builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<ICounselorRepository, CounselorRepository>();
+builder.Services.AddScoped<IAdminModerationRepository, AdminModerationRepository>();
 builder.Services.AddScoped<IAIHistoryRepository, AIHistoryRepository>();
 
 // AI gateway: rotating key pool is a singleton so cooldowns are shared across every request.
