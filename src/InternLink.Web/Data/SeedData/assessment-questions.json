@@ -1,0 +1,1232 @@
+[
+  {
+    "SkillName": "C#",
+    "Questions": [
+      {
+        "QuestionId": "cs-1",
+        "QuestionText": "Which keyword is used in C# to automatically call Dispose() on an IDisposable object when exiting scope?",
+        "Options": ["using", "dispose", "finalize", "auto"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The 'using' statement defines a scope at the end of which the IDisposable object will be automatically disposed."
+      },
+      {
+        "QuestionId": "cs-2",
+        "QuestionText": "What is the primary difference between a struct (value type) and a class (reference type) in C#?",
+        "Options": [
+          "Structs are allocated on the stack (or inline) and copied by value; classes are heap-allocated and copied by reference",
+          "Structs support inheritance while classes do not",
+          "Classes cannot implement interfaces",
+          "Structs can have parameterless constructors prior to C# 10"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Structs are value types allocated on the stack/inline and passed by value, whereas classes are reference types allocated on the managed heap."
+      },
+      {
+        "QuestionId": "cs-3",
+        "QuestionText": "Which of the following creates an immutable record type with positional properties in modern C#?",
+        "Options": [
+          "public record Person(string FirstName, string LastName);",
+          "public struct Person { string FirstName; string LastName; }",
+          "public static class Person(string FirstName, string LastName);",
+          "public interface Person(string FirstName, string LastName);"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Positional record syntax generates an immutable reference type with init-only properties and value-based equality."
+      },
+      {
+        "QuestionId": "cs-4",
+        "QuestionText": "How do async/await methods handle synchronization and non-blocking I/O in .NET?",
+        "Options": [
+          "By creating a state machine that yields execution back to the caller/threadpool without blocking the calling thread",
+          "By running synchronous operations in a background task loop indefinitely",
+          "By using Thread.Sleep until the operation completes",
+          "By pausing all other threads in the process"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The compiler transforms async methods into a state machine that registers continuations without blocking threads during I/O waits."
+      },
+      {
+        "QuestionId": "cs-5",
+        "QuestionText": "Which collection type provides lock-free or lightweight thread-safe operations in System.Collections.Concurrent?",
+        "Options": [
+          "ConcurrentDictionary<TKey, TValue>",
+          "List<T>",
+          "Dictionary<TKey, TValue>",
+          "HashSet<T>"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "ConcurrentDictionary is specifically designed for thread-safe operations without requiring manual locking."
+      }
+    ]
+  },
+  {
+    "SkillName": "ASP.NET Core",
+    "Questions": [
+      {
+        "QuestionId": "asp-1",
+        "QuestionText": "What is the lifetime of a service registered with AddScoped in the ASP.NET Core Dependency Injection container?",
+        "Options": [
+          "Created once per HTTP request and shared across components handling that request",
+          "Created once for the entire application lifetime",
+          "Created every time the service is requested",
+          "Created once per user session"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Scoped services are created once per client request scope and disposed when the HTTP request ends."
+      },
+      {
+        "QuestionId": "asp-2",
+        "QuestionText": "In ASP.NET Core middleware pipeline execution, what is the purpose of the 'next' delegate?",
+        "Options": [
+          "To invoke the next middleware component in the pipeline",
+          "To abort the request immediately",
+          "To restart the pipeline from the beginning",
+          "To authenticate the incoming HTTP headers"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Calling await next(context) passes execution to the next middleware in the HTTP request pipeline."
+      },
+      {
+        "QuestionId": "asp-3",
+        "QuestionText": "Which filter or attribute is used to protect ASP.NET Core POST actions against Cross-Site Request Forgery (CSRF)?",
+        "Options": [
+          "[ValidateAntiForgeryToken] / [AutoValidateAntiforgeryToken]",
+          "[Authorize]",
+          "[AllowAnonymous]",
+          "[ResponseCache]"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "[ValidateAntiForgeryToken] validates the incoming antiforgery request token header or form field."
+      },
+      {
+        "QuestionId": "asp-4",
+        "QuestionText": "How does ASP.NET Core handle static files (e.g. CSS, JS, images) by default?",
+        "Options": [
+          "Through app.UseStaticFiles() serving files out of wwwroot",
+          "Automatically through routing without any middleware",
+          "Through EF Core database queries",
+          "By streaming them through the Razor view engine"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "app.UseStaticFiles() enables serving static assets located in the wwwroot web root folder."
+      },
+      {
+        "QuestionId": "asp-5",
+        "QuestionText": "What is the primary benefit of Tag Helpers in Razor Views?",
+        "Options": [
+          "They enable server-side code to participate in creating and rendering HTML elements in Razor files in an HTML-friendly syntax",
+          "They replace JavaScript on the client side",
+          "They automatically translate English text into other languages",
+          "They bypass database queries"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Tag Helpers allow server-side C# logic to augment HTML tags with clean, idiomatic HTML syntax (e.g. asp-action, asp-for)."
+      }
+    ]
+  },
+  {
+    "SkillName": "SQL Server",
+    "Questions": [
+      {
+        "QuestionId": "sql-1",
+        "QuestionText": "What is the primary distinction between a Clustered Index and a Non-Clustered Index in SQL Server?",
+        "Options": [
+          "A Clustered index physically sorts and stores data rows at leaf level (only one per table); Non-Clustered contains row pointers",
+          "A table can have multiple clustered indexes but only one non-clustered index",
+          "Clustered indexes cannot be used for primary keys",
+          "Non-clustered indexes replace table storage completely"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A clustered index defines the physical order of data in the table, so only one can exist per table."
+      },
+      {
+        "QuestionId": "sql-2",
+        "QuestionText": "Which SQL Server feature provides tokenization, word-breaking, and linguistic stemming for searching text columns?",
+        "Options": [
+          "Full-Text Search (FTS) with CONTAINS / CONTAINSTABLE",
+          "Scalar LIKE queries",
+          "Partitioned views",
+          "Columnstore indexing"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "SQL Server Full-Text Search builds inverted word catalogs supporting prefix and proximity queries via CONTAINS/CONTAINSTABLE."
+      },
+      {
+        "QuestionId": "sql-3",
+        "QuestionText": "What does the SQL error code 2601 or 2627 signify in SQL Server?",
+        "Options": [
+          "Violation of UNIQUE KEY or PRIMARY KEY constraint (duplicate key insertion)",
+          "Foreign key constraint violation",
+          "Check constraint failure",
+          "Timeout expired while executing query"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Error 2601/2627 indicates an attempt to insert a duplicate value into a column with a UNIQUE index or primary key."
+      },
+      {
+        "QuestionId": "sql-4",
+        "QuestionText": "Why is parameterized SQL mandatory when building database queries with dynamic user inputs?",
+        "Options": [
+          "It prevents SQL Injection attacks and allows the query optimizer to reuse cached execution plans",
+          "It automatically compiles SQL queries to C# bytecode",
+          "It removes the need for database indexes",
+          "It compresses the database files on disk"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Parameterization treats input strictly as literal values rather than executable code, stopping SQL injection and enabling plan caching."
+      },
+      {
+        "QuestionId": "sql-5",
+        "QuestionText": "What is the effect of the READ COMMITTED SNAPSHOT isolation level (RCSI) in SQL Server?",
+        "Options": [
+          "Readers do not block writers and writers do not block readers by using row versioning in tempdb",
+          "It locks all read tables exclusively until transaction completion",
+          "It allows dirty reads of uncommitted data",
+          "It turns off transaction logging"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "RCSI uses row versioning in tempdb to provide snapshot consistency so read queries never block concurrent write operations."
+      }
+    ]
+  },
+  {
+    "SkillName": "Entity Framework Core",
+    "Questions": [
+      {
+        "QuestionId": "ef-1",
+        "QuestionText": "When should AsNoTracking() be applied to EF Core queries?",
+        "Options": [
+          "For read-only queries where entities will not be modified or saved back to the database",
+          "When performing entity updates or deletes",
+          "When creating database migrations",
+          "Only when using in-memory mock databases"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "AsNoTracking() turns off change tracking snapshot overhead, significantly reducing memory consumption and improving read query performance."
+      },
+      {
+        "QuestionId": "ef-2",
+        "QuestionText": "What is the purpose of FromSql / FromSqlRaw in EF Core?",
+        "Options": [
+          "To execute hand-written, parameterized raw SQL queries while mapping results to EF entities or models",
+          "To generate automatic EF migrations",
+          "To export database tables to JSON",
+          "To format dates in SQL syntax"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "FromSql and FromSqlRaw allow developers to execute hand-authored SQL statements with full control over query design and performance."
+      },
+      {
+        "QuestionId": "ef-3",
+        "QuestionText": "What is the N+1 query problem and how does Eager Loading (.Include()) resolve it?",
+        "Options": [
+          "N+1 occurs when navigating navigation properties causes separate queries per parent row; .Include() issues a JOIN in one query",
+          "N+1 refers to having N database servers plus one load balancer",
+          "N+1 means adding one column to N tables simultaneously",
+          "It is resolved by disabling foreign keys"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Include() eagerly joins and fetches child records in a single database round-trip rather than making N individual roundtrips."
+      },
+      {
+        "QuestionId": "ef-4",
+        "QuestionText": "Which method on DbContext persists all tracked changes to the underlying database within an automatic transaction?",
+        "Options": [
+          "SaveChangesAsync()",
+          "CommitTransaction()",
+          "FlushChanges()",
+          "SyncDatabase()"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "SaveChangesAsync() writes all inserted, updated, and deleted entities tracked by the ChangeTracker to the database."
+      },
+      {
+        "QuestionId": "ef-5",
+        "QuestionText": "How can EF Core execute arbitrary raw non-query SQL (such as an INSERT, UPDATE, or DELETE) asynchronously?",
+        "Options": [
+          "await db.Database.ExecuteSqlRawAsync(sql, parameters, ct)",
+          "await db.Database.RunAsync(sql)",
+          "await db.ExecuteBatch(sql)",
+          "await db.QueryRawAsync(sql)"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Database.ExecuteSqlRawAsync executes raw commands against the database connection and returns the number of affected rows."
+      }
+    ]
+  },
+  {
+    "SkillName": "JavaScript",
+    "Questions": [
+      {
+        "QuestionId": "js-1",
+        "QuestionText": "What is the difference between '==' and '===' in JavaScript?",
+        "Options": [
+          "'===' performs strict equality checking without type coercion; '==' coerces operands of different types",
+          "'==' compares memory addresses while '===' compares values",
+          "'===' is only used for strings and '==' is used for numbers",
+          "There is no functional difference"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The strict equality operator === verifies both value and type without converting types."
+      },
+      {
+        "QuestionId": "js-2",
+        "QuestionText": "How does the JavaScript Event Loop handle asynchronous promises (microtasks) compared to setTimeout (macrotasks)?",
+        "Options": [
+          "Microtasks (Promise callbacks) are drained completely before the next macrotask (setTimeout) is processed",
+          "Macrotasks have higher priority than microtasks",
+          "Microtasks only run when the browser tab loses focus",
+          "They run in parallel on background worker threads"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The microtask queue (Promises, queueMicrotask) is processed immediately after the current task and before the next macrotask."
+      },
+      {
+        "QuestionId": "js-3",
+        "QuestionText": "What is a Closure in JavaScript?",
+        "Options": [
+          "A function bundled together with references to its surrounding lexical environment",
+          "A syntax for closing browser windows",
+          "A method to delete variables from memory",
+          "An HTML tag closing bracket"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A closure gives an inner function access to its outer enclosing scope even after the outer function has executed."
+      },
+      {
+        "QuestionId": "js-4",
+        "QuestionText": "Which native API is modern JavaScript standard for sending asynchronous HTTP requests?",
+        "Options": [
+          "fetch()",
+          "XMLHttpRequest (XHR)",
+          "$.ajax()",
+          "http.get()"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "fetch() is the standard promise-based browser API for making network requests."
+      },
+      {
+        "QuestionId": "js-5",
+        "QuestionText": "What does the JavaScript method Array.prototype.reduce() do?",
+        "Options": [
+          "Executes a user-supplied reducer callback function on each element of the array, resulting in a single accumulated output value",
+          "Shrinks the length of the array by half",
+          "Deletes empty elements from the array",
+          "Sorts the array in descending order"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "reduce() iterates through an array and accumulates the elements into a single accumulated result."
+      }
+    ]
+  },
+  {
+    "SkillName": "React",
+    "Questions": [
+      {
+        "QuestionId": "react-1",
+        "QuestionText": "What is the primary rule when using React Hooks (e.g. useState, useEffect)?",
+        "Options": [
+          "Hooks must only be called at the top level of React function components or custom hooks, never inside loops, conditions, or nested functions",
+          "Hooks must always be called inside class components",
+          "Hooks can only be called inside setTimeout callbacks",
+          "Hooks must be called after return statements"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "React relies on the call order of hooks across re-renders, so they must always be executed unconditionally at the top level."
+      },
+      {
+        "QuestionId": "react-2",
+        "QuestionText": "Why is it important to provide a unique 'key' prop when rendering lists in React?",
+        "Options": [
+          "Keys help React identify which items have changed, been added, or been removed during Virtual DOM reconciliation",
+          "Keys encrypt the data in the browser",
+          "Keys format CSS classes automatically",
+          "Keys prevent the component from re-rendering"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Keys give elements a stable identity so React can efficiently match and patch Virtual DOM nodes rather than re-creating them."
+      },
+      {
+        "QuestionId": "react-3",
+        "QuestionText": "What does the dependency array in useEffect([dependencies]) control?",
+        "Options": [
+          "When the effect function re-runs: if empty ([]), runs once on mount; if omitted, runs on every render; if populated, runs when dependencies change",
+          "It specifies which CSS stylesheets to load",
+          "It defines which child components to render",
+          "It acts as a database connection pool"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The dependency array tells React to skip running the effect unless one of the listed values has changed between renders."
+      },
+      {
+        "QuestionId": "react-4",
+        "QuestionText": "What is the purpose of React.memo()?",
+        "Options": [
+          "A higher-order component that memoizes the rendered output and skips re-rendering if props have not changed (shallow comparison)",
+          "A hook to store global variables in local storage",
+          "A tool to remember browser history",
+          "A debugger for React Native"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "React.memo prevents unnecessary re-renders of functional components when the incoming props remain shallowly identical."
+      },
+      {
+        "QuestionId": "react-5",
+        "QuestionText": "How does React state updates behave with useState?",
+        "Options": [
+          "State updates are asynchronous and batched; mutating state directly does not trigger a re-render",
+          "State updates are synchronous and mutate the variable directly",
+          "State cannot hold objects or arrays",
+          "State is shared automatically across all components"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "React batches state updates and requires calling the setter function with a new reference to trigger reconciliation."
+      }
+    ]
+  },
+  {
+    "SkillName": "Docker",
+    "Questions": [
+      {
+        "QuestionId": "doc-1",
+        "QuestionText": "What is the primary difference between a Docker Image and a Docker Container?",
+        "Options": [
+          "An image is an immutable, read-only template; a container is a running, stateful instance of an image",
+          "A container contains the source code while an image contains only documentation",
+          "Images require VirtualBox while containers run on bare metal",
+          "There is no difference between them"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Docker image is a packaged static blueprint, while a container is a live, running instantiation of that blueprint."
+      },
+      {
+        "QuestionId": "doc-2",
+        "QuestionText": "What is the benefit of multi-stage builds in a Dockerfile?",
+        "Options": [
+          "They separate the build environment (SDKs/compilers) from the final lean runtime image, keeping production image size small",
+          "They allow running multiple operating systems inside a single container simultaneously",
+          "They bypass container security checks",
+          "They increase image build time without changing output size"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Multi-stage builds leave behind intermediate build tools and SDKs, copying only final build artifacts into a minimal runtime image."
+      },
+      {
+        "QuestionId": "doc-3",
+        "QuestionText": "What Docker mechanism is used to persist data generated by and used by Docker containers beyond their lifecycle?",
+        "Options": [
+          "Docker Volumes / Bind Mounts",
+          "Container RAM caches",
+          "Environment variables",
+          "Dockerfile RUN commands"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Volumes are managed by Docker and store persistent data outside the container's temporary writable layer."
+      },
+      {
+        "QuestionId": "doc-4",
+        "QuestionText": "What is the function of the EXPOSE instruction in a Dockerfile?",
+        "Options": [
+          "It acts as documentation indicating which port the container listens on at runtime (port mapping -p is still needed to publish)",
+          "It opens the firewall for all incoming internet traffic automatically",
+          "It publishes ports to the host without any run flags",
+          "It exposes the root password of the container"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "EXPOSE informs Docker that the container listens on specific ports, but does not publish them without -p or -P at runtime."
+      },
+      {
+        "QuestionId": "doc-5",
+        "QuestionText": "What does 'docker compose up -d' do?",
+        "Options": [
+          "Builds, creates, and starts all services defined in docker-compose.yml in the background (detached mode)",
+          "Deletes all stopped containers and unused images",
+          "Upgrades Docker daemon to the latest version",
+          "Downloads Docker Desktop installer"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "docker compose up starts all defined services, and -d specifies detached mode so the shell remains free."
+      }
+    ]
+  },
+  {
+    "SkillName": "REST APIs",
+    "Questions": [
+      {
+        "QuestionId": "rest-1",
+        "QuestionText": "What does Idempotency mean in the context of HTTP methods?",
+        "Options": [
+          "Making multiple identical requests has the same intended effect on the server as making a single request (e.g. GET, PUT, DELETE)",
+          "The method returns data in encrypted format",
+          "The endpoint requires user authentication",
+          "The request cannot be cached by intermediate proxies"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "An idempotent HTTP method produces the same resource state regardless of how many times it is repeated."
+      },
+      {
+        "QuestionId": "rest-2",
+        "QuestionText": "Which HTTP status code should be returned when a request is well-formed but conflicts with the current state of the resource (e.g. duplicate key)?",
+        "Options": [
+          "409 Conflict",
+          "400 Bad Request",
+          "404 Not Found",
+          "500 Internal Server Error"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "HTTP 409 Conflict indicates that the request cannot be completed due to a conflict with current server state (such as a unique constraint violation)."
+      },
+      {
+        "QuestionId": "rest-3",
+        "QuestionText": "What is the recommended HTTP method for partially updating an existing resource?",
+        "Options": [
+          "PATCH",
+          "PUT",
+          "POST",
+          "GET"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "PATCH applies partial modifications to a resource, whereas PUT typically replaces the entire resource representation."
+      },
+      {
+        "QuestionId": "rest-4",
+        "QuestionText": "What is the purpose of the HTTP 'Accept' header in client requests?",
+        "Options": [
+          "It informs the server which content/media types (e.g. application/json, text/html) the client is able to understand",
+          "It accepts terms of service agreements",
+          "It approves server SSL certificates",
+          "It passes authentication credentials"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Accept header is used in content negotiation to tell the server which media formats the client prefers."
+      },
+      {
+        "QuestionId": "rest-5",
+        "QuestionText": "What is the standard HTTP status code returned upon successful resource creation?",
+        "Options": [
+          "201 Created",
+          "200 OK",
+          "204 No Content",
+          "301 Moved Permanently"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "201 Created signifies that the request succeeded and led to the creation of a new resource, usually with a Location header."
+      }
+    ]
+  },
+  {
+    "SkillName": "Bootstrap 5",
+    "Questions": [
+      {
+        "QuestionId": "bs-1",
+        "QuestionText": "How many columns does the Bootstrap responsive grid system divide each row into?",
+        "Options": [
+          "12 columns",
+          "10 columns",
+          "16 columns",
+          "8 columns"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Bootstrap's flexbox grid system is based on a 12-column layout across 6 responsive breakpoints (xs, sm, md, lg, xl, xxl)."
+      },
+      {
+        "QuestionId": "bs-2",
+        "QuestionText": "What major change in JavaScript architecture occurred in Bootstrap 5 compared to Bootstrap 4?",
+        "Options": [
+          "Bootstrap 5 dropped jQuery dependency in favor of vanilla JavaScript",
+          "Bootstrap 5 requires React or Vue",
+          "Bootstrap 5 removed all JavaScript plugins",
+          "Bootstrap 5 added Angular CLI requirements"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Bootstrap 5 completely eliminated the jQuery dependency, rewriting all plugins in clean vanilla ECMAScript."
+      },
+      {
+        "QuestionId": "bs-3",
+        "QuestionText": "Which Bootstrap 5 utility class provides subtle background and text coloring for alert/badge contrast?",
+        "Options": [
+          "bg-success-subtle and text-success-emphasis",
+          "bg-super-green",
+          "color-success-light",
+          "style-alert-soft"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Bootstrap 5.3+ introduced subtle background and emphasis utilities (-subtle and -emphasis) for modern color contrast."
+      },
+      {
+        "QuestionId": "bs-4",
+        "QuestionText": "What does the class 'd-flex justify-content-between align-items-center' do?",
+        "Options": [
+          "Creates a flexbox container with space between items horizontally and centers items vertically",
+          "Hides the element on mobile screens",
+          "Centers all text in a block element",
+          "Creates a 2-column table"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "d-flex enables flex display, justify-content-between spaces items across main axis, and align-items-center centers along cross axis."
+      },
+      {
+        "QuestionId": "bs-5",
+        "QuestionText": "Which class is used in Bootstrap 5 to create a rounded, card-like elevated panel?",
+        "Options": [
+          "card shadow-sm border rounded-3",
+          "panel panel-default",
+          "box box-elevated",
+          "div-container-card"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "card combined with shadow-sm and border rounded-3 produces modern, polished container cards."
+      }
+    ]
+  },
+  {
+    "SkillName": "HTML5/CSS3",
+    "Questions": [
+      {
+        "QuestionId": "html-1",
+        "QuestionText": "Which HTML5 semantic element is best suited to encapsulate content that is tangentially related to the main content (e.g. sidebar)?",
+        "Options": [
+          "<aside>",
+          "<section>",
+          "<article>",
+          "<nav>"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "<aside> represents a portion of a document whose content is only indirectly related to the document's main content."
+      },
+      {
+        "QuestionId": "html-2",
+        "QuestionText": "In CSS, what is the effect of 'box-sizing: border-box;'?",
+        "Options": [
+          "The element's padding and border are included in its total specified width and height",
+          "The element is given a 3D border shadow",
+          "Margin is calculated inside the element border",
+          "The element is restricted to square aspect ratios"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "border-box includes padding and border within the defined width/height, preventing layout overflow issues."
+      },
+      {
+        "QuestionId": "html-3",
+        "QuestionText": "What CSS feature enables responsive designs that adapt according to screen width or device orientation?",
+        "Options": [
+          "@media queries",
+          "@font-face",
+          "@keyframes",
+          "@import"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "CSS Media Queries (@media (max-width: ...)) apply styles conditionally based on device capabilities and viewport dimensions."
+      },
+      {
+        "QuestionId": "html-4",
+        "QuestionText": "Which CSS property defines CSS Custom Properties (CSS variables) that can be inherited across the entire document?",
+        "Options": [
+          ":root { --primary-color: #0F6B5C; }",
+          "$primary-color = #0F6B5C;",
+          "@var primary-color: #0F6B5C;",
+          "#global { primary-color: #0F6B5C; }"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Declaring --variable-name on the :root pseudo-class makes the custom property globally accessible via var(--variable-name)."
+      },
+      {
+        "QuestionId": "html-5",
+        "QuestionText": "What is the purpose of the 'aria-label' attribute in HTML?",
+        "Options": [
+          "Provides an accessible text label for screen readers when no visible text is present on an interactive element",
+          "Applies a tooltip on hover",
+          "Translates text automatically into Arabic",
+          "Styles the element font color"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "aria-label defines an accessible name string for assistive technologies like screen readers."
+      }
+    ]
+  },
+  {
+    "SkillName": "TypeScript",
+    "Questions": [
+      {
+        "QuestionId": "ts-1",
+        "QuestionText": "What is the difference between 'interface' and 'type' alias in TypeScript?",
+        "Options": [
+          "Interfaces support declaration merging and are extensible with 'extends'; type aliases can define unions, primitives, and mapped types",
+          "Interfaces are compiled into JavaScript objects at runtime while types are deleted",
+          "Type aliases cannot be used with objects",
+          "Interfaces cannot be implemented by classes"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Interfaces allow declaration merging and object inheritance, whereas types support unions (A | B), tuples, and advanced type operators."
+      },
+      {
+        "QuestionId": "ts-2",
+        "QuestionText": "What does the 'unknown' type represent in TypeScript compared to 'any'?",
+        "Options": [
+          "'unknown' is the type-safe counterpart of 'any'; any operation on 'unknown' requires type narrowing or casting first",
+          "'unknown' disables all TypeScript type checks completely",
+          "'unknown' is identical to 'never'",
+          "'unknown' can only store string values"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "unknown forces the developer to perform type checking (typeof, instanceof) before performing operations, whereas any disables all checks."
+      },
+      {
+        "QuestionId": "ts-3",
+        "QuestionText": "What does the 'readonly' modifier do on object properties in TypeScript?",
+        "Options": [
+          "Prevents reassignment to the property after initialization",
+          "Makes the property private to the class",
+          "Hides the property from Object.keys()",
+          "Deletes the property from compiled JavaScript"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "readonly ensures compile-time immutability by disallowing reassignment to that property."
+      },
+      {
+        "QuestionId": "ts-4",
+        "QuestionText": "What is the purpose of Generics in TypeScript (e.g. <T>)?",
+        "Options": [
+          "Allows creating reusable components and functions that work over a variety of types while preserving type safety",
+          "Generates random data for unit tests",
+          "Translates TypeScript to C# code",
+          "Bypasses strict null checks"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Generics provide type variables that capture input types and maintain end-to-end type safety in functions, interfaces, and classes."
+      },
+      {
+        "QuestionId": "ts-5",
+        "QuestionText": "What does the non-null assertion operator '!' do in TypeScript (e.g. user!.name)?",
+        "Options": [
+          "Tells the TypeScript compiler to assert that an expression is neither null nor undefined at compile time",
+          "Performs a runtime check and throws an exception if null",
+          "Converts the value to a boolean false",
+          "Inverts the bitwise representation"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The postfix ! operator is a compile-time assertion that removes null and undefined from the type without runtime emission."
+      }
+    ]
+  },
+  {
+    "SkillName": "CI/CD Pipelines",
+    "Questions": [
+      {
+        "QuestionId": "cicd-1",
+        "QuestionText": "What is the primary goal of Continuous Integration (CI)?",
+        "Options": [
+          "Automating the building, testing, and validation of code changes merged into a shared repository branch frequently",
+          "Manually releasing code once per year",
+          "Replacing source control with cloud backups",
+          "Automating database backups only"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "CI ensures developers integrate code frequently, validated by automated builds and tests to detect integration defects early."
+      },
+      {
+        "QuestionId": "cicd-2",
+        "QuestionText": "What is the distinction between Continuous Delivery and Continuous Deployment?",
+        "Options": [
+          "Continuous Delivery automatically prepares tested artifacts ready for release on demand; Continuous Deployment automatically deploys directly to production",
+          "Continuous Delivery is for mobile apps; Continuous Deployment is for web apps",
+          "Continuous Delivery does not run tests",
+          "Continuous Deployment requires manual manager approval for every single build"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Continuous Delivery keeps code releasable with manual release trigger; Continuous Deployment automatically deploys passing commits to production."
+      },
+      {
+        "QuestionId": "cicd-3",
+        "QuestionText": "In automated pipeline security, where should sensitive credentials (e.g. production connection strings, API keys) be stored?",
+        "Options": [
+          "Encrypted Pipeline Secrets / Key Vaults (never in plain text in repository files or logs)",
+          "Hardcoded directly in appsettings.json in the Git repository",
+          "Public GitHub environment variables",
+          "Committed in a README.md file"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Secrets should always be managed in secure key stores and injected into pipeline environments as masked environment variables."
+      },
+      {
+        "QuestionId": "cicd-4",
+        "QuestionText": "What is the role of a Quality Gate in a CI pipeline?",
+        "Options": [
+          "Enforcing rules (e.g. all unit tests must pass, zero security vulnerabilities, code coverage thresholds) that block merging if failed",
+          "Requiring two developers to type at the same keyboard",
+          "Compressing the compiled binaries before saving",
+          "Generating user documentation"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Quality Gate defines verifiable criteria that a build must satisfy before proceeding to downstream stages or merging."
+      },
+      {
+        "QuestionId": "cicd-5",
+        "QuestionText": "What does a Blue-Green deployment strategy accomplish?",
+        "Options": [
+          "Deploys the new version to an identical idle environment (Green) alongside live (Blue) and switches traffic instantly with zero downtime",
+          "Deploys code on Mondays and deletes it on Fridays",
+          "Tests code using color-coded user interfaces",
+          "Rolls out updates to 10% of servers at a time"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Blue-Green deployment runs two identical production environments to enable zero-downtime cutover and instant rollback if issues occur."
+      }
+    ]
+  },
+  {
+    "SkillName": "AWS",
+    "Questions": [
+      {
+        "QuestionId": "aws-1",
+        "QuestionText": "What AWS compute service provides scalable virtual servers in the cloud?",
+        "Options": [
+          "Amazon EC2 (Elastic Compute Cloud)",
+          "Amazon S3",
+          "Amazon RDS",
+          "AWS Lambda"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Amazon EC2 provides resizable virtual machine compute capacity in the AWS cloud."
+      },
+      {
+        "QuestionId": "aws-2",
+        "QuestionText": "Which AWS storage service provides object storage designed for 99.999999999% (11 9's) durability?",
+        "Options": [
+          "Amazon S3 (Simple Storage Service)",
+          "Amazon EBS",
+          "Amazon EFS",
+          "Amazon DynamoDB"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Amazon S3 stores data as objects within buckets with eleven 9s of durability across multiple Availability Zones."
+      },
+      {
+        "QuestionId": "aws-3",
+        "QuestionText": "What is AWS Lambda?",
+        "Options": [
+          "A serverless compute service that runs code in response to events and automatically manages underlying compute resources",
+          "A relational database engine",
+          "A domain name registrar",
+          "A managed Kubernetes control plane"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "AWS Lambda is an event-driven, serverless computing platform executing code only when triggered."
+      },
+      {
+        "QuestionId": "aws-4",
+        "QuestionText": "What is the purpose of Amazon VPC (Virtual Private Cloud)?",
+        "Options": [
+          "To provision a logically isolated section of the AWS cloud where you can launch AWS resources in a defined virtual network",
+          "To host WordPress websites",
+          "To provide email marketing services",
+          "To monitor application logs"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Amazon VPC lets you control your virtual networking environment, including selection of your own IP address range, subnets, and route tables."
+      },
+      {
+        "QuestionId": "aws-5",
+        "QuestionText": "Which service is used in AWS to control identity, access permissions, and roles for users and services?",
+        "Options": [
+          "AWS IAM (Identity and Access Management)",
+          "AWS CloudWatch",
+          "AWS CloudTrail",
+          "AWS Shield"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "AWS IAM enables you to manage access to AWS services and resources securely using policies and roles."
+      }
+    ]
+  },
+  {
+    "SkillName": "Kubernetes",
+    "Questions": [
+      {
+        "QuestionId": "k8s-1",
+        "QuestionText": "What is the smallest deployable computing unit that can be created and managed in Kubernetes?",
+        "Options": [
+          "Pod",
+          "Node",
+          "Cluster",
+          "Deployment"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Pod encapsulates one or more containers, storage resources, and unique network IP address as the basic execution unit in Kubernetes."
+      },
+      {
+        "QuestionId": "k8s-2",
+        "QuestionText": "What Kubernetes resource provides a stable network endpoint (virtual IP and DNS name) to expose a group of Pods?",
+        "Options": [
+          "Service",
+          "ConfigMap",
+          "Volume",
+          "DaemonSet"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Kubernetes Service defines a logical set of Pods and a policy by which to access them with load balancing."
+      },
+      {
+        "QuestionId": "k8s-3",
+        "QuestionText": "What does a Kubernetes Deployment controller manage?",
+        "Options": [
+          "Declarative updates for Pods and ReplicaSets, ensuring the desired number of pod replicas are running",
+          "Node operating system updates",
+          "External domain DNS registration",
+          "Docker daemon installation on worker nodes"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Deployment provides declarative updates for Pods and ReplicaSets, enabling automated rollouts and rollbacks."
+      },
+      {
+        "QuestionId": "k8s-4",
+        "QuestionText": "Which component in the Kubernetes Control Plane is responsible for distributing workloads across worker nodes?",
+        "Options": [
+          "kube-scheduler",
+          "kube-proxy",
+          "kubelet",
+          "etcd"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The kube-scheduler watches for newly created Pods with no assigned node, and selects an optimal node for them to run on."
+      },
+      {
+        "QuestionId": "k8s-5",
+        "QuestionText": "What is the function of 'etcd' in a Kubernetes cluster?",
+        "Options": [
+          "A consistent, highly-available key-value store used as Kubernetes' backing store for all cluster data",
+          "A container runtime engine",
+          "A web dashboard for developers",
+          "A load balancer for external HTTP traffic"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "etcd stores the complete state and configuration of the Kubernetes cluster."
+      }
+    ]
+  },
+  {
+    "SkillName": "Git & Version Control",
+    "Questions": [
+      {
+        "QuestionId": "git-1",
+        "QuestionText": "What is the difference between 'git fetch' and 'git pull'?",
+        "Options": [
+          "'git fetch' downloads new remote commits without merging them into your local branch; 'git pull' fetches and automatically merges",
+          "'git fetch' deletes local branches while 'git pull' restores them",
+          "'git pull' only works on the main branch",
+          "There is no difference"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "git fetch retrieves updates from the remote repository without altering your working tree; git pull is fetch followed by merge (or rebase)."
+      },
+      {
+        "QuestionId": "git-2",
+        "QuestionText": "What does 'git rebase' do compared to 'git merge'?",
+        "Options": [
+          "'git rebase' reapplies commits on top of another base tip, creating a linear history; 'git merge' creates a 2-parent merge commit",
+          "'git rebase' deletes all commit history permanently",
+          "'git merge' requires an internet connection while rebase does not",
+          "'git rebase' is only allowed on production servers"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Rebasing rewrites commit history by transplanting branch commits sequentially on top of the target branch."
+      },
+      {
+        "QuestionId": "git-3",
+        "QuestionText": "What does the command 'git reset --soft HEAD~1' do?",
+        "Options": [
+          "Undoes the last commit, leaving all modified changes staged in the index",
+          "Completely deletes the commit and discards all file modifications",
+          "Pushes the commit to the remote repository",
+          "Creates a new tag on the previous commit"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "--soft moves HEAD back one commit while keeping your working tree changes staged in the index."
+      },
+      {
+        "QuestionId": "git-4",
+        "QuestionText": "What is the purpose of a .gitignore file?",
+        "Options": [
+          "Specifies intentionally untracked files and patterns that Git should ignore (e.g. bin/, obj/, user secrets, node_modules/)",
+          "Ignores Git error messages in the terminal",
+          "Deletes files from the remote server on pull",
+          "Prevents other developers from editing files"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": ".gitignore tells Git which local build artifacts, logs, and sensitive files to exclude from version tracking."
+      },
+      {
+        "QuestionId": "git-5",
+        "QuestionText": "What does 'git cherry-pick <commit-hash>' do?",
+        "Options": [
+          "Applies the changes introduced by an existing individual commit onto the currently checked-out branch",
+          "Deletes a commit from history",
+          "Renames a branch",
+          "Creates a fork of the repository"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "git cherry-pick selects a specific commit by its SHA hash and records its changes as a new commit on the current branch."
+      }
+    ]
+  },
+  {
+    "SkillName": "Technical Communication",
+    "Questions": [
+      {
+        "QuestionId": "tc-1",
+        "QuestionText": "When writing an architectural decision record (ADR), what is the most important element to document?",
+        "Options": [
+          "The context, options considered, trade-offs, and rationale behind the chosen decision",
+          "Only the names of the engineers who agreed",
+          "The exact cost of developer laptop hardware",
+          "Marketing copy for the website"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "An ADR captures the architectural context, decision, consequences, and trade-offs for future maintainers."
+      },
+      {
+        "QuestionId": "tc-2",
+        "QuestionText": "What constitutes an effective Pull Request description?",
+        "Options": [
+          "A clear summary of what changed, why it changed, how it was tested, and references to related issues",
+          "Leaving the description completely blank",
+          "Pasting raw binary machine code",
+          "Only saying 'fixed stuff'"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Clear PR descriptions accelerate code reviews by providing background, rationales, test verification steps, and issue links."
+      },
+      {
+        "QuestionId": "tc-3",
+        "QuestionText": "In asynchronous engineering communication, what is the best practice for reporting bugs?",
+        "Options": [
+          "Provide exact steps to reproduce, expected vs actual behavior, environment details, and logs/screenshots",
+          "Say 'the system is broken' without details",
+          "Call the on-call engineer at midnight without filing a ticket",
+          "Delete the database"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Reproduction steps, expected vs actual results, and logs enable rapid isolation and triage."
+      },
+      {
+        "QuestionId": "tc-4",
+        "QuestionText": "Why are diagrams (e.g. C4 model, UML Sequence Diagrams) valuable in system documentation?",
+        "Options": [
+          "They provide visual clarity on system boundaries, component interactions, and data flow",
+          "They replace the need for writing source code",
+          "They compile directly into SQL tables",
+          "They prevent software bugs automatically"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Diagrams distill complex distributed relationships into clear visual models accessible across engineering disciplines."
+      },
+      {
+        "QuestionId": "tc-5",
+        "QuestionText": "What does Conventional Commits specification (e.g. 'feat:', 'fix:', 'docs:') provide?",
+        "Options": [
+          "A standardized commit message structure that enables automated changelog generation and clear versioning",
+          "An encryption method for Git commits",
+          "A syntax requirement enforced by the C# compiler",
+          "A way to speed up network downloads"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Conventional Commits standardize message formats to convey semantic intent and enable automated tooling."
+      }
+    ]
+  },
+  {
+    "SkillName": "Teamwork & Collaboration",
+    "Questions": [
+      {
+        "QuestionId": "tw-1",
+        "QuestionText": "What is the primary objective of a constructive Code Review?",
+        "Options": [
+          "To improve code quality, share knowledge across the team, and catch potential defects collaboratively",
+          "To criticize the author personally",
+          "To delay feature delivery as long as possible",
+          "To rewrite everything in your personal favorite style"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Constructive code reviews foster mentorship, improve maintainability, and ensure standard adherence."
+      },
+      {
+        "QuestionId": "tw-2",
+        "QuestionText": "What is a Blameless Post-Mortem in engineering culture?",
+        "Options": [
+          "An incident review focusing on systemic failures, process gaps, and preventative measures rather than blaming individuals",
+          "A meeting where the developer responsible for a bug is fired",
+          "Ignoring production outages completely",
+          "A secret meeting with executives only"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Blameless post-mortems analyze root causes to build resilience into systems and processes without assigning personal blame."
+      },
+      {
+        "QuestionId": "tw-3",
+        "QuestionText": "In cross-functional teams, what is the role of empathy in technical collaboration?",
+        "Options": [
+          "Understanding the constraints and priorities of design, product, and QA partners to build better solutions together",
+          "Agreeing with every suggestion without evaluating technical feasibility",
+          "Avoiding all code discussions",
+          "Delegating all coding tasks to junior developers"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Cross-functional empathy aligns technical feasibility with user experience and business outcomes."
+      },
+      {
+        "QuestionId": "tw-4",
+        "QuestionText": "What is the best way to handle technical disagreements during architecture design?",
+        "Options": [
+          "Evaluate trade-offs using objective benchmarks, prototype small spikes, and align on team goals",
+          "Refuse to work on the project until your design is chosen",
+          "Let whoever speaks loudest decide",
+          "Flip a coin"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Objective criteria, risk analysis, and rapid prototyping resolve architecture debates constructively."
+      },
+      {
+        "QuestionId": "tw-5",
+        "QuestionText": "What does Psychological Safety foster in high-performing engineering teams?",
+        "Options": [
+          "An environment where team members feel safe to ask questions, admit mistakes, and propose innovative ideas without fear of humiliation",
+          "A guarantee that no code will ever have bugs",
+          "Eliminating code reviews and tests",
+          "Working in isolation without team meetings"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Psychological safety encourages transparency, rapid learning, and collaborative problem-solving."
+      }
+    ]
+  },
+  {
+    "SkillName": "Problem Solving",
+    "Questions": [
+      {
+        "QuestionId": "ps-1",
+        "QuestionText": "What is the First Principles thinking approach in software engineering?",
+        "Options": [
+          "Breaking a complex problem down to its most fundamental truths and building up a solution from there",
+          "Copying and pasting the top answer from StackOverflow",
+          "Rewriting the whole system in assembly language",
+          "Asking someone else to solve the problem"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "First principles thinking decomposes problems to foundational truths, avoiding legacy assumptions."
+      },
+      {
+        "QuestionId": "ps-2",
+        "QuestionText": "When debugging a production performance degradation, what should be the first step?",
+        "Options": [
+          "Inspect metrics, telemetry, and profiling data to formulate a hypothesis based on evidence before altering code",
+          "Randomly change configuration settings on live servers",
+          "Restart all database clusters without checking logs",
+          "Immediately rewrite the entire backend"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Systematic debugging requires gathering telemetry and metrics to identify the bottleneck before taking action."
+      },
+      {
+        "QuestionId": "ps-3",
+        "QuestionText": "What is the Divide and Conquer strategy in algorithm design (e.g. Merge Sort, Binary Search)?",
+        "Options": [
+          "Dividing a problem into smaller subproblems, solving the subproblems recursively, and combining the results",
+          "Splitting a team into competing groups",
+          "Deleting half the database records",
+          "Running two different operating systems"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Divide and conquer recursively breaks problems down into manageable independent subproblems."
+      },
+      {
+        "QuestionId": "ps-4",
+        "QuestionText": "What is the Five Whys technique in root cause analysis?",
+        "Options": [
+          "Iteratively asking 'Why?' five times to peel away symptom layers and reach the underlying systemic cause",
+          "Asking five different people for their opinion",
+          "Retrying a failed network request five times",
+          "Writing five unit tests per class"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Five Whys technique drills down into the causal chain of an issue to determine its foundational defect."
+      },
+      {
+        "QuestionId": "ps-5",
+        "QuestionText": "What is the benefit of defining Minimal Reproducible Examples (MRE) when encountering bugs?",
+        "Options": [
+          "It isolates the exact variable causing the bug, removing unrelated complexity and speeding up fixes",
+          "It increases code lines for developer metrics",
+          "It replaces integration testing",
+          "It requires writing code without an IDE"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Minimal Reproducible Example eliminates noise and proves precisely what triggers the unexpected behavior."
+      }
+    ]
+  },
+  {
+    "SkillName": "Agile/Scrum",
+    "Questions": [
+      {
+        "QuestionId": "agile-1",
+        "QuestionText": "What is the primary purpose of the Daily Standup (Scrum)?",
+        "Options": [
+          "A 15-minute sync for developers to inspect progress toward the Sprint Goal and flag blockers",
+          "A detailed performance evaluation of each employee",
+          "A time to write code together",
+          "A meeting to plan next quarter's roadmap"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Daily standups synchronize progress, align on daily commitments, and identify impediments."
+      },
+      {
+        "QuestionId": "agile-2",
+        "QuestionText": "What is the Definition of Done (DoD) in Scrum?",
+        "Options": [
+          "A shared formal agreement of all quality standards and criteria that a product backlog item must meet to be considered completed",
+          "When the developer finishes typing code on their local machine",
+          "When the sprint deadline is reached regardless of test results",
+          "When a customer asks for a new feature"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Definition of Done ensures transparency by guaranteeing all completed increments meet quality and testing standards."
+      },
+      {
+        "QuestionId": "agile-3",
+        "QuestionText": "What happens during a Sprint Retrospective meeting?",
+        "Options": [
+          "The team reflects on what went well, what went wrong, and commits to actionable improvements for the next sprint",
+          "The team showcases completed features to stakeholders",
+          "The Product Owner estimates story points",
+          "Developers fix bugs in production"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Retrospectives provide continuous process improvement by analyzing team workflow, communication, and tools."
+      },
+      {
+        "QuestionId": "agile-4",
+        "QuestionText": "Who is primarily responsible for maximizing the value of the product and managing the Product Backlog in Scrum?",
+        "Options": [
+          "Product Owner",
+          "Scrum Master",
+          "Lead Developer",
+          "Database Administrator"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Product Owner orders and clarifies backlog items to maximize the business value delivered by the team."
+      },
+      {
+        "QuestionId": "agile-5",
+        "QuestionText": "What is a Story Point in Agile estimation?",
+        "Options": [
+          "A relative unit of measure assessing the combined effort, complexity, and uncertainty of implementing a user story",
+          "The exact number of hours an engineer must work",
+          "A monetary bonus given for completing a ticket",
+          "A count of bug fixes in a release"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Story points gauge relative complexity, effort, and risk rather than absolute calendar hours."
+      }
+    ]
+  }
+]

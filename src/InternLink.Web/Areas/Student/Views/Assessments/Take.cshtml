@@ -1,0 +1,142 @@
+@model InternLink.Web.ViewModels.AssessmentExamViewModel
+@{
+    ViewData["Title"] = $"{Model.SkillName} Assessment";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <div class="mb-3">
+        <a asp-area="Student" asp-controller="Assessments" asp-action="Index" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left me-1"></i>Back to All Assessments
+        </a>
+    </div>
+
+    <!-- Exam Container -->
+    <div id="examContainer">
+        <!-- Sticky Exam Header with Countdown Timer -->
+        <div class="card shadow-sm border-0 rounded-3 mb-4 sticky-top" style="top: 70px; z-index: 1020;">
+            <div class="card-body p-3">
+                <div class="row align-items-center g-2">
+                    <div class="col-md-6 col-sm-12">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary px-2 py-1">Exam in Progress</span>
+                            <h4 class="h5 fw-bold mb-0 text-slate-800">@Model.SkillName Assessment</h4>
+                        </div>
+                        <div class="text-muted small">5 Multiple-Choice Questions • 70% to Pass</div>
+                    </div>
+
+                    <div class="col-md-6 col-sm-12 text-md-end">
+                        <div class="d-inline-flex flex-column align-items-md-end">
+                            <div id="timerBadge" class="badge bg-light text-slate-800 border px-3 py-2 fs-5 font-monospace shadow-sm">
+                                <i class="bi bi-stopwatch me-2 text-primary"></i>
+                                <span id="timerText">10:00</span>
+                            </div>
+                            <div class="progress mt-2" style="width: 160px; height: 6px;">
+                                <div id="timerProgress" class="progress-bar bg-primary" role="progressbar" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Form -->
+        <form id="assessmentForm" onsubmit="return false;">
+            <div class="row g-4 mb-4">
+                @for (var i = 0; i < Model.Questions.Count; i++)
+                {
+                    var q = Model.Questions[i];
+                    <div class="col-12">
+                        <div class="card shadow-sm border rounded-3 question-card" data-question-id="@q.QuestionId">
+                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary">Question @(i + 1) of @Model.Questions.Count</span>
+                                <span class="badge bg-light text-muted border">Single Choice</span>
+                            </div>
+                            <div class="card-body p-4">
+                                <h5 class="card-title fw-bold text-slate-800 mb-4">@q.QuestionText</h5>
+
+                                <div class="d-flex flex-column gap-2">
+                                    @for (var optIdx = 0; optIdx < q.Options.Count; optIdx++)
+                                    {
+                                        var opt = q.Options[optIdx];
+                                        var radioId = $"q_{q.QuestionId}_opt_{optIdx}";
+
+                                        <div class="form-check p-3 border rounded-3 bg-light-subtle option-label transition-hover">
+                                            <input class="form-check-input ms-0 me-3" type="radio" 
+                                                   name="question_@q.QuestionId" 
+                                                   id="@radioId" 
+                                                   value="@optIdx">
+                                            <label class="form-check-label fw-medium text-slate-800 w-100 cursor-pointer" for="@radioId">
+                                                @opt
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Submit CTA -->
+            <div class="card shadow-sm border-0 rounded-3 p-4 mb-4 text-center">
+                <div class="d-flex flex-column align-items-center gap-2">
+                    <button type="button" id="submitAssessmentBtn" class="btn btn-primary btn-lg px-5 py-3 shadow-sm">
+                        <i class="bi bi-check-circle me-2"></i>Submit Assessment
+                    </button>
+                    <div class="form-text text-muted small">
+                        Unanswered questions will be counted as incorrect. Results and verified badges are calculated instantly.
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Container (Hidden initially, revealed post-submission) -->
+    <div id="resultsContainer" class="d-none">
+        <div class="card shadow-sm border-0 rounded-3 mb-4 text-center">
+            <div class="card-body p-5">
+                <div class="mb-3">
+                    <div id="resultScore" class="display-3 fw-bold text-primary font-monospace">0%</div>
+                    <div id="resultPassBadge" class="my-2"></div>
+                    <div id="resultSummary" class="text-muted mt-2"></div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a asp-area="Student" asp-controller="Assessments" asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-1"></i>All Assessments
+                    </a>
+                    <a asp-area="Student" asp-controller="Profile" asp-action="Index" class="btn btn-primary px-4">
+                        <i class="bi bi-person-badge me-1"></i>View on Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="fw-bold text-slate-800 mb-0">
+                    <i class="bi bi-journal-text text-primary me-2"></i>Question Review & Explanations
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div id="feedbackQuestionsList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import '/js/assessment.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new window.AssessmentEngine({
+                skillId: '@Model.SkillId',
+                skillName: '@Model.SkillName',
+                sessionToken: '@Model.SessionToken',
+                durationMinutes: @Model.DurationMinutes
+            });
+        });
+    </script>
+}

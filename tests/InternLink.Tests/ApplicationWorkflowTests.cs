@@ -5,7 +5,7 @@ using Xunit;
 
 namespace InternLink.Tests;
 
-public class Prompt12Tests
+public class ApplicationWorkflowTests
 {
     [Fact]
     public void DbExceptionMapper_NonSqlException_ReturnsFalse()

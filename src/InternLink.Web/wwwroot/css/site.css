@@ -472,7 +472,7 @@ body {
 }
 
 /* ============================================================================
-   Wizard & Stepper Styles (Prompt 11: Resume Builder)
+   Wizard & Stepper Styles (Resume Builder)
    ========================================================================== */
 .wizard-stepper {
     display: flex;
@@ -541,7 +541,7 @@ body {
 }
 
 /* ============================================================================
-   Application Funnel & Status Styles (Prompt 12 & ATS)
+   Application Funnel & Status Stepper Styles
    ========================================================================== */
 .app-funnel-stepper {
     display: flex;
