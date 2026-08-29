@@ -13,6 +13,7 @@ public class Company
     // INVARIANT: VerificationStatus is modified exclusively by Administrators.
     // Companies cannot mutate their own verification state during profile updates.
     public VerificationStatus VerificationStatus { get; set; } = VerificationStatus.Pending;
+    public string? AdminRejectionReason { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // Navigation properties

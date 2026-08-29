@@ -12,6 +12,8 @@ public class CompanyDashboardViewModel
 {
     public int OpenJobsCount { get; set; }
     public int TotalApplicantsCount { get; set; }
+    public byte VerificationStatus { get; set; }
+    public string? AdminRejectionReason { get; set; }
 }
 
 public class AdminDashboardViewModel

@@ -63,6 +63,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
             b.ToTable("Companies");
             b.HasKey(c => c.Id);
             b.Property(c => c.VerificationStatus).HasConversion<byte>();
+            b.Property(c => c.AdminRejectionReason).HasMaxLength(500);
             b.HasOne(c => c.User)
              .WithOne(u => u.CompanyProfile)
              .HasForeignKey<Company>(c => c.UserId);

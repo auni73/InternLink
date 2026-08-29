@@ -1,0 +1,235 @@
+@model InternLink.Web.ViewModels.CompanyAtsBoardViewModel
+@using InternLink.Web.Helpers
+@using InternLink.Web.Models.Enums
+@{
+    ViewData["Title"] = "ATS Pipeline Board";
+    var selectedJobId = Model.SelectedJobId?.ToString() ?? "";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header with Breadcrumb and Job Filter -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
+                    <i class="bi bi-kanban me-1"></i>Recruitment Pipeline
+                </span>
+                <span class="text-muted small">|</span>
+                <span class="text-muted small fw-medium" id="totalApplicantsCount">@Model.TotalApplicants Active Applications</span>
+            </div>
+            <h2 class="fw-bold mb-0 text-slate-800">Applicant Tracking Pipeline</h2>
+        </div>
+
+        <!-- Job Filter Dropdown Form -->
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" asp-action="Index" class="d-flex align-items-center gap-2">
+                <label for="jobFilterSelect" class="form-label mb-0 text-muted small fw-semibold text-nowrap">Filter Vacancy:</label>
+                <select id="jobFilterSelect" name="jobId" class="form-select form-select-sm shadow-sm" style="min-width: 250px;" onchange="this.form.submit()">
+                    <option value="" selected="@(string.IsNullOrEmpty(selectedJobId))">All Active Vacancies (@Model.CompanyJobs.Count)</option>
+                    @foreach (var job in Model.CompanyJobs)
+                    {
+                        <option value="@job.JobId" selected="@(selectedJobId == job.JobId.ToString())">@job.Title</option>
+                    }
+                </select>
+            </form>
+            @if (Model.SelectedJobId.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary shadow-sm" title="Clear Filter">
+                    <i class="bi bi-x-circle me-1"></i>Reset
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Kanban Board Grid -->
+    <div class="ats-board-container pb-4">
+        <div class="row g-3 flex-nowrap overflow-x-auto">
+            
+            <!-- 1. APPLIED COLUMN -->
+            <div class="col-12 col-md-6 col-lg-3 ats-column-wrapper">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-slate-50 border-top border-4 border-secondary">
+                    <div class="card-header bg-white border-bottom py-3 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-inbox text-secondary fs-5"></i>
+                            <h6 class="mb-0 fw-bold text-slate-800">Applied</h6>
+                        </div>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2 py-1 column-count" id="count-Applied">
+                            @Model.AppliedCount
+                        </span>
+                    </div>
+                    <div class="card-body p-2 ats-card-list" id="column-Applied" data-status="Applied">
+                        @foreach (var app in Model.AppliedCards)
+                        {
+                            <partial name="_ApplicantCard" model="app" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SCREENED COLUMN -->
+            <div class="col-12 col-md-6 col-lg-3 ats-column-wrapper">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-slate-50 border-top border-4 border-primary">
+                    <div class="card-header bg-white border-bottom py-3 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-search text-primary fs-5"></i>
+                            <h6 class="mb-0 fw-bold text-slate-800">Screened</h6>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 column-count" id="count-Screened">
+                            @Model.ScreenedCount
+                        </span>
+                    </div>
+                    <div class="card-body p-2 ats-card-list" id="column-Screened" data-status="Screened">
+                        @foreach (var app in Model.ScreenedCards)
+                        {
+                            <partial name="_ApplicantCard" model="app" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. SCHEDULED COLUMN -->
+            <div class="col-12 col-md-6 col-lg-3 ats-column-wrapper">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-slate-50 border-top border-4 border-warning">
+                    <div class="card-header bg-white border-bottom py-3 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar2-check text-warning-emphasis fs-5"></i>
+                            <h6 class="mb-0 fw-bold text-slate-800">Scheduled</h6>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1 column-count" id="count-Scheduled">
+                            @Model.ScheduledCount
+                        </span>
+                    </div>
+                    <div class="card-body p-2 ats-card-list" id="column-Scheduled" data-status="Scheduled">
+                        @foreach (var app in Model.ScheduledCards)
+                        {
+                            <partial name="_ApplicantCard" model="app" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. OFFERED & REJECTED TERMINAL COLUMNS SIDE-BY-SIDE -->
+            <div class="col-12 col-md-6 col-lg-3 ats-column-wrapper">
+                <div class="d-flex flex-column gap-3 h-100">
+                    <!-- Offered Sub-Column -->
+                    <div class="card border-0 shadow-sm rounded-4 flex-grow-1 bg-slate-50 border-top border-4 border-success">
+                        <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-6"></i>
+                                <h6 class="mb-0 fw-bold text-slate-800 small text-uppercase">Offered</h6>
+                            </div>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 column-count" id="count-Offered">
+                                @Model.OfferedCount
+                            </span>
+                        </div>
+                        <div class="card-body p-2 ats-card-list terminal-list" id="column-Offered" data-status="Offered">
+                            @foreach (var app in Model.OfferedCards)
+                            {
+                                <partial name="_ApplicantCard" model="app" />
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Rejected Sub-Column -->
+                    <div class="card border-0 shadow-sm rounded-4 flex-grow-1 bg-slate-50 border-top border-4 border-danger">
+                        <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-x-circle-fill text-danger fs-6"></i>
+                                <h6 class="mb-0 fw-bold text-slate-800 small text-uppercase">Rejected</h6>
+                            </div>
+                            <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1 column-count" id="count-Rejected">
+                                @Model.RejectedCount
+                            </span>
+                        </div>
+                        <div class="card-body p-2 ats-card-list terminal-list" id="column-Rejected" data-status="Rejected">
+                            @foreach (var app in Model.RejectedCards)
+                            {
+                                <partial name="_ApplicantCard" model="app" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 1. SCHEDULE INTERVIEW MODAL -->
+<!-- ========================================== -->
+<div class="modal fade" id="scheduleInterviewModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom py-3 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold text-slate-800 d-flex align-items-center gap-2" id="scheduleModalLabel">
+                    <i class="bi bi-calendar-plus text-primary"></i>Schedule Interview
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    Schedule an interview for candidate <strong id="scheduleCandidateName" class="text-slate-800"></strong> applying for <strong id="scheduleJobTitle" class="text-slate-800"></strong>.
+                </p>
+
+                <input type="hidden" id="scheduleAppId" value="" />
+
+                <div class="mb-3">
+                    <label for="scheduleDateTimeInput" class="form-label fw-semibold small text-slate-700">
+                        Interview Date & Time (UTC/Local) <span class="text-danger">*</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" id="scheduleDateTimeInput" required />
+                    <div class="form-text small text-muted">Must be a future date and time.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="meetingLinkInput" class="form-label fw-semibold small text-slate-700">
+                        Meeting Link URL <span class="text-danger">*</span>
+                    </label>
+                    <input type="url" class="form-control" id="meetingLinkInput" placeholder="https://meet.google.com/xxx-xxxx-xxx or https://zoom.us/j/..." required />
+                    <div class="form-text small text-muted">Valid HTTP or HTTPS link (Google Meet, Zoom, MS Teams).</div>
+                </div>
+
+                <div id="scheduleValidationAlert" class="alert alert-danger py-2 px-3 small d-none mb-0">
+                    <i class="bi bi-exclamation-circle me-1"></i><span id="scheduleValidationErrorMsg"></span>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" id="confirmScheduleBtn" disabled>
+                    <i class="bi bi-check2-circle"></i>Confirm & Schedule
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. APPLICANT DETAIL MODAL -->
+<!-- ========================================== -->
+<div class="modal fade" id="applicantDetailModal" tabindex="-1" aria-labelledby="applicantDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom py-3 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold text-slate-800 d-flex align-items-center gap-2" id="applicantDetailModalLabel">
+                    <i class="bi bi-person-badge text-primary"></i>Candidate Profile & Application Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="applicantDetailModalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/company-ats.js" asp-append-version="true"></script>
+}

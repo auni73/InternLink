@@ -102,6 +102,7 @@ builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, Inte
 // Skill Assessment Question & Session services
 builder.Services.AddSingleton<InternLink.Web.Services.Assessment.IAssessmentQuestionProvider, InternLink.Web.Services.Assessment.AssessmentQuestionProvider>();
 builder.Services.AddSingleton<InternLink.Web.Services.Assessment.IAssessmentSessionService, InternLink.Web.Services.Assessment.AssessmentSessionService>();
+builder.Services.AddScoped<InternLink.Web.Services.Skills.IStudentSkillService, InternLink.Web.Services.Skills.StudentSkillService>();
 
 // Per-area dashboard services (server-rendered stat cards).
 builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
