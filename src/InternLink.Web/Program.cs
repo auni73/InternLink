@@ -90,7 +90,7 @@ builder.Services.AddScoped<IResumeRepository, ResumeRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 
-// Storage & Resume PDF Services (reusable for Prompt 11, Prompt 23)
+// Storage & Resume PDF Services
 builder.Services.AddSingleton<InternLink.Web.Services.Storage.IFileStorage, InternLink.Web.Services.Storage.DiskFileStorage>();
 builder.Services.AddSingleton<InternLink.Web.Services.Resume.IPdfRenderer, InternLink.Web.Services.Resume.QuestPdfResumeRenderer>();
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeService, InternLink.Web.Services.Resume.ResumeService>();

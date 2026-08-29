@@ -7,7 +7,7 @@ using Xunit;
 
 namespace InternLink.Tests;
 
-public class Prompt11Tests
+public class StudentProfileTests
 {
     [Theory]
     [InlineData("3.85", true)]
