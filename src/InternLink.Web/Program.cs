@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Data;
+using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Repositories.Implementation;
 
@@ -20,7 +22,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     });
 });
 
-// 3. Register Repositories (Scoped)
+// 3. Configure ASP.NET Core Identity with AppUser & AppRole (Guid keys)
+builder.Services.AddIdentity<AppUser, AppRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// 4. Register Repositories (Scoped)
 builder.Services.AddScoped<IJobRepository, JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
@@ -28,12 +46,14 @@ builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 
 var app = builder.Build();
 
-// 4. Startup Sanity Probe (Development only)
+// 5. Startup Sanity Probe and Development Seeding (Development only)
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
 
     try
     {
@@ -50,6 +70,9 @@ if (app.Environment.IsDevelopment())
             else
             {
                 logger.LogInformation("Database connection successful. Applied schema scripts count: {Count}", appliedScriptsCount);
+                
+                // Seed development data (roles, admin, counselor, companies, jobs, student)
+                await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
             }
         }
         else
@@ -59,11 +82,11 @@ if (app.Environment.IsDevelopment())
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Database sanity probe failed. Run db/scripts in order — see db/scripts/README.md");
+        logger.LogError(ex, "Database initialization/seeding probe failed. Run db/scripts in order — see db/scripts/README.md");
     }
 }
 
-// 5. Configure the HTTP request pipeline.
+// 6. Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -75,6 +98,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
