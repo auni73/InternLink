@@ -111,11 +111,36 @@ public class ApplicationRepository : IApplicationRepository
         return application;
     }
 
+    public async Task<bool> UpdateCoverLetterAsync(
+        Guid jobId,
+        Guid studentId,
+        string coverLetterText,
+        CancellationToken ct = default)
+    {
+        var parameters = new[]
+        {
+            new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+            new SqlParameter("@studentId", SqlDbType.UniqueIdentifier) { Value = studentId },
+            new SqlParameter("@coverLetter", SqlDbType.NVarChar, -1)
+            {
+                Value = string.IsNullOrWhiteSpace(coverLetterText) ? DBNull.Value : coverLetterText
+            }
+        };
+
+        // Scoped by StudentId as well as JobId so one student can never overwrite another's letter.
+        const string sql = @"
+            UPDATE dbo.Applications 
+            SET CoverLetterText = @coverLetter 
+            WHERE JobId = @jobId AND StudentId = @studentId";
+
+        var rows = await _db.Database.ExecuteSqlRawAsync(sql, parameters, ct);
+        return rows > 0;
+    }
+
     public async Task<IReadOnlyList<StudentApplicationItemViewModel>> GetStudentApplicationsWithDetailsAsync(
         Guid studentId, 
         CancellationToken ct = default)
-    {
-        var studentIdParam = new SqlParameter("@studentId", SqlDbType.UniqueIdentifier) { Value = studentId };
+    {        var studentIdParam = new SqlParameter("@studentId", SqlDbType.UniqueIdentifier) { Value = studentId };
 
         const string sql = @"
             SELECT 

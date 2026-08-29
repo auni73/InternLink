@@ -12,6 +12,9 @@ public interface IApplicationRepository
     Task<Application> ApplyAsync(Guid jobId, Guid studentId, Guid resumeId, string? coverLetter, CancellationToken ct = default);
     Task<IReadOnlyList<StudentApplicationItemViewModel>> GetStudentApplicationsWithDetailsAsync(Guid studentId, CancellationToken ct = default);
 
+    /// <summary>Writes the final cover letter onto the caller's own application. False when they have not applied.</summary>
+    Task<bool> UpdateCoverLetterAsync(Guid jobId, Guid studentId, string coverLetterText, CancellationToken ct = default);
+
     // ATS Company Pipeline queries & guarded transitions
     Task<IReadOnlyList<JobFilterOptionDto>> GetCompanyJobFilterOptionsAsync(Guid companyId, CancellationToken ct = default);
     Task<IReadOnlyList<CompanyAtsApplicantItemViewModel>> GetCompanyAtsApplicationsAsync(Guid companyId, Guid? jobId, CancellationToken ct = default);
