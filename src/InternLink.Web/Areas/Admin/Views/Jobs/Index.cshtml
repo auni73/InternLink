@@ -18,6 +18,13 @@
             </div>
             <h2 class="fw-bold mb-0 text-slate-800">Job Vacancy & Internship Moderation Queue</h2>
         </div>
+        <form asp-action="ReindexAll" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Rebuild Semantic Index</span>
+            </button>
+        </form>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
