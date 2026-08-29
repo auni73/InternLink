@@ -141,20 +141,14 @@ public class GeminiGatewayTests
     [Fact]
     public async Task GenerateAsync_SendsJsonMimeType_OnlyWhenJsonModeRequested()
     {
-        string? capturedBody = null;
-        var handler = new FakeHttpMessageHandler((request, _) =>
-        {
-            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            return Respond(HttpStatusCode.OK, SuccessBody);
-        });
-
+        var handler = new FakeHttpMessageHandler((_, _) => Respond(HttpStatusCode.OK, SuccessBody));
         var (client, _, _) = BuildClient(handler, "key-one");
 
         await client.GenerateAsync("system", "user", IntegrationFeature.ResumeSuggestions, Guid.NewGuid(), true);
-        Assert.Contains("application/json", capturedBody);
+        Assert.Contains("application/json", handler.ReceivedBodies[0]);
 
         await client.GenerateAsync("system", "user", IntegrationFeature.ResumeSuggestions, Guid.NewGuid(), false);
-        Assert.DoesNotContain("responseMimeType", capturedBody);
+        Assert.DoesNotContain("responseMimeType", handler.ReceivedBodies[1]);
     }
 
     private static (GeminiClient Client, FakeAIHistoryRepository Ledger, GeminiKeyPool Pool) BuildClient(
@@ -197,14 +191,20 @@ internal sealed class FakeHttpMessageHandler : HttpMessageHandler
 
     public List<string?> ReceivedApiKeys { get; } = [];
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    public List<string?> ReceivedBodies { get; } = [];
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var callIndex = CallCount++;
         ReceivedApiKeys.Add(request.Headers.TryGetValues("x-goog-api-key", out var values)
             ? values.FirstOrDefault()
             : null);
 
-        return Task.FromResult(_responder(request, callIndex));
+        ReceivedBodies.Add(request.Content is null
+            ? null
+            : await request.Content.ReadAsStringAsync(cancellationToken));
+
+        return _responder(request, callIndex);
     }
 }
 
