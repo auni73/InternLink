@@ -6,5 +6,5 @@
     <a class="nav-link @Active("Home")" asp-area="Company" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2"></i>Dashboard</a>
     <a class="nav-link @Active("Profile")" asp-area="Company" asp-controller="Profile" asp-action="Index"><i class="bi bi-building"></i>Company Profile</a>
     <a class="nav-link @Active("Jobs")" asp-area="Company" asp-controller="Jobs" asp-action="Index"><i class="bi bi-briefcase"></i>Job Postings</a>
-    <a class="nav-link @Active("Pipeline")" asp-area="Company" asp-controller="Pipeline" asp-action="Index"><i class="bi bi-kanban"></i>ATS Pipeline</a>
+    <a class="nav-link @(string.Equals(controller, "Ats", StringComparison.OrdinalIgnoreCase) || string.Equals(controller, "Pipeline", StringComparison.OrdinalIgnoreCase) ? "active" : "")" asp-area="Company" asp-controller="Ats" asp-action="Index"><i class="bi bi-kanban"></i>ATS Pipeline</a>
 </nav>

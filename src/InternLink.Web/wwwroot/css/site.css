@@ -617,3 +617,35 @@ body {
     font-weight: 600;
 }
 
+/* ============================================================================
+   Company ATS Kanban Board Styles
+   ========================================================================== */
+.ats-board-container {
+    min-height: calc(100vh - 220px);
+}
+
+.ats-column-wrapper {
+    min-width: 290px;
+}
+
+.ats-card-list {
+    min-height: 480px;
+    background-color: #f8fafc;
+    border-radius: 0 0 calc(var(--il-radius) * 1.5) calc(var(--il-radius) * 1.5);
+}
+
+.ats-card-list.terminal-list {
+    min-height: 220px;
+}
+
+.ats-applicant-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border-color: #e2e8f0 !important;
+}
+
+.ats-applicant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+
