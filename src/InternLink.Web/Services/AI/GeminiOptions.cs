@@ -9,7 +9,7 @@ public class GeminiOptions
 
     public string Model { get; set; } = "gemini-3.6-flash";
 
-    public string EmbeddingModel { get; set; } = "text-embedding-004";
+    public string EmbeddingModel { get; set; } = "gemini-embedding-2";
 
     public string BaseAddress { get; set; } = "https://generativelanguage.googleapis.com/";
 
