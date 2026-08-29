@@ -27,4 +27,6 @@ public interface IJobRepository
     // Vector indexing support
     Task<JobVectorSource?> GetJobVectorSourceAsync(Guid jobId, CancellationToken ct = default);
     Task<IReadOnlyList<Guid>> GetApprovedOpenJobIdsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Guid>> GetAllJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default);
+    Task<IReadOnlyList<Guid>> GetIndexableJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default);
 }

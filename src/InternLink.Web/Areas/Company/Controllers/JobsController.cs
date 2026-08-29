@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Filters;
 using InternLink.Web.Repositories.Interface;
+using InternLink.Web.Services.Vectors;
 using InternLink.Web.ViewModels;
 
 namespace InternLink.Web.Areas.Company.Controllers;
@@ -10,17 +11,20 @@ public class JobsController : CompanyControllerBase
     private readonly IJobRepository _jobRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly ISkillRepository _skillRepository;
+    private readonly IJobIndexQueue _indexQueue;
     private readonly ILogger<JobsController> _logger;
 
     public JobsController(
         IJobRepository jobRepository,
         ICompanyRepository companyRepository,
         ISkillRepository skillRepository,
+        IJobIndexQueue indexQueue,
         ILogger<JobsController> logger)
     {
         _jobRepository = jobRepository;
         _companyRepository = companyRepository;
         _skillRepository = skillRepository;
+        _indexQueue = indexQueue;
         _logger = logger;
     }
 
@@ -158,6 +162,8 @@ public class JobsController : CompanyControllerBase
         }
 
         _logger.LogInformation("Company {CompanyId} closed job posting {JobId}.", companyId.Value, id);
+
+        _indexQueue.TryEnqueue(new JobIndexCommand(id, JobIndexOperation.Delete));
 
         var isJsonRequest = Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
                             Request.Headers.Accept.ToString().Contains("application/json") ||

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
+using InternLink.Web.Services.Vectors;
 using InternLink.Web.ViewModels;
 
 namespace InternLink.Web.Areas.Admin.Controllers;
@@ -9,15 +10,21 @@ namespace InternLink.Web.Areas.Admin.Controllers;
 public class UsersController : AdminControllerBase
 {
     private readonly IAdminModerationRepository _moderationRepo;
+    private readonly IJobRepository _jobRepository;
+    private readonly IJobIndexQueue _indexQueue;
     private readonly UserManager<AppUser> _userManager;
     private readonly ILogger<UsersController> _logger;
 
     public UsersController(
         IAdminModerationRepository moderationRepo,
+        IJobRepository jobRepository,
+        IJobIndexQueue indexQueue,
         UserManager<AppUser> userManager,
         ILogger<UsersController> logger)
     {
         _moderationRepo = moderationRepo;
+        _jobRepository = jobRepository;
+        _indexQueue = indexQueue;
         _userManager = userManager;
         _logger = logger;
     }
@@ -73,6 +80,12 @@ public class UsersController : AdminControllerBase
         // 3. Structured logging
         _logger.LogInformation("Admin {AdminId} Suspend User {TargetId}", CurrentUserId, id);
 
+        // 4. A suspended company's postings must not stay discoverable via semantic search.
+        foreach (var jobId in await _jobRepository.GetAllJobIdsByCompanyUserIdAsync(id, ct))
+        {
+            _indexQueue.TryEnqueue(new JobIndexCommand(jobId, JobIndexOperation.Delete));
+        }
+
         var isJsonRequest = Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
                             Request.Headers.Accept.ToString().Contains("application/json") ||
                             (Request.ContentType?.Contains("application/json") ?? false);
@@ -105,6 +118,12 @@ public class UsersController : AdminControllerBase
 
         // 3. Structured logging
         _logger.LogInformation("Admin {AdminId} Reactivate User {TargetId}", CurrentUserId, id);
+
+        // 4. Restore the points dropped at suspension; without this their jobs stay invisible until ReindexAll.
+        foreach (var jobId in await _jobRepository.GetIndexableJobIdsByCompanyUserIdAsync(id, ct))
+        {
+            _indexQueue.TryEnqueue(new JobIndexCommand(jobId, JobIndexOperation.Upsert));
+        }
 
         var isJsonRequest = Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
                             Request.Headers.Accept.ToString().Contains("application/json") ||

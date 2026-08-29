@@ -569,6 +569,39 @@ public class JobRepository : IJobRepository
             .SqlQueryRaw<Guid>(sql)
             .ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<Guid>> GetAllJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default)
+    {
+        var userIdParam = new SqlParameter("@userId", SqlDbType.UniqueIdentifier) { Value = companyUserId };
+
+        const string sql = @"
+            SELECT j.Id AS Value
+            FROM dbo.Jobs j
+            INNER JOIN dbo.Companies c ON j.CompanyId = c.Id
+            WHERE c.UserId = @userId";
+
+        return await _db.Database
+            .SqlQueryRaw<Guid>(sql, userIdParam)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetIndexableJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default)
+    {
+        var userIdParam = new SqlParameter("@userId", SqlDbType.UniqueIdentifier) { Value = companyUserId };
+
+        const string sql = @"
+            SELECT j.Id AS Value
+            FROM dbo.Jobs j
+            INNER JOIN dbo.Companies c ON j.CompanyId = c.Id
+            WHERE c.UserId = @userId
+              AND j.IsApproved = 1 
+              AND j.IsClosed = 0 
+              AND j.DeadLine >= SYSDATETIMEOFFSET()";
+
+        return await _db.Database
+            .SqlQueryRaw<Guid>(sql, userIdParam)
+            .ToListAsync(ct);
+    }
 }
 
 public class JobVectorSourceRowResult
