@@ -1,0 +1,20 @@
+@* Stat card: expects ViewData: Icon, Label, Value, optional Url. *@
+@{
+    var url = ViewData["Url"] as string;
+}
+<div class="card h-100 @(url is not null ? "position-relative" : "")">
+    <div class="card-body d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center rounded-3"
+             style="width:48px;height:48px;background-color:var(--il-primary-50);color:var(--il-primary-700);">
+            <i class="bi @ViewData["Icon"]"></i>
+        </div>
+        <div>
+            <div class="h3 mb-0">@ViewData["Value"]</div>
+            <div class="text-muted small">@ViewData["Label"]</div>
+        </div>
+    </div>
+    @if (url is not null)
+    {
+        <a href="@url" class="stretched-link" aria-label="@ViewData["Label"]"></a>
+    }
+</div>

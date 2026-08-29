@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Data;
 using InternLink.Web.Helpers;
 using InternLink.Web.Models;
@@ -24,6 +25,8 @@ public class AccountController : Controller
     private readonly IEmailSender _emailSender;
     private readonly IOtpService _otpService;
     private readonly PendingLoginTokenService _pendingLogin;
+    private readonly IWebHostEnvironment _env;
+    private readonly DevOtpStore _devOtpStore;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
@@ -33,6 +36,8 @@ public class AccountController : Controller
         IEmailSender emailSender,
         IOtpService otpService,
         PendingLoginTokenService pendingLogin,
+        IWebHostEnvironment env,
+        DevOtpStore devOtpStore,
         ILogger<AccountController> logger)
     {
         _userManager = userManager;
@@ -41,15 +46,22 @@ public class AccountController : Controller
         _emailSender = emailSender;
         _otpService = otpService;
         _pendingLogin = pendingLogin;
+        _env = env;
+        _devOtpStore = devOtpStore;
         _logger = logger;
     }
 
     // ------------------------------------------------------------------ Register
 
     [HttpGet]
-    public IActionResult Register()
+    public IActionResult Register(string? role = null)
     {
-        return View(new RegisterViewModel());
+        var model = new RegisterViewModel();
+        if (string.Equals(role, "Company", StringComparison.OrdinalIgnoreCase))
+        {
+            model.Role = RegistrationRole.Company;
+        }
+        return View(model);
     }
 
     [HttpPost]
@@ -64,70 +76,90 @@ public class AccountController : Controller
         {
             UserName = model.Email,
             Email = model.Email,
-            EmailConfirmed = false,
+            // Development convenience: skip the email-confirmation step entirely.
+            EmailConfirmed = _env.IsDevelopment(),
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
-        // User row + linked profile row must both commit or both roll back.
-        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        // EnableRetryOnFailure forbids raw user-initiated transactions; the whole
+        // user+profile unit must run inside the execution strategy as one retriable block.
+        var strategy = _db.Database.CreateExecutionStrategy();
+        IdentityResult? createResult = null;
         try
         {
-            var createResult = await _userManager.CreateAsync(user, model.Password);
-            if (!createResult.Succeeded)
+            await strategy.ExecuteAsync(async () =>
             {
-                foreach (var error in createResult.Errors)
+                // User row + linked profile row must both commit or both roll back.
+                await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+
+                createResult = await _userManager.CreateAsync(user, model.Password);
+                if (!createResult.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    await transaction.RollbackAsync(ct);
+                    return;
                 }
-                await transaction.RollbackAsync(ct);
-                return View(model);
-            }
 
-            if (model.Role == RegistrationRole.Student)
-            {
-                await _userManager.AddToRoleAsync(user, "Student");
-                _db.Students.Add(new Student
+                if (model.Role == RegistrationRole.Student)
                 {
-                    UserId = user.Id,
-                    FirstName = model.FirstName!.Trim(),
-                    LastName = model.LastName!.Trim(),
-                    InstitutionalId = model.InstitutionalId!.Trim(),
-                    Department = model.Department!.Trim(),
-                    CGPA = model.CGPA!.Value,
-                    CreatedAt = DateTimeOffset.UtcNow
-                });
-            }
-            else
-            {
-                await _userManager.AddToRoleAsync(user, "Company");
-                _db.Companies.Add(new Company
+                    await _userManager.AddToRoleAsync(user, "Student");
+                    _db.Students.Add(new Student
+                    {
+                        UserId = user.Id,
+                        FirstName = model.FirstName!.Trim(),
+                        LastName = model.LastName!.Trim(),
+                        InstitutionalId = model.InstitutionalId!.Trim(),
+                        Department = model.Department!.Trim(),
+                        CGPA = model.CGPA!.Value,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                }
+                else
                 {
-                    UserId = user.Id,
-                    CompanyName = model.CompanyName!.Trim(),
-                    IndustrySector = model.IndustrySector!.Trim(),
-                    CorporateWebsite = string.IsNullOrWhiteSpace(model.CorporateWebsite) ? null : model.CorporateWebsite.Trim(),
-                    VerificationStatus = VerificationStatus.Pending,
-                    CreatedAt = DateTimeOffset.UtcNow
-                });
-            }
+                    await _userManager.AddToRoleAsync(user, "Company");
+                    _db.Companies.Add(new Company
+                    {
+                        UserId = user.Id,
+                        CompanyName = model.CompanyName!.Trim(),
+                        IndustrySector = model.IndustrySector!.Trim(),
+                        CorporateWebsite = string.IsNullOrWhiteSpace(model.CorporateWebsite) ? null : model.CorporateWebsite.Trim(),
+                        VerificationStatus = VerificationStatus.Pending,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                }
 
-            await _db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+                await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            });
         }
         catch (Exception ex) when (DbExceptionMapper.IsUniqueConstraintViolation(ex))
         {
-            await transaction.RollbackAsync(ct);
             _logger.LogWarning(ex, "Registration failed on a unique constraint for {Email}.", model.Email);
             ModelState.AddModelError(string.Empty, "An account with these details already exists.");
             return View(model);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(ct);
             _logger.LogError(ex, "Registration failed unexpectedly for {Email}.", model.Email);
             ModelState.AddModelError(string.Empty, "Registration could not be completed. Please try again.");
             return View(model);
+        }
+
+        // Identity validation failures (duplicate email, weak password) surface as field errors.
+        if (createResult is null || !createResult.Succeeded)
+        {
+            foreach (var error in createResult?.Errors ?? Enumerable.Empty<IdentityError>())
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        // In Development the account is already confirmed — go straight to sign-in.
+        if (_env.IsDevelopment())
+        {
+            TempData["OtpInfo"] = "Account created and auto-confirmed (Development). You can sign in now.";
+            return RedirectToAction(nameof(Login));
         }
 
         // Email confirmation is required before sign-in (SignIn.RequireConfirmedEmail = true).
@@ -236,14 +268,26 @@ public class AccountController : Controller
     // ------------------------------------------------------------------ OTP second factor
 
     [HttpGet]
-    public IActionResult VerifyOtp(string? returnUrl = null)
+    public async Task<IActionResult> VerifyOtp(string? returnUrl = null)
     {
-        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out _, out _))
+        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out var userId, out _))
         {
             return RedirectToAction(nameof(Login));
         }
 
-        return View(new VerifyOtpViewModel { ReturnUrl = returnUrl });
+        var model = new VerifyOtpViewModel { ReturnUrl = returnUrl };
+
+        // Development convenience: pre-fill the code captured by DevEmailSender.
+        if (_env.IsDevelopment())
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user?.Email is not null)
+            {
+                model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
+            }
+        }
+
+        return View(model);
     }
 
     [HttpPost]

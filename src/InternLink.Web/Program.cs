@@ -10,6 +10,7 @@ using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Repositories.Implementation;
 using InternLink.Web.Services.Auth;
+using InternLink.Web.Services.Dashboard;
 using InternLink.Web.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -84,11 +85,19 @@ builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+// Per-area dashboard services (server-rendered stat cards).
+builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
+builder.Services.AddScoped<ICompanyDashboardService, CompanyDashboardService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<ICounselorDashboardService, CounselorDashboardService>();
 
 // OTP second factor: repository-backed service with an injectable clock for testability.
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddSingleton<PendingLoginTokenService>();
+builder.Services.AddSingleton<DevOtpStore>();
 
 // Email sender: write OTP codes/links to console in Development, send via MailKit SMTP otherwise.
 if (builder.Environment.IsDevelopment())
