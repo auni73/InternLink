@@ -82,12 +82,38 @@ public class GeminiClient : IGeminiClient
             throw new AiServiceException("The AI request was empty.");
         }
 
+        var payload = BuildRequestJson(systemPrompt, userPrompt, jsonMode);
+        return await ExecuteAsync(payload, systemPrompt, feature, userId, ct);
+    }
+
+    public async Task<GeminiResponse> GenerateChatAsync(
+        string systemPrompt,
+        IReadOnlyList<ChatMessage> history,
+        IntegrationFeature feature,
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        if (history is null || history.Count == 0)
+        {
+            throw new AiServiceException("The AI request was empty.");
+        }
+
+        var payload = BuildChatRequestJson(systemPrompt, history);
+        return await ExecuteAsync(payload, systemPrompt, feature, userId, ct);
+    }
+
+    private async Task<GeminiResponse> ExecuteAsync(
+        string payload,
+        string systemPrompt,
+        IntegrationFeature feature,
+        Guid userId,
+        CancellationToken ct)
+    {
         if (_keyPool.KeyCount == 0)
         {
             throw new AiServiceException("AI features are not configured on this environment.");
         }
 
-        var payload = BuildRequestJson(systemPrompt, userPrompt, jsonMode);
         var endpoint = $"v1beta/models/{_options.Model}:generateContent";
 
         // One pass over the pool: a quota-blocked key rotates to the next rather than retrying in place.
@@ -192,6 +218,30 @@ public class GeminiClient : IGeminiClient
         if (jsonMode)
         {
             request.GenerationConfig = new GeminiGenerationConfig { ResponseMimeType = "application/json" };
+        }
+
+        return JsonSerializer.Serialize(request, SerializerOptions);
+    }
+
+    private static string BuildChatRequestJson(string systemPrompt, IReadOnlyList<ChatMessage> history)
+    {
+        var request = new GeminiRequest
+        {
+            Contents = history
+                .Select(m => new GeminiContent
+                {
+                    Role = m.IsUser ? "user" : "model",
+                    Parts = [new GeminiPart { Text = m.Text }]
+                })
+                .ToList()
+        };
+
+        if (!string.IsNullOrWhiteSpace(systemPrompt))
+        {
+            request.SystemInstruction = new GeminiContent
+            {
+                Parts = [new GeminiPart { Text = systemPrompt }]
+            };
         }
 
         return JsonSerializer.Serialize(request, SerializerOptions);

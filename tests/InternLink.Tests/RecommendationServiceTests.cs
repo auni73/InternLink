@@ -285,6 +285,13 @@ public class RecommendationServiceTests
 
             return Task.FromResult(new GeminiResponse(ResponseContent, 10, 5, 0.0001m));
         }
+
+        public Task<GeminiResponse> GenerateChatAsync(
+            string systemPrompt,
+            IReadOnlyList<ChatMessage> history,
+            IntegrationFeature feature,
+            Guid userId,
+            CancellationToken ct = default) => throw new NotSupportedException();
     }
 
     private sealed class FakeJobRepositoryForRecommendations : IJobRepository

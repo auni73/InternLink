@@ -1,0 +1,56 @@
+@model InternLink.Web.ViewModels.MockInterviewSessionViewModel
+@{
+    var hasSession = Model.SessionId != Guid.Empty;
+}
+
+<div id="mockChat"
+     class="card border-0 shadow-sm rounded-3"
+     data-session-id="@(hasSession ? Model.SessionId.ToString() : "")"
+     data-start-url="@Url.Action("StartSession", "InterviewPrep", new { area = "Student" })"
+     data-sessions-url="/Student/InterviewPrep/Sessions"
+     hidden="@(hasSession ? null : "hidden")">
+
+    <div class="card-header bg-white border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary"
+                  style="width:2.25rem;height:2.25rem;">
+                <i class="bi bi-person-badge"></i>
+            </span>
+            <div>
+                <div class="fw-semibold text-slate-800">Interviewer</div>
+                <div class="small text-secondary" id="chatRoleLabel">@Model.Role</div>
+            </div>
+        </div>
+        <button id="endInterviewBtn" type="button" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+            <i class="bi bi-stop-circle"></i><span>End Interview</span>
+        </button>
+    </div>
+
+    <div class="card-body p-3 p-lg-4">
+        <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Interview transcript">
+            @foreach (var turn in Model.Transcript)
+            {
+                var fromStudent = turn.Speaker == InternLink.Web.ViewModels.TranscriptSpeakers.Student;
+                <div class="chat-row @(fromStudent ? "from-student" : "from-interviewer")">
+                    <div>
+                        <div class="chat-speaker">@(fromStudent ? "You" : "Interviewer")</div>
+                        <div class="chat-bubble">@turn.Text</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div id="chatError" class="alert alert-warning mt-3 d-none" role="alert"></div>
+
+        <form id="chatForm" class="mt-3">
+            <div class="input-group input-group-lg">
+                <textarea id="chatInput" class="form-control" rows="2" maxlength="4000"
+                          placeholder="Type your answer, then press Enter to send" aria-label="Your answer"></textarea>
+                <button id="chatSendBtn" class="btn btn-primary px-4" type="submit">
+                    <i class="bi bi-send"></i><span class="visually-hidden">Send</span>
+                </button>
+            </div>
+            <div class="form-text">Enter sends. Shift+Enter adds a new line. Every turn is saved, so you can close this tab and come back.</div>
+        </form>
+    </div>
+</div>

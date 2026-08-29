@@ -1,0 +1,16 @@
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    var onQuestions = string.Equals(action, "Questions", StringComparison.OrdinalIgnoreCase);
+}
+<ul class="nav nav-pills gap-2 mb-4">
+    <li class="nav-item">
+        <a class="nav-link @(onQuestions ? "active" : "")" asp-area="Student" asp-controller="InterviewPrep" asp-action="Questions">
+            <i class="bi bi-list-check me-1"></i>Question Bank
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(onQuestions ? "" : "active")" asp-area="Student" asp-controller="InterviewPrep" asp-action="Mock">
+            <i class="bi bi-chat-dots me-1"></i>Mock Interview
+        </a>
+    </li>
+</ul>

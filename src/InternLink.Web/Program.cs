@@ -97,6 +97,7 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<ICounselorRepository, CounselorRepository>();
 builder.Services.AddScoped<IAdminModerationRepository, AdminModerationRepository>();
 builder.Services.AddScoped<IAIHistoryRepository, AIHistoryRepository>();
+builder.Services.AddScoped<IMockInterviewRepository, MockInterviewRepository>();
 
 // AI gateway: rotating key pool is a singleton so cooldowns are shared across every request.
 builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
@@ -135,6 +136,7 @@ builder.Services.AddSingleton<InternLink.Web.Services.Resume.IPdfRenderer, Inter
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeService, InternLink.Web.Services.Resume.ResumeService>();
 builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeAnalysisService, InternLink.Web.Services.Resume.ResumeAnalysisService>();
 builder.Services.AddScoped<InternLink.Web.Services.CoverLetter.ICoverLetterService, InternLink.Web.Services.CoverLetter.CoverLetterService>();
+builder.Services.AddScoped<InternLink.Web.Services.InterviewPrep.IInterviewPrepService, InternLink.Web.Services.InterviewPrep.InterviewPrepService>();
 
 // Full-Text Search capability service
 builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, InternLink.Web.Helpers.FtsCapabilityService>();
