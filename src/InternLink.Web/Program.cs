@@ -97,6 +97,7 @@ builder.Services.AddScoped<ICounselorDashboardService, CounselorDashboardService
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddSingleton<PendingLoginTokenService>();
+builder.Services.AddSingleton<DevOtpStore>();
 
 // Email sender: write OTP codes/links to console in Development, send via MailKit SMTP otherwise.
 if (builder.Environment.IsDevelopment())

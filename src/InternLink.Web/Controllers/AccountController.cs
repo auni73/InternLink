@@ -25,6 +25,8 @@ public class AccountController : Controller
     private readonly IEmailSender _emailSender;
     private readonly IOtpService _otpService;
     private readonly PendingLoginTokenService _pendingLogin;
+    private readonly IWebHostEnvironment _env;
+    private readonly DevOtpStore _devOtpStore;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
@@ -34,6 +36,8 @@ public class AccountController : Controller
         IEmailSender emailSender,
         IOtpService otpService,
         PendingLoginTokenService pendingLogin,
+        IWebHostEnvironment env,
+        DevOtpStore devOtpStore,
         ILogger<AccountController> logger)
     {
         _userManager = userManager;
@@ -42,6 +46,8 @@ public class AccountController : Controller
         _emailSender = emailSender;
         _otpService = otpService;
         _pendingLogin = pendingLogin;
+        _env = env;
+        _devOtpStore = devOtpStore;
         _logger = logger;
     }
 
@@ -65,7 +71,8 @@ public class AccountController : Controller
         {
             UserName = model.Email,
             Email = model.Email,
-            EmailConfirmed = false,
+            // Development convenience: skip the email-confirmation step entirely.
+            EmailConfirmed = _env.IsDevelopment(),
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -141,6 +148,13 @@ public class AccountController : Controller
                 ModelState.AddModelError(string.Empty, error.Description);
             }
             return View(model);
+        }
+
+        // In Development the account is already confirmed — go straight to sign-in.
+        if (_env.IsDevelopment())
+        {
+            TempData["OtpInfo"] = "Account created and auto-confirmed (Development). You can sign in now.";
+            return RedirectToAction(nameof(Login));
         }
 
         // Email confirmation is required before sign-in (SignIn.RequireConfirmedEmail = true).
@@ -249,14 +263,26 @@ public class AccountController : Controller
     // ------------------------------------------------------------------ OTP second factor
 
     [HttpGet]
-    public IActionResult VerifyOtp(string? returnUrl = null)
+    public async Task<IActionResult> VerifyOtp(string? returnUrl = null)
     {
-        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out _, out _))
+        if (!_pendingLogin.TryRead(Request.Cookies[PendingLoginCookie], PendingLoginLifetime, out var userId, out _))
         {
             return RedirectToAction(nameof(Login));
         }
 
-        return View(new VerifyOtpViewModel { ReturnUrl = returnUrl });
+        var model = new VerifyOtpViewModel { ReturnUrl = returnUrl };
+
+        // Development convenience: pre-fill the code captured by DevEmailSender.
+        if (_env.IsDevelopment())
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user?.Email is not null)
+            {
+                model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
+            }
+        }
+
+        return View(model);
     }
 
     [HttpPost]
