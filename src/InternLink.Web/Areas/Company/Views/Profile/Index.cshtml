@@ -1,0 +1,167 @@
+@model InternLink.Web.ViewModels.CompanyProfileViewModel
+@using InternLink.Web.Models.Enums
+@{
+    ViewData["Title"] = "Company Profile";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-slate-800">Company Profile</h2>
+            <p class="text-muted mb-0">Manage enterprise identity, industry classification, and corporate links.</p>
+        </div>
+        <div>
+            @if (Model.VerificationStatus == VerificationStatus.Verified)
+            {
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6 rounded-pill d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-patch-check-fill text-success"></i> Verified Employer
+                </span>
+            }
+            else if (Model.VerificationStatus == VerificationStatus.Pending)
+            {
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-6 rounded-pill d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-clock-history"></i> Verification Pending
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 rounded-pill d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-x-circle-fill"></i> Verification Rejected
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-semibold">Corporate Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Index" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="CompanyId" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4 py-2 small" role="alert"></div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="CompanyName" class="form-label fw-medium">Company Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                                    <input asp-for="CompanyName" class="form-control" placeholder="e.g. Acme Tech Solutions Ltd." required />
+                                </div>
+                                <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="IndustrySector" class="form-label fw-medium">Industry Sector <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-tag"></i></span>
+                                    <input asp-for="IndustrySector" class="form-control" placeholder="e.g. Software & Cloud Engineering" required />
+                                </div>
+                                <span asp-validation-for="IndustrySector" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="CorporateWebsite" class="form-label fw-medium">Corporate Website</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-globe"></i></span>
+                                    <input asp-for="CorporateWebsite" class="form-control" placeholder="https://www.example.com" />
+                                </div>
+                                <span asp-validation-for="CorporateWebsite" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-medium text-muted">Platform Verification Status</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
+                                    <input type="text" class="form-control bg-light text-muted" value="@Model.VerificationStatus" readonly disabled />
+                                </div>
+                                <div class="form-text small">
+                                    <i class="bi bi-info-circle me-1"></i>Verification status is immutable and managed exclusively by university administrators.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-2"></i>Save Profile Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-semibold">Verification Guidelines</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.VerificationStatus == VerificationStatus.Verified)
+                    {
+                        <div class="text-center py-3">
+                            <div class="text-success mb-2">
+                                <i class="bi bi-patch-check-fill display-4"></i>
+                            </div>
+                            <h6 class="fw-bold text-success">Account Active & Verified</h6>
+                            <p class="text-muted small mb-0">
+                                Your organization has full posting privileges. You can publish job vacancies, configure selection criteria, and review candidate talent pipelines.
+                            </p>
+                        </div>
+                    }
+                    else if (Model.VerificationStatus == VerificationStatus.Pending)
+                    {
+                        <div class="text-center py-3">
+                            <div class="text-warning-emphasis mb-2">
+                                <i class="bi bi-hourglass-split display-4"></i>
+                            </div>
+                            <h6 class="fw-bold text-slate-800">Verification Under Review</h6>
+                            <p class="text-muted small mb-0">
+                                Our university career administration team is reviewing your corporate details. While review is pending, you can complete your profile. Mutating job postings will be enabled upon administrator approval.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <div class="text-danger mb-2">
+                                <i class="bi bi-exclamation-octagon-fill display-4"></i>
+                            </div>
+                            <h6 class="fw-bold text-danger">Verification Declined</h6>
+                            <p class="text-muted small mb-0">
+                                Your verification request was not approved. Please ensure your corporate domain and details are accurate, or contact the university career office for assistance.
+                            </p>
+                        </div>
+                    }
+
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-semibold text-slate-800 mb-2">Quick Tips</h6>
+                        <ul class="list-unstyled small text-muted mb-0 d-flex flex-column gap-2">
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check2 text-primary mt-1"></i>
+                                <span>Ensure corporate website includes official domain protocol (<code>https://</code>).</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check2 text-primary mt-1"></i>
+                                <span>Maintain precise industry categorization for optimal student discovery.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

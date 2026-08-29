@@ -1,0 +1,173 @@
+@model InternLink.Web.ViewModels.CompanyJobEditViewModel
+@using InternLink.Web.Models.Enums
+@{
+    ViewData["Title"] = "Post New Vacancy";
+    var tomorrowStr = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd");
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a asp-action="Index">Job Postings</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">New Vacancy</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0 text-slate-800">Post New Internship / Vacancy</h2>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Postings
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" novalidate>
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4 py-2 small" role="alert"></div>
+
+        <div class="row g-4">
+            <!-- Left Column: Core Job Details -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-semibold">Job Details & Role Overview</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Title" class="form-label fw-medium">Position Title <span class="text-danger">*</span></label>
+                                <input asp-for="Title" class="form-control" placeholder="e.g. Software Engineering Intern (.NET / React)" required />
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="LocationType" class="form-label fw-medium">Workplace Location <span class="text-danger">*</span></label>
+                                <select asp-for="LocationType" class="form-select" asp-items="Html.GetEnumSelectList<LocationType>()"></select>
+                                <span asp-validation-for="LocationType" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DeadLineDate" class="form-label fw-medium">Application Deadline <span class="text-danger">*</span></label>
+                                <input asp-for="DeadLineDate" type="date" min="@tomorrowStr" class="form-control" required />
+                                <span asp-validation-for="DeadLineDate" class="text-danger small"></span>
+                                <div class="form-text small">Must be a future date (at least tomorrow).</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="CoreDescription" class="form-label fw-medium">Role Description & Responsibilities <span class="text-danger">*</span></label>
+                                <textarea asp-for="CoreDescription" rows="6" class="form-control" placeholder="Provide a detailed overview of the role, day-to-day responsibilities, learning outcomes, and mentorship support..." required></textarea>
+                                <span asp-validation-for="CoreDescription" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="SelectionCriteria" class="form-label fw-medium">Selection Criteria & Qualifications</label>
+                                <textarea asp-for="SelectionCriteria" rows="4" class="form-control" placeholder="Academic requirements, expected skills, bonus projects, or GPA guidelines..."></textarea>
+                                <span asp-validation-for="SelectionCriteria" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i>Publish Vacancy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Required Skills & Weights -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-semibold">Required Skills & Weights</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-3">
+                            Select relevant skills and assign priority weights (1 = Nice to have $\rightarrow$ 5 = Critical). Our AI matching engine uses these weights to rank candidate profiles.
+                        </p>
+
+                        <!-- Skill Selector -->
+                        <div class="input-group mb-3">
+                            <select id="skillPickerSelect" class="form-select">
+                                <option value="">-- Choose a skill --</option>
+                                @if (Model.AvailableSkills != null)
+                                {
+                                    @foreach (var skill in Model.AvailableSkills)
+                                    {
+                                        <option value="@skill.Id" data-name="@skill.SkillName">@skill.SkillName</option>
+                                    }
+                                }
+                            </select>
+                            <button type="button" id="addSkillBtn" class="btn btn-outline-primary">
+                                <i class="bi bi-plus"></i> Add
+                            </button>
+                        </div>
+
+                        <!-- Selected Skills List -->
+                        <div id="selectedSkillsContainer">
+                            @if (Model.SelectedSkills != null && Model.SelectedSkills.Count > 0)
+                            {
+                                for (int i = 0; i < Model.SelectedSkills.Count; i++)
+                                {
+                                    var item = Model.SelectedSkills[i];
+                                    var weightLabel = item.Weight switch
+                                    {
+                                        1 => "1 - Nice to have",
+                                        2 => "2 - Helpful",
+                                        3 => "3 - Preferred",
+                                        4 => "4 - Important",
+                                        5 => "5 - Critical",
+                                        _ => $"{item.Weight}"
+                                    };
+                                    var badgeClass = item.Weight == 5 ? "bg-danger" : item.Weight >= 3 ? "bg-primary" : "bg-secondary";
+
+                                    <div class="card bg-light border p-3 rounded-3 skill-row-item mb-2" data-skill-id="@item.SkillId">
+                                        <input type="hidden" name="SelectedSkills[@i].SkillId" value="@item.SkillId" />
+                                        <input type="hidden" name="SelectedSkills[@i].SkillName" value="@item.SkillName" />
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-slate-800">@item.SkillName</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge @badgeClass weight-label" id="label_@i">@weightLabel</span>
+                                                <button type="button" class="btn btn-sm btn-outline-danger border-0 remove-skill-btn" title="Remove skill">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="small text-muted" style="min-width: 80px;">Weight (1-5):</span>
+                                            <input type="range" class="form-range skill-weight-slider" name="SelectedSkills[@i].Weight" min="1" max="5" value="@item.Weight" data-target-label="label_@i" />
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div id="noSkillsNotice" class="text-center py-4 text-muted border rounded-3 bg-light">
+                                    <i class="bi bi-tags display-6 text-slate-300"></i>
+                                    <p class="small mt-2 mb-0">No skill requirements attached yet. Pick from above to configure weighted criteria.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light border-0 rounded-3 p-3 text-muted small">
+                    <div class="d-flex gap-2">
+                        <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+                        <div>
+                            <strong>Approval Policy:</strong> Newly posted vacancies enter a <em>Pending Approval</em> state and will become visible in student search immediately upon administrative review.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/company-jobs.js" asp-append-version="true"></script>
+}

@@ -286,6 +286,221 @@ public class JobRepository : IJobRepository
             RequiredSkills = skills
         };
     }
+
+    public async Task<IReadOnlyList<CompanyJobListItemViewModel>> GetCompanyJobsAsync(Guid companyId, CancellationToken ct = default)
+    {
+        var companyIdParam = new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId };
+
+        const string sql = @"
+            SELECT 
+                j.Id AS JobId,
+                j.Title,
+                j.LocationType,
+                j.DeadLine,
+                j.IsApproved,
+                j.IsClosed,
+                j.CreatedAt,
+                (SELECT COUNT(1) FROM dbo.Applications a WHERE a.JobId = j.Id) AS ApplicantCount
+            FROM dbo.Jobs j
+            WHERE j.CompanyId = @companyId
+            ORDER BY j.CreatedAt DESC";
+
+        var rows = await _db.Database
+            .SqlQueryRaw<CompanyJobRowResult>(sql, companyIdParam)
+            .ToListAsync(ct);
+
+        return rows.Select(r => new CompanyJobListItemViewModel
+        {
+            JobId = r.JobId,
+            Title = r.Title,
+            LocationType = (LocationType)r.LocationType,
+            DeadLine = r.DeadLine,
+            IsApproved = r.IsApproved,
+            IsClosed = r.IsClosed,
+            CreatedAt = r.CreatedAt,
+            ApplicantCount = r.ApplicantCount
+        }).ToList();
+    }
+
+    public async Task<CompanyJobEditViewModel?> GetCompanyJobForEditAsync(Guid jobId, Guid companyId, CancellationToken ct = default)
+    {
+        var jobIdParam = new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId };
+        var companyIdParam = new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId };
+
+        const string jobSql = @"
+            SELECT j.* 
+            FROM dbo.Jobs j 
+            WHERE j.Id = @jobId AND j.CompanyId = @companyId";
+
+        var job = await _db.Jobs
+            .FromSqlRaw(jobSql, jobIdParam, companyIdParam)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ct);
+
+        if (job is null)
+        {
+            return null;
+        }
+
+        const string skillsSql = @"
+            SELECT js.SkillId, js.RequiredWeight AS Weight, s.SkillName
+            FROM dbo.JobSkills js
+            INNER JOIN dbo.Skills s ON js.SkillId = s.Id
+            WHERE js.JobId = @jobId
+            ORDER BY js.RequiredWeight DESC, s.SkillName ASC";
+
+        var selectedSkills = await _db.Database
+            .SqlQueryRaw<JobSkillWeightRowResult>(skillsSql, new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId })
+            .ToListAsync(ct);
+
+        return new CompanyJobEditViewModel
+        {
+            Id = job.Id,
+            Title = job.Title,
+            CoreDescription = job.CoreDescription,
+            SelectionCriteria = job.SelectionCriteria,
+            LocationType = job.LocationType,
+            DeadLineDate = job.DeadLine.DateTime.Date,
+            IsApproved = job.IsApproved,
+            IsClosed = job.IsClosed,
+            SelectedSkills = selectedSkills.Select(s => new JobSkillWeightDto
+            {
+                SkillId = s.SkillId,
+                SkillName = s.SkillName,
+                Weight = s.Weight
+            }).ToList()
+        };
+    }
+
+    public async Task<Guid> CreateJobWithSkillsAsync(Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default)
+    {
+        var jobId = Guid.NewGuid();
+        var deadlineOffset = new DateTimeOffset(model.DeadLineDate.Date.AddDays(1).AddTicks(-1), TimeSpan.Zero);
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            const string insertJobSql = @"
+                INSERT INTO dbo.Jobs (Id, CompanyId, Title, CoreDescription, SelectionCriteria, LocationType, DeadLine, IsApproved, IsClosed, CreatedAt)
+                VALUES (@id, @companyId, @title, @desc, @crit, @loc, @deadline, 0, 0, SYSDATETIMEOFFSET())";
+
+            await _db.Database.ExecuteSqlRawAsync(insertJobSql, new object[] {
+                new SqlParameter("@id", SqlDbType.UniqueIdentifier) { Value = jobId },
+                new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId },
+                new SqlParameter("@title", SqlDbType.NVarChar, 200) { Value = model.Title.Trim() },
+                new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
+                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = (object?)model.SelectionCriteria?.Trim() ?? DBNull.Value },
+                new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
+                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
+            }, ct);
+
+            if (model.SelectedSkills != null && model.SelectedSkills.Count > 0)
+            {
+                foreach (var skill in model.SelectedSkills)
+                {
+                    const string insertSkillSql = @"
+                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredWeight)
+                        VALUES (@jobId, @skillId, @weight)";
+
+                    await _db.Database.ExecuteSqlRawAsync(insertSkillSql, new object[] {
+                        new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+                        new SqlParameter("@skillId", SqlDbType.UniqueIdentifier) { Value = skill.SkillId },
+                        new SqlParameter("@weight", SqlDbType.TinyInt) { Value = Math.Clamp(skill.Weight, (byte)1, (byte)5) }
+                    }, ct);
+                }
+            }
+
+            await transaction.CommitAsync(ct);
+            return jobId;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(ct);
+            throw;
+        }
+    }
+
+    public async Task<bool> UpdateJobWithSkillsAsync(Guid jobId, Guid companyId, CompanyJobEditViewModel model, CancellationToken ct = default)
+    {
+        const string checkSql = "SELECT COUNT(1) AS Value FROM dbo.Jobs j WHERE j.Id = @jobId AND j.CompanyId = @companyId";
+        var exists = await _db.Database.SqlQueryRaw<int>(checkSql,
+            new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+            new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId }
+        ).FirstOrDefaultAsync(ct);
+
+        if (exists == 0)
+        {
+            return false;
+        }
+
+        var deadlineOffset = new DateTimeOffset(model.DeadLineDate.Date.AddDays(1).AddTicks(-1), TimeSpan.Zero);
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            // Architectural invariant: Keep IsApproved unchanged on edit.
+            // Re-queue for administrative approval on major structural edits is noted as an optional extension.
+            const string updateJobSql = @"
+                UPDATE dbo.Jobs
+                SET Title = @title,
+                    CoreDescription = @desc,
+                    SelectionCriteria = @crit,
+                    LocationType = @loc,
+                    DeadLine = @deadline
+                WHERE Id = @jobId AND CompanyId = @companyId";
+
+            await _db.Database.ExecuteSqlRawAsync(updateJobSql, new object[] {
+                new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+                new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId },
+                new SqlParameter("@title", SqlDbType.NVarChar, 200) { Value = model.Title.Trim() },
+                new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
+                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = (object?)model.SelectionCriteria?.Trim() ?? DBNull.Value },
+                new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
+                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
+            }, ct);
+
+            const string deleteSkillsSql = "DELETE FROM dbo.JobSkills WHERE JobId = @jobId";
+            await _db.Database.ExecuteSqlRawAsync(deleteSkillsSql, new object[] {
+                new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId }
+            }, ct);
+
+            if (model.SelectedSkills != null && model.SelectedSkills.Count > 0)
+            {
+                foreach (var skill in model.SelectedSkills)
+                {
+                    const string insertSkillSql = @"
+                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredWeight)
+                        VALUES (@jobId, @skillId, @weight)";
+
+                    await _db.Database.ExecuteSqlRawAsync(insertSkillSql, new object[] {
+                        new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+                        new SqlParameter("@skillId", SqlDbType.UniqueIdentifier) { Value = skill.SkillId },
+                        new SqlParameter("@weight", SqlDbType.TinyInt) { Value = Math.Clamp(skill.Weight, (byte)1, (byte)5) }
+                    }, ct);
+                }
+            }
+
+            await transaction.CommitAsync(ct);
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(ct);
+            throw;
+        }
+    }
+
+    public async Task<bool> CloseJobAsync(Guid jobId, Guid companyId, CancellationToken ct = default)
+    {
+        // Parameterized update to set IsClosed = 1. Strictly no deletion endpoint per project rules.
+        const string closeSql = "UPDATE dbo.Jobs SET IsClosed = 1 WHERE Id = @jobId AND CompanyId = @companyId";
+        var rows = await _db.Database.ExecuteSqlRawAsync(closeSql, new object[] {
+            new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId },
+            new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId }
+        }, ct);
+
+        return rows > 0;
+    }
 }
 
 // Helper POCOs for SqlQuery mapping
@@ -313,4 +528,23 @@ public class JobDetailRowResult
     public string CoreDescription { get; set; } = string.Empty;
     public string SelectionCriteria { get; set; } = string.Empty;
     public bool HasApplied { get; set; }
+}
+
+public class CompanyJobRowResult
+{
+    public Guid JobId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public byte LocationType { get; set; }
+    public DateTimeOffset DeadLine { get; set; }
+    public bool IsApproved { get; set; }
+    public bool IsClosed { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public int ApplicantCount { get; set; }
+}
+
+public class JobSkillWeightRowResult
+{
+    public Guid SkillId { get; set; }
+    public string SkillName { get; set; } = string.Empty;
+    public byte Weight { get; set; }
 }
