@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using InternLink.Web.Data;
 using InternLink.Web.Models;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Repositories.Implementation;
+using InternLink.Web.Services.AI;
 using InternLink.Web.Services.Auth;
 using InternLink.Web.Services.Dashboard;
 using InternLink.Web.Services.Email;
@@ -91,6 +93,18 @@ builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<ICounselorRepository, CounselorRepository>();
+builder.Services.AddScoped<IAdminModerationRepository, AdminModerationRepository>();
+builder.Services.AddScoped<IAIHistoryRepository, AIHistoryRepository>();
+
+// AI gateway: rotating key pool is a singleton so cooldowns are shared across every request.
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
+builder.Services.AddSingleton<IGeminiKeyPool, GeminiKeyPool>();
+builder.Services.AddHttpClient<IGeminiClient, GeminiClient>((sp, client) =>
+{
+    var gemini = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
+    client.BaseAddress = new Uri(gemini.BaseAddress);
+    client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gemini.TimeoutSeconds));
+});
 
 // Markdown Sanitization & Rendering Service (with DisableHtml)
 builder.Services.AddSingleton<InternLink.Web.Services.IMarkdownService, InternLink.Web.Services.MarkdownService>();
