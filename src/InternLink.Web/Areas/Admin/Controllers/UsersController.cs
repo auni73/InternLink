@@ -71,11 +71,12 @@ public class UsersController : AdminControllerBase
             return NotFound("User not found.");
         }
 
-        // 1. Set IsActive = 0 in database
-        await _moderationRepo.SetUserActiveStatusAsync(id, false, ct);
-
-        // 2. Update Security Stamp to invalidate live cookie sessions
+        // 1. Rotate the security stamp FIRST. Identity's UserStore calls Context.Update(user), which marks every
+        // property modified and would write the stale in-memory IsActive back over the status change below.
         await _userManager.UpdateSecurityStampAsync(user);
+
+        // 2. Set IsActive = 0 in database
+        await _moderationRepo.SetUserActiveStatusAsync(id, false, ct);
 
         // 3. Structured logging
         _logger.LogInformation("Admin {AdminId} Suspend User {TargetId}", CurrentUserId, id);
@@ -110,11 +111,11 @@ public class UsersController : AdminControllerBase
             return NotFound("User not found.");
         }
 
-        // 1. Set IsActive = 1 in database
-        await _moderationRepo.SetUserActiveStatusAsync(id, true, ct);
-
-        // 2. Update Security Stamp
+        // 1. Rotate the security stamp before the status write, for the same reason as Suspend.
         await _userManager.UpdateSecurityStampAsync(user);
+
+        // 2. Set IsActive = 1 in database
+        await _moderationRepo.SetUserActiveStatusAsync(id, true, ct);
 
         // 3. Structured logging
         _logger.LogInformation("Admin {AdminId} Reactivate User {TargetId}", CurrentUserId, id);
