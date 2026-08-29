@@ -343,11 +343,11 @@ public class JobRepository : IJobRepository
         }
 
         const string skillsSql = @"
-            SELECT js.SkillId, js.RequiredWeight AS Weight, s.SkillName
+            SELECT js.SkillId, js.RequiredImportanceWeight AS Weight, s.SkillName
             FROM dbo.JobSkills js
             INNER JOIN dbo.Skills s ON js.SkillId = s.Id
             WHERE js.JobId = @jobId
-            ORDER BY js.RequiredWeight DESC, s.SkillName ASC";
+            ORDER BY js.RequiredImportanceWeight DESC, s.SkillName ASC";
 
         var selectedSkills = await _db.Database
             .SqlQueryRaw<JobSkillWeightRowResult>(skillsSql, new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId })
@@ -399,7 +399,7 @@ public class JobRepository : IJobRepository
                 foreach (var skill in model.SelectedSkills)
                 {
                     const string insertSkillSql = @"
-                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredWeight)
+                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredImportanceWeight)
                         VALUES (@jobId, @skillId, @weight)";
 
                     await _db.Database.ExecuteSqlRawAsync(insertSkillSql, new object[] {
@@ -469,7 +469,7 @@ public class JobRepository : IJobRepository
                 foreach (var skill in model.SelectedSkills)
                 {
                     const string insertSkillSql = @"
-                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredWeight)
+                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredImportanceWeight)
                         VALUES (@jobId, @skillId, @weight)";
 
                     await _db.Database.ExecuteSqlRawAsync(insertSkillSql, new object[] {
