@@ -10,16 +10,88 @@ public class ResumesController : StudentControllerBase
 {
     private readonly IResumeService _resumeService;
     private readonly IResumeRepository _resumeRepository;
+    private readonly IResumeAnalysisService _analysisService;
+    private readonly IJobRepository _jobRepository;
     private readonly ILogger<ResumesController> _logger;
 
     public ResumesController(
         IResumeService resumeService,
         IResumeRepository resumeRepository,
+        IResumeAnalysisService analysisService,
+        IJobRepository jobRepository,
         ILogger<ResumesController> logger)
     {
         _resumeService = resumeService;
         _resumeRepository = resumeRepository;
+        _analysisService = analysisService;
+        _jobRepository = jobRepository;
         _logger = logger;
+    }
+
+    [HttpGet]
+    [Route("Student/Resumes/{id:guid}/Analyze")]
+    public async Task<IActionResult> Analyze(Guid id, CancellationToken ct)
+    {
+        var studentId = await GetStudentIdAsync(ct);
+        if (studentId is null)
+        {
+            return NotFound();
+        }
+
+        var resume = await _resumeService.GetResumeForEditAsync(id, studentId.Value, ct);
+        if (resume is null)
+        {
+            return NotFound("Resume not found.");
+        }
+
+        var (openJobs, _) = await _jobRepository.SearchApprovedOpenJobsAsync(
+            new JobSearchFilter { Page = 1, PageSize = 20 },
+            studentId.Value,
+            isFtsAvailable: false,
+            ct);
+
+        var viewModel = new ResumeAnalysisPageViewModel
+        {
+            ResumeId = resume.ResumeId,
+            CandidateName = resume.Data.PersonalInfo.FullName,
+            IsFinalized = resume.IsFinalized,
+            TargetJobs = openJobs
+                .Select(j => new TargetJobOption { JobId = j.Id, Title = j.Title, CompanyName = j.CompanyName })
+                .ToList()
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [Route("Student/Resumes/{id:guid}/Analyze")]
+    public async Task<IActionResult> Analyze(Guid id, [FromQuery] Guid? targetJobId, CancellationToken ct)
+    {
+        var studentId = await GetStudentIdAsync(ct);
+        if (studentId is null)
+        {
+            return NotFound(new { error = "Student profile not found." });
+        }
+
+        var resume = await _resumeService.GetResumeForEditAsync(id, studentId.Value, ct);
+        if (resume is null)
+        {
+            return NotFound(new { error = "Resume not found." });
+        }
+
+        var score = await _analysisService.GetAtsScoreAsync(id, studentId.Value, targetJobId, ct);
+
+        var suggestions = targetJobId.HasValue && targetJobId.Value != Guid.Empty
+            ? await _analysisService.GetImprovementSuggestionsAsync(id, studentId.Value, targetJobId.Value, ct)
+            : [];
+
+        _logger.LogInformation(
+            "Student {StudentId} analysed resume {ResumeId} against job {TargetJobId}.",
+            studentId.Value,
+            id,
+            targetJobId);
+
+        return Json(new ResumeAnalysisResultViewModel { Score = score, Suggestions = suggestions });
     }
 
     [HttpGet]

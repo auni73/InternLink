@@ -66,6 +66,11 @@
                                         <i class="bi bi-download"></i>
                                     </a>
                                 }
+
+                                <a asp-area="Student" asp-controller="Resumes" asp-action="Analyze" asp-route-id="@resume.Id"
+                                   class="btn btn-sm btn-outline-primary" title="ATS review">
+                                    <i class="bi bi-clipboard-data"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
