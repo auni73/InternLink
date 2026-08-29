@@ -217,7 +217,15 @@ public class AccountController : Controller
         // the password check and SignInAsync. Do not collapse this back into PasswordSignInAsync.
 
         await _signInManager.SignInAsync(user, isPersistent: model.RememberMe);
-        return RedirectToLocal(model.ReturnUrl);
+
+        // Honor a local returnUrl (e.g. a deep link that triggered the login redirect) before role routing.
+        if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+        {
+            return Redirect(model.ReturnUrl);
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return RedirectToRoleDashboard(roles);
     }
 
     // ------------------------------------------------------------------ Logout
@@ -235,14 +243,27 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult Denied()
     {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
         return View();
     }
 
-    private IActionResult RedirectToLocal(string? returnUrl)
+    private IActionResult RedirectToRoleDashboard(IList<string> roles)
     {
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        if (roles.Contains("Admin"))
         {
-            return Redirect(returnUrl);
+            return RedirectToAction("Index", "Home", new { area = "Admin" });
+        }
+        if (roles.Contains("Company"))
+        {
+            return RedirectToAction("Index", "Home", new { area = "Company" });
+        }
+        if (roles.Contains("Counselor"))
+        {
+            return RedirectToAction("Index", "Home", new { area = "Counselor" });
+        }
+        if (roles.Contains("Student"))
+        {
+            return RedirectToAction("Index", "Home", new { area = "Student" });
         }
         return RedirectToAction("Index", "Home");
     }
