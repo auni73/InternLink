@@ -373,10 +373,16 @@ class CompanyAtsBoard {
     renderDetailModalContent(data) {
         if (!this.detailModalBody) return;
 
+        // Applicant-supplied values reach a company user's browser here. Cover letter text in
+        // particular is free-form student input, so every interpolation below must be escaped.
+        const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+
         const verifiedSkillsHtml = (data.verifiedSkills && data.verifiedSkills.length > 0)
             ? data.verifiedSkills.map(s => `
                 <span class="badge bg-success-subtle text-success border border-success-subtle p-2 d-inline-flex align-items-center gap-1">
-                    <i class="bi bi-patch-check-fill"></i> ${s.skillName} (${s.bestScore}%)
+                    <i class="bi bi-patch-check-fill"></i> ${esc(s.skillName)} (${Number(s.bestScore) || 0}%)
                 </span>`).join(' ')
             : '<span class="text-muted small">No verified skills recorded yet.</span>';
 
@@ -386,8 +392,8 @@ class CompanyAtsBoard {
                     <i class="bi bi-camera-video-fill fs-4 text-warning-emphasis"></i>
                     <div>
                         <div class="fw-bold text-warning-emphasis">Interview Scheduled</div>
-                        <div class="small text-slate-700">${new Date(data.interviewDateTime).toLocaleString()}</div>
-                        ${data.meetingLink ? `<a href="${data.meetingLink}" target="_blank" rel="noopener noreferrer" class="small fw-semibold text-warning-emphasis"><i class="bi bi-box-arrow-up-right me-1"></i>Join Video Call</a>` : ''}
+                        <div class="small text-slate-700">${esc(new Date(data.interviewDateTime).toLocaleString())}</div>
+                        ${data.meetingLink ? `<a href="${esc(data.meetingLink)}" target="_blank" rel="noopener noreferrer" class="small fw-semibold text-warning-emphasis"><i class="bi bi-box-arrow-up-right me-1"></i>Join Video Call</a>` : ''}
                     </div>
                 </div>`
             : '';
@@ -396,7 +402,7 @@ class CompanyAtsBoard {
             ? `
                 <div class="mb-3">
                     <h6 class="fw-bold text-slate-800 mb-2">Cover Letter</h6>
-                    <div class="p-3 bg-light rounded-3 text-slate-700 small border" style="white-space: pre-wrap;">${data.coverLetterText}</div>
+                    <div class="p-3 bg-light rounded-3 text-slate-700 small border" style="white-space: pre-wrap;">${esc(data.coverLetterText)}</div>
                 </div>`
             : '';
 
@@ -415,9 +421,9 @@ class CompanyAtsBoard {
                 <!-- Candidate Header -->
                 <div class="d-flex justify-content-between align-items-start gap-3 pb-3 border-bottom mb-3">
                     <div>
-                        <h4 class="fw-bold text-slate-800 mb-1">${data.studentName}</h4>
+                        <h4 class="fw-bold text-slate-800 mb-1">${esc(data.studentName)}</h4>
                         <div class="text-muted small">
-                            <i class="bi bi-briefcase me-1"></i>Applied for: <strong>${data.jobTitle}</strong>
+                            <i class="bi bi-briefcase me-1"></i>Applied for: <strong>${esc(data.jobTitle)}</strong>
                         </div>
                     </div>
                     <div>
@@ -430,7 +436,7 @@ class CompanyAtsBoard {
                     <div class="col-md-4">
                         <div class="p-3 bg-light rounded-3 border">
                             <div class="text-muted small">Department</div>
-                            <div class="fw-bold text-slate-800">${data.department}</div>
+                            <div class="fw-bold text-slate-800">${esc(data.department)}</div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -458,7 +464,50 @@ class CompanyAtsBoard {
                 </div>
 
                 ${coverLetterHtml}
+
+                <!-- Skill gap: same shared partial the student sees -->
+                <div class="border-top pt-3"
+                     id="atsSkillGap"
+                     data-skill-gap-url="/Company/Ats/Applications/${esc(data.applicationId)}/SkillGap">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <h6 class="fw-bold text-slate-800 mb-0">Skill Gap Analysis</h6>
+                        <button type="button" id="atsSkillGapBtn" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-clipboard-data"></i><span>Analyze Candidate Fit</span>
+                        </button>
+                    </div>
+                    <div id="atsSkillGapStatus" class="alert alert-warning d-none py-2 px-3 small" role="alert"></div>
+                    <div id="atsSkillGapContent" hidden></div>
+                </div>
             </div>`;
+
+        this.bindSkillGap();
+    }
+
+    bindSkillGap() {
+        const root = this.detailModalBody.querySelector('#atsSkillGap');
+        if (!root) return;
+
+        const button = root.querySelector('#atsSkillGapBtn');
+        const content = root.querySelector('#atsSkillGapContent');
+        const status = root.querySelector('#atsSkillGapStatus');
+
+        button.addEventListener('click', async () => {
+            status.classList.add('d-none');
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span><span>Analyzing…</span>';
+
+            try {
+                content.innerHTML = await api.get(root.dataset.skillGapUrl);
+                content.hidden = false;
+                button.innerHTML = '<i class="bi bi-arrow-clockwise"></i><span>Refresh Analysis</span>';
+            } catch (error) {
+                status.textContent = error.message;
+                status.classList.remove('d-none');
+                button.innerHTML = '<i class="bi bi-clipboard-data"></i><span>Analyze Candidate Fit</span>';
+            } finally {
+                button.disabled = false;
+            }
+        });
     }
 
     showToast(message, type = 'info') {
