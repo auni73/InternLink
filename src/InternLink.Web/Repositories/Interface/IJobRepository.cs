@@ -29,4 +29,16 @@ public interface IJobRepository
     Task<IReadOnlyList<Guid>> GetApprovedOpenJobIdsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<Guid>> GetAllJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default);
     Task<IReadOnlyList<Guid>> GetIndexableJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default);
+
+    // Recommendations
+    Task<IReadOnlyList<RecommendationCandidate>> GetRecommendationCandidatesAsync(
+        IReadOnlyList<Guid> jobIds,
+        Guid studentId,
+        CancellationToken ct = default);
+
+    /// <summary>Relational fallback ranking used when semantic search is unavailable.</summary>
+    Task<IReadOnlyList<RecommendationCandidate>> GetSkillOverlapRankedJobsAsync(
+        Guid studentId,
+        int take,
+        CancellationToken ct = default);
 }
