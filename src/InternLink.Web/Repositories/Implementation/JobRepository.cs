@@ -344,7 +344,7 @@ public class JobRepository : IJobRepository
         }
 
         const string skillsSql = @"
-            SELECT js.SkillId, js.RequiredImportanceWeight AS Weight, s.SkillName
+            SELECT js.SkillId, CAST(js.RequiredImportanceWeight AS tinyint) AS Weight, s.SkillName
             FROM dbo.JobSkills js
             INNER JOIN dbo.Skills s ON js.SkillId = s.Id
             WHERE js.JobId = @jobId
@@ -531,7 +531,7 @@ public class JobRepository : IJobRepository
         var skillsParam = new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = jobId };
 
         const string skillsSql = @"
-            SELECT s.Id AS SkillId, s.SkillName, js.RequiredImportanceWeight AS Weight
+            SELECT s.Id AS SkillId, s.SkillName, CAST(js.RequiredImportanceWeight AS tinyint) AS Weight
             FROM dbo.JobSkills js
             INNER JOIN dbo.Skills s ON js.SkillId = s.Id
             WHERE js.JobId = @jobId
@@ -658,5 +658,7 @@ public class JobSkillWeightRowResult
 {
     public Guid SkillId { get; set; }
     public string SkillName { get; set; } = string.Empty;
+
+    // JobSkills.RequiredImportanceWeight is INT in the schema; queries CAST to tinyint to match.
     public byte Weight { get; set; }
 }
