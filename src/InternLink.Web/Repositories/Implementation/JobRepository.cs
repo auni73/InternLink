@@ -389,7 +389,7 @@ public class JobRepository : IJobRepository
                 new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId },
                 new SqlParameter("@title", SqlDbType.NVarChar, 200) { Value = model.Title.Trim() },
                 new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
-                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = (object?)model.SelectionCriteria?.Trim() ?? DBNull.Value },
+                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = model.SelectionCriteria?.Trim() ?? string.Empty },
                 new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
                 new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
             }, ct);
@@ -454,7 +454,7 @@ public class JobRepository : IJobRepository
                 new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = companyId },
                 new SqlParameter("@title", SqlDbType.NVarChar, 200) { Value = model.Title.Trim() },
                 new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
-                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = (object?)model.SelectionCriteria?.Trim() ?? DBNull.Value },
+                new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = model.SelectionCriteria?.Trim() ?? string.Empty },
                 new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
                 new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
             }, ct);
