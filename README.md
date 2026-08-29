@@ -53,6 +53,22 @@ dotnet user-secrets set "ConnectionStrings:InternLinkDb" "Server=localhost\MSSQL
 
 ---
 
+## Development Seed Accounts & Credentials
+
+> [!NOTE]
+> The following accounts are seeded automatically on first run in the `Development` environment only.
+
+| Role | Email | Default Password | Notes |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@internlink.test` | `Admin123!` | System administrator (user/company moderation, approvals) |
+| **Counselor** | `counselor@internlink.test` | `Counselor123!` | Career counselor (student advising notes & feedback) |
+| **Company** | `techcorp@internlink.test` | `Company123!` | TechCorp Innovations Ltd. (Software Dev) |
+| **Company** | `cloudscale@internlink.test` | `Company123!` | CloudScale Systems (Cloud & DevOps) |
+| **Company** | `datawave@internlink.test` | `Company123!` | DataWave Analytics (Data Science & AI) |
+| **Student** | `student@internlink.test` | `Student123!` | Tanvir Ahmed (CSE Dept, CGPA 3.82) |
+
+---
+
 ## Toolchain Prerequisites
 
 - **.NET 8 SDK** (`dotnet --version` $\ge$ `8.0.x`)
