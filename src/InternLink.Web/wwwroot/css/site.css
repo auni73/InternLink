@@ -231,3 +231,242 @@ body {
 .table-dense > :not(caption) > * > * {
     padding: .4rem .5rem;
 }
+
+/* ============================================================================
+   Auth pages (Login / Register / VerifyOtp) — centered card on mint gradient
+   ========================================================================== */
+.auth-body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #eaf6f1 0%, #f4faf7 45%, #eef7f3 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+}
+
+.auth-brand {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.auth-brand-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background-color: var(--il-primary-600);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 6px 18px rgba(15, 107, 92, .25);
+}
+
+.auth-brand-name {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--il-primary-700);
+    margin-top: .75rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border: 1px solid rgba(15, 42, 46, .08);
+    border-radius: .875rem;
+    box-shadow: 0 10px 30px rgba(15, 42, 46, .07);
+    padding: 2rem;
+}
+
+.auth-card h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.auth-card h1 .bi {
+    color: var(--il-primary-600);
+    font-size: 1.25rem;
+}
+
+.auth-subtitle {
+    color: #8a9aa0;
+    font-size: .925rem;
+    margin-bottom: 1.5rem;
+}
+
+.auth-footer {
+    margin-top: 1.5rem;
+    color: #a7b4b9;
+    font-size: .85rem;
+    text-align: center;
+}
+
+/* Inputs with a leading icon (and optional trailing eye) */
+.auth-field .form-label {
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.auth-input-wrap {
+    position: relative;
+}
+
+.auth-input-wrap .bi-lead {
+    position: absolute;
+    left: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aab7bc;
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.auth-input-wrap .form-control {
+    padding-left: 2.4rem;
+    border-radius: .625rem;
+    border-color: #dde6e4;
+}
+
+.auth-input-wrap .form-control::placeholder {
+    color: #b6c2c6;
+}
+
+.auth-input-wrap .toggle-password {
+    position: absolute;
+    right: .5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #aab7bc;
+    padding: .25rem .4rem;
+}
+
+.auth-input-wrap .toggle-password:hover {
+    color: var(--il-primary-700);
+}
+
+/* Segmented role toggle (Student | Company) */
+.role-segment {
+    display: flex;
+    background-color: #f1f5f4;
+    border-radius: .625rem;
+    padding: .25rem;
+    gap: .25rem;
+}
+
+.role-segment label {
+    flex: 1 1 0;
+    text-align: center;
+    padding: .5rem .75rem;
+    border-radius: .5rem;
+    font-weight: 600;
+    font-size: .9rem;
+    color: #6c7d83;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+.role-segment label .bi {
+    font-size: 1rem;
+}
+
+.role-segment input:checked + label {
+    background-color: #fff;
+    color: #1f2a2e;
+    border: 1px solid #e2eae7;
+    box-shadow: 0 1px 3px rgba(15, 42, 46, .08);
+}
+
+.btn-auth {
+    border-radius: .625rem;
+    padding: .625rem 1rem;
+    font-weight: 600;
+}
+
+/* ============================================================================
+   Public landing hero
+   ========================================================================== */
+.landing-body {
+    background: linear-gradient(160deg, #f2faf6 0%, #ffffff 40%, #f5fbf8 100%);
+}
+
+.landing-hero {
+    min-height: calc(100vh - var(--il-topbar-height));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 1rem 5rem;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid var(--il-primary-200);
+    background-color: #f0f9f5;
+    color: var(--il-primary-700);
+    border-radius: 999px;
+    padding: .45rem 1.1rem;
+    font-size: .95rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.hero-badge .bi {
+    color: var(--il-accent-500);
+    font-size: 1rem;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 6.5vw, 4.5rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #16211f;
+}
+
+.hero-highlight {
+    color: var(--il-primary-600);
+    display: inline-block;
+    background-image: linear-gradient(180deg, rgba(242, 163, 60, 0) 72%, rgba(242, 163, 60, .55) 72%);
+    background-repeat: no-repeat;
+    padding: 0 .1em .05em;
+}
+
+.hero-sub {
+    max-width: 620px;
+    color: #77878c;
+    font-size: 1.25rem;
+    margin: 1.75rem auto 2.5rem;
+}
+
+.btn-hero {
+    border-radius: 999px;
+    padding: .8rem 1.8rem;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.btn-hero-outline {
+    background-color: #fff;
+    border: 1px solid #dfe8e5;
+    color: #1f2a2e;
+}
+
+.btn-hero-outline:hover {
+    border-color: var(--il-primary-400);
+    color: var(--il-primary-700);
+    background-color: #fff;
+}

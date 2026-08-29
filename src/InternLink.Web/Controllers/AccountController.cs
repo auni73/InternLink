@@ -54,9 +54,14 @@ public class AccountController : Controller
     // ------------------------------------------------------------------ Register
 
     [HttpGet]
-    public IActionResult Register()
+    public IActionResult Register(string? role = null)
     {
-        return View(new RegisterViewModel());
+        var model = new RegisterViewModel();
+        if (string.Equals(role, "Company", StringComparison.OrdinalIgnoreCase))
+        {
+            model.Role = RegistrationRole.Company;
+        }
+        return View(model);
     }
 
     [HttpPost]

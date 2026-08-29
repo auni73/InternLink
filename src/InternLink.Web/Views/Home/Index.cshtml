@@ -1,8 +1,26 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="landing-hero">
+    <span class="hero-badge"><i class="bi bi-stars"></i>AI-Powered Career Platform</span>
+
+    <h1 class="hero-title">
+        Your internship journey,<br />
+        <span class="hero-highlight">simplified</span>
+    </h1>
+
+    <p class="hero-sub">
+        Connect with top companies, get AI-powered resume feedback, and prepare for
+        interviews — all in one platform built for university students.
+    </p>
+
+    <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a class="btn btn-primary btn-hero" asp-controller="Account" asp-action="Register" asp-route-role="Student">
+            <i class="bi bi-mortarboard bi-dense me-2"></i>I'm a Student
+        </a>
+        <a class="btn btn-hero btn-hero-outline" asp-controller="Account" asp-action="Register" asp-route-role="Company">
+            <i class="bi bi-briefcase bi-dense me-2"></i>I'm Hiring
+        </a>
+    </div>
 </div>

@@ -1,117 +1,154 @@
 @model RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Create an account";
+    Layout = "_AuthLayout";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
-        <h1 class="h3 mb-4">Create your account</h1>
+<div class="auth-card">
+    <h1><i class="bi bi-person"></i>Create an account</h1>
+    <p class="auth-subtitle">Join InternLink to connect with opportunities.</p>
 
-        <form asp-action="Register" method="post" novalidate>
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <form asp-action="Register" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="mb-4">
-                <label class="form-label d-block">I am registering as</label>
-                <div class="btn-group" role="group" aria-label="Account type">
-                    <input type="radio" class="btn-check" asp-for="Role" value="Student" id="roleStudent" autocomplete="off">
-                    <label class="btn btn-outline-primary" for="roleStudent">Student</label>
+        <div class="auth-field mb-3">
+            <label class="form-label">I am a...</label>
+            <div class="role-segment">
+                <input type="radio" class="btn-check" asp-for="Role" value="Student" id="roleStudent" autocomplete="off">
+                <label for="roleStudent"><i class="bi bi-mortarboard"></i>Student</label>
 
-                    <input type="radio" class="btn-check" asp-for="Role" value="Company" id="roleCompany" autocomplete="off">
-                    <label class="btn btn-outline-primary" for="roleCompany">Company</label>
-                </div>
-                <span asp-validation-for="Role" class="text-danger d-block"></span>
+                <input type="radio" class="btn-check" asp-for="Role" value="Company" id="roleCompany" autocomplete="off">
+                <label for="roleCompany"><i class="bi bi-building"></i>Company</label>
             </div>
+            <span asp-validation-for="Role" class="text-danger small"></span>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="username" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
+        <div id="studentFields">
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+                <div class="col-6 auth-field mb-3">
+                    <label asp-for="FirstName" class="form-label">First Name</label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-person bi-lead"></i>
+                        <input asp-for="FirstName" class="form-control" placeholder="John" />
+                    </div>
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label"></label>
-                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                <div class="col-6 auth-field mb-3">
+                    <label asp-for="LastName" class="form-label">Last Name</label>
+                    <div class="auth-input-wrap">
+                        <input asp-for="LastName" class="form-control" placeholder="Doe" />
+                    </div>
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-6 auth-field mb-3">
+                    <label asp-for="InstitutionalId" class="form-label">Student ID</label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-person-badge bi-lead"></i>
+                        <input asp-for="InstitutionalId" class="form-control" placeholder="2020-1-60-001" />
+                    </div>
+                    <span asp-validation-for="InstitutionalId" class="text-danger small"></span>
+                </div>
+                <div class="col-6 auth-field mb-3">
+                    <label asp-for="CGPA" class="form-label">CGPA</label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-award bi-lead"></i>
+                        <input asp-for="CGPA" class="form-control" type="number" step="0.01" min="0" max="4" placeholder="3.50" />
+                    </div>
+                    <span asp-validation-for="CGPA" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="auth-field mb-3">
+                <label asp-for="Department" class="form-label">Department</label>
+                <div class="auth-input-wrap">
+                    <i class="bi bi-mortarboard bi-lead"></i>
+                    <input asp-for="Department" class="form-control" placeholder="Computer Science & Engineering" />
+                </div>
+                <span asp-validation-for="Department" class="text-danger small"></span>
+            </div>
+        </div>
 
-            <fieldset id="studentFields" class="border rounded p-3 mb-3">
-                <legend class="h6">Student details</legend>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="FirstName" class="form-label"></label>
-                        <input asp-for="FirstName" class="form-control" />
-                        <span asp-validation-for="FirstName" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="LastName" class="form-label"></label>
-                        <input asp-for="LastName" class="form-control" />
-                        <span asp-validation-for="LastName" class="text-danger"></span>
-                    </div>
+        <div id="companyFields">
+            <div class="auth-field mb-3">
+                <label asp-for="CompanyName" class="form-label">Company Name</label>
+                <div class="auth-input-wrap">
+                    <i class="bi bi-building bi-lead"></i>
+                    <input asp-for="CompanyName" class="form-control" placeholder="Acme Ltd." />
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="InstitutionalId" class="form-label"></label>
-                        <input asp-for="InstitutionalId" class="form-control" />
-                        <span asp-validation-for="InstitutionalId" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Department" class="form-label"></label>
-                        <input asp-for="Department" class="form-control" />
-                        <span asp-validation-for="Department" class="text-danger"></span>
-                    </div>
+                <span asp-validation-for="CompanyName" class="text-danger small"></span>
+            </div>
+            <div class="auth-field mb-3">
+                <label asp-for="IndustrySector" class="form-label">Industry Sector</label>
+                <div class="auth-input-wrap">
+                    <i class="bi bi-diagram-3 bi-lead"></i>
+                    <input asp-for="IndustrySector" class="form-control" placeholder="Software Development" />
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="CGPA" class="form-label"></label>
-                        <input asp-for="CGPA" class="form-control" type="number" step="0.01" min="0" max="4" />
-                        <span asp-validation-for="CGPA" class="text-danger"></span>
-                    </div>
-                </div>
-            </fieldset>
-
-            <fieldset id="companyFields" class="border rounded p-3 mb-3">
-                <legend class="h6">Company details</legend>
-                <div class="mb-3">
-                    <label asp-for="CompanyName" class="form-label"></label>
-                    <input asp-for="CompanyName" class="form-control" />
-                    <span asp-validation-for="CompanyName" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="IndustrySector" class="form-label"></label>
-                    <input asp-for="IndustrySector" class="form-control" />
-                    <span asp-validation-for="IndustrySector" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="CorporateWebsite" class="form-label"></label>
+                <span asp-validation-for="IndustrySector" class="text-danger small"></span>
+            </div>
+            <div class="auth-field mb-3">
+                <label asp-for="CorporateWebsite" class="form-label">Website <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="auth-input-wrap">
+                    <i class="bi bi-globe bi-lead"></i>
                     <input asp-for="CorporateWebsite" class="form-control" placeholder="https://example.com" />
-                    <span asp-validation-for="CorporateWebsite" class="text-danger"></span>
                 </div>
-            </fieldset>
+                <span asp-validation-for="CorporateWebsite" class="text-danger small"></span>
+            </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary">Register</button>
-            <a asp-action="Login" class="btn btn-link">Already have an account? Sign in</a>
-        </form>
-    </div>
+        <div class="auth-field mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <div class="auth-input-wrap">
+                <i class="bi bi-envelope bi-lead"></i>
+                <input asp-for="Email" class="form-control" placeholder="name@example.com" autocomplete="username" />
+            </div>
+            <span asp-validation-for="Email" class="text-danger small"></span>
+        </div>
+
+        <div class="auth-field mb-3">
+            <label asp-for="Password" class="form-label">Password</label>
+            <div class="auth-input-wrap">
+                <i class="bi bi-lock bi-lead"></i>
+                <input asp-for="Password" class="form-control" placeholder="••••••••" autocomplete="new-password" />
+                <button type="button" class="toggle-password" data-target="Password" tabindex="-1" aria-label="Show password">
+                    <i class="bi bi-eye bi-dense"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+
+        <div class="auth-field mb-4">
+            <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+            <div class="auth-input-wrap">
+                <i class="bi bi-lock bi-lead"></i>
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="••••••••" autocomplete="new-password" />
+                <button type="button" class="toggle-password" data-target="ConfirmPassword" tabindex="-1" aria-label="Show password">
+                    <i class="bi bi-eye bi-dense"></i>
+                </button>
+            </div>
+            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-auth w-100">Create Account</button>
+    </form>
+
+    <hr class="my-4" />
+    <p class="text-center mb-0 text-muted">
+        Already have an account? <a asp-action="Login" class="fw-semibold text-decoration-none">Sign in</a>
+    </p>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            const studentFields = document.getElementById('studentFields');
-            const companyFields = document.getElementById('companyFields');
-            const studentRadio = document.getElementById('roleStudent');
-            const companyRadio = document.getElementById('roleCompany');
+            var studentFields = document.getElementById('studentFields');
+            var companyFields = document.getElementById('companyFields');
+            var studentRadio = document.getElementById('roleStudent');
+            var companyRadio = document.getElementById('roleCompany');
 
             function toggleFields() {
-                const isStudent = studentRadio.checked;
+                var isStudent = studentRadio.checked;
                 studentFields.style.display = isStudent ? '' : 'none';
                 companyFields.style.display = isStudent ? 'none' : '';
             }
