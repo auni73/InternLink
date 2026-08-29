@@ -20,4 +20,5 @@ public class Student
     public virtual ICollection<StudentSkill> StudentSkills { get; set; } = new List<StudentSkill>();
     public virtual ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();
     public virtual ICollection<CounselorFeedback> CounselorFeedbacks { get; set; } = new List<CounselorFeedback>();
+    public virtual ICollection<MockInterviewSession> MockInterviewSessions { get; set; } = new List<MockInterviewSession>();
 }

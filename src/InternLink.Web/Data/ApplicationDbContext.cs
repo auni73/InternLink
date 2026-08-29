@@ -26,6 +26,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     public DbSet<CounselorFeedback> CounselorFeedbacks => Set<CounselorFeedback>();
     public DbSet<AIHistory> AIHistories => Set<AIHistory>();
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
+    public DbSet<MockInterviewSession> MockInterviewSessions => Set<MockInterviewSession>();
     public DbSet<SchemaVersion> SchemaVersions => Set<SchemaVersion>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -208,6 +209,21 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
             b.HasOne(o => o.User)
              .WithMany(u => u.OtpCodes)
              .HasForeignKey(o => o.UserId);
+        });
+
+        // 17. MockInterviewSessions
+        builder.Entity<MockInterviewSession>(b =>
+        {
+            b.ToTable("MockInterviewSessions");
+            b.HasKey(m => m.Id);
+            b.Property(m => m.Role).HasMaxLength(100);
+            b.Property(m => m.Status).HasConversion<byte>();
+            b.HasOne(m => m.Student)
+             .WithMany(s => s.MockInterviewSessions)
+             .HasForeignKey(m => m.StudentId);
+            b.HasOne(m => m.Job)
+             .WithMany()
+             .HasForeignKey(m => m.JobId);
         });
     }
 }
