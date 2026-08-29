@@ -1,22 +1,233 @@
-html {
-  font-size: 14px;
+/* ============================================================================
+   InternLink Design System
+   ----------------------------------------------------------------------------
+   Anti-generic rules (keep this app from looking like default Bootstrap):
+     - NO purple/blue gradient hero banners. Flat, confident color blocks only.
+     - NO emoji used as icons. Use Bootstrap Icons (bi-*) exclusively.
+     - Vary density by purpose: dashboards/tables are DENSE; forms are ROOMIER.
+     - One radius token (--il-radius) everywhere. One card elevation (border +
+       shadow-sm). Never mix in heavy drop-shadows.
+     - Palette is deliberate (deep teal + warm amber), never stock #0d6efd blue.
+   ========================================================================== */
+
+:root {
+    /* Primary — deep teal (shade scale, tool-generated) */
+    --il-primary-50: #e6f2ef;
+    --il-primary-100: #c1ded7;
+    --il-primary-200: #98c9bd;
+    --il-primary-300: #6eb4a3;
+    --il-primary-400: #4fa48f;
+    --il-primary-500: #2f937b;
+    --il-primary-600: #0f6b5c; /* brand primary */
+    --il-primary-700: #0c5a4d;
+    --il-primary-800: #09453b;
+    --il-primary-900: #06302a;
+
+    /* Accent — warm amber */
+    --il-accent-50: #fef6ea;
+    --il-accent-100: #fce7c6;
+    --il-accent-200: #f9d29a;
+    --il-accent-300: #f6bd6d;
+    --il-accent-400: #f4ad4b;
+    --il-accent-500: #f2a33c; /* brand accent */
+    --il-accent-600: #d98a28;
+    --il-accent-700: #b06e1f;
+    --il-accent-800: #855216;
+    --il-accent-900: #5c390f;
+
+    /* Neutral slate for secondary UI */
+    --il-slate-500: #5a6b75;
+    --il-slate-600: #47555d;
+
+    /* One shared radius token */
+    --il-radius: .5rem;
+
+    /* Layout metrics */
+    --il-sidebar-width: 256px;
+    --il-topbar-height: 60px;
+
+    /* ---- Bootstrap variable overrides ---- */
+    --bs-primary: var(--il-primary-600);
+    --bs-primary-rgb: 15, 107, 92;
+    --bs-primary-text-emphasis: var(--il-primary-800);
+    --bs-primary-bg-subtle: var(--il-primary-50);
+    --bs-primary-border-subtle: var(--il-primary-200);
+
+    --bs-secondary: var(--il-slate-500);
+    --bs-secondary-rgb: 90, 107, 117;
+
+    --bs-link-color: var(--il-primary-700);
+    --bs-link-color-rgb: 12, 90, 77;
+    --bs-link-hover-color: var(--il-primary-800);
+    --bs-link-hover-color-rgb: 9, 69, 59;
+
+    --bs-body-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --bs-body-color: #1f2a2e;
+    --bs-body-bg: #f7f9f9;
+
+    --bs-border-radius: var(--il-radius);
+    --bs-border-radius-sm: .375rem;
+    --bs-border-radius-lg: .75rem;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+/* Display font for all headings and the brand */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.navbar-brand,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.01em;
 }
 
 body {
-  margin-bottom: 60px;
+    min-height: 100vh;
+}
+
+/* Consistent focus ring in the brand color, not Bootstrap blue */
+.btn:focus-visible,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--il-primary-400);
+    box-shadow: 0 0 0 0.2rem rgba(15, 107, 92, 0.25);
+}
+
+/* ---- Buttons ---- */
+.btn-primary {
+    --bs-btn-bg: var(--il-primary-600);
+    --bs-btn-border-color: var(--il-primary-600);
+    --bs-btn-hover-bg: var(--il-primary-700);
+    --bs-btn-hover-border-color: var(--il-primary-700);
+    --bs-btn-active-bg: var(--il-primary-800);
+    --bs-btn-active-border-color: var(--il-primary-800);
+    --bs-btn-disabled-bg: var(--il-primary-600);
+    --bs-btn-disabled-border-color: var(--il-primary-600);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--il-primary-700);
+    --bs-btn-border-color: var(--il-primary-600);
+    --bs-btn-hover-bg: var(--il-primary-600);
+    --bs-btn-hover-border-color: var(--il-primary-600);
+    --bs-btn-active-bg: var(--il-primary-700);
+    --bs-btn-active-border-color: var(--il-primary-700);
+}
+
+/* Amber call-to-action button */
+.btn-accent {
+    --bs-btn-color: #3a2a06;
+    --bs-btn-bg: var(--il-accent-500);
+    --bs-btn-border-color: var(--il-accent-500);
+    --bs-btn-hover-color: #3a2a06;
+    --bs-btn-hover-bg: var(--il-accent-600);
+    --bs-btn-hover-border-color: var(--il-accent-600);
+    --bs-btn-active-bg: var(--il-accent-700);
+    --bs-btn-active-border-color: var(--il-accent-700);
+    --bs-btn-disabled-color: #3a2a06;
+    --bs-btn-disabled-bg: var(--il-accent-500);
+    --bs-btn-disabled-border-color: var(--il-accent-500);
+}
+
+/* ---- Badges ---- */
+.badge.text-bg-accent {
+    color: #3a2a06;
+    background-color: var(--il-accent-500);
+}
+
+.role-badge {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    font-size: .7rem;
+    padding: .35em .7em;
+    border-radius: var(--il-radius);
+    color: var(--il-primary-800);
+    background-color: var(--il-primary-100);
+    border: 1px solid var(--il-primary-200);
+}
+
+/* ---- Cards: exactly one elevation style ---- */
+.card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--il-radius);
+    box-shadow: 0 .125rem .25rem rgba(15, 42, 46, 0.06);
+}
+
+/* ---- Icon sizing convention: 1.25rem inline, 1rem dense ---- */
+.bi {
+    vertical-align: -.125em;
+    font-size: 1.25rem;
+}
+
+.bi-dense {
+    font-size: 1rem;
+}
+
+/* ============================================================================
+   App shell: topbar + per-area sidebar
+   ========================================================================== */
+.app-topbar {
+    min-height: var(--il-topbar-height);
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.app-topbar .navbar-brand {
+    color: var(--il-primary-700);
+    font-weight: 700;
+}
+
+.app-shell {
+    display: flex;
+    align-items: stretch;
+    min-height: calc(100vh - var(--il-topbar-height));
+}
+
+.app-sidebar {
+    flex: 0 0 var(--il-sidebar-width);
+    width: var(--il-sidebar-width);
+    background-color: #ffffff;
+    border-right: 1px solid var(--bs-border-color);
+    padding: 1rem .75rem;
+}
+
+.app-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    color: var(--bs-body-color);
+    border-radius: var(--il-radius);
+    padding: .5rem .75rem;
+    font-weight: 500;
+}
+
+.app-sidebar .nav-link:hover {
+    background-color: var(--il-primary-50);
+    color: var(--il-primary-800);
+}
+
+.app-sidebar .nav-link.active {
+    background-color: var(--il-primary-600);
+    color: #fff;
+}
+
+.app-sidebar .nav-link .bi {
+    font-size: 1.1rem;
+}
+
+.app-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 1.5rem;
+}
+
+/* Full-width main for pages without a sidebar (public/auth pages) */
+.app-main-plain {
+    padding: 1.5rem;
+}
+
+/* Dense tables for dashboards */
+.table-dense > :not(caption) > * > * {
+    padding: .4rem .5rem;
 }
