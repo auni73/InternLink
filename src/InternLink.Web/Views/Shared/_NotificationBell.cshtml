@@ -1,0 +1,38 @@
+<div class="dropdown" id="notificationDropdownContainer">
+    <button type="button" 
+            class="btn btn-link text-body position-relative p-2 rounded-circle" 
+            id="notificationBellBtn" 
+            data-bs-toggle="dropdown" 
+            data-bs-auto-close="outside"
+            aria-expanded="false" 
+            title="Notifications" 
+            aria-label="Notifications">
+        <i class="bi bi-bell fs-5" id="notificationBellIcon"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" 
+              id="notificationBadge" 
+              style="font-size: 0.65rem; transform: translate(-40%, 25%) !important;">
+            0
+            <span class="visually-hidden">unread notifications</span>
+        </span>
+    </button>
+
+    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 p-0 mt-2" 
+         id="notificationDropdownMenu" 
+         style="width: 360px; max-width: 90vw; overflow: hidden;">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light-subtle rounded-top-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-bell-fill text-primary"></i>
+                <h6 class="fw-bold mb-0 text-slate-800">Notifications</h6>
+            </div>
+            <span class="badge bg-primary-subtle text-primary rounded-pill small" id="notificationUnreadHeaderBadge">0 new</span>
+        </div>
+
+        <div id="notificationListContainer" style="max-height: 380px; overflow-y: auto;">
+            <!-- Loading skeleton by default -->
+            <div class="p-4 text-center text-muted" id="notificationLoading">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                <span class="small">Loading notifications...</span>
+            </div>
+        </div>
+    </div>
+</div>

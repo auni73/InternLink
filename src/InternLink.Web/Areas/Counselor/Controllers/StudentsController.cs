@@ -18,6 +18,8 @@ public class StudentsController : Controller
     private readonly IApplicationRepository _applicationRepo;
     private readonly IMarkdownService _markdownService;
     private readonly UserManager<AppUser> _userManager;
+    private readonly InternLink.Web.Services.Notification.INotificationService _notificationService;
+    private readonly ILogger<StudentsController> _logger;
 
     public StudentsController(
         ICounselorRepository counselorRepo,
@@ -25,7 +27,9 @@ public class StudentsController : Controller
         IResumeRepository resumeRepo,
         IApplicationRepository applicationRepo,
         IMarkdownService markdownService,
-        UserManager<AppUser> userManager)
+        UserManager<AppUser> userManager,
+        InternLink.Web.Services.Notification.INotificationService notificationService,
+        ILogger<StudentsController> logger)
     {
         _counselorRepo = counselorRepo;
         _studentRepo = studentRepo;
@@ -33,6 +37,8 @@ public class StudentsController : Controller
         _applicationRepo = applicationRepo;
         _markdownService = markdownService;
         _userManager = userManager;
+        _notificationService = notificationService;
+        _logger = logger;
     }
 
     // GET: /Counselor/Students?search=&page=1&pageSize=15
@@ -134,7 +140,19 @@ public class StudentsController : Controller
             model.MeetingDate, 
             ct);
 
-        // NOTIFY: Prompt 26 will send notification to student here
+        // NOTIFY: Student that counselor left advising notes
+        try
+        {
+            await _notificationService.CreateAsync(
+                student.UserId,
+                "Your counselor left new advising notes",
+                "/Student/AdvisingNotes",
+                ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send notification to student {StudentUserId}", student.UserId);
+        }
 
         TempData["SuccessMessage"] = "Advising feedback note saved successfully.";
         return RedirectToAction(nameof(Details), new { id = model.StudentId, tab = "notes" });

@@ -13,17 +13,23 @@ public class AtsController : CompanyControllerBase
     private readonly IApplicationRepository _applicationRepository;
     private readonly ISkillGapRepository _skillGapRepository;
     private readonly ISkillGapService _skillGapService;
+    private readonly IStudentRepository _studentRepository;
+    private readonly InternLink.Web.Services.Notification.INotificationService _notificationService;
     private readonly ILogger<AtsController> _logger;
 
     public AtsController(
         IApplicationRepository applicationRepository,
         ISkillGapRepository skillGapRepository,
         ISkillGapService skillGapService,
+        IStudentRepository studentRepository,
+        InternLink.Web.Services.Notification.INotificationService notificationService,
         ILogger<AtsController> logger)
     {
         _applicationRepository = applicationRepository;
         _skillGapRepository = skillGapRepository;
         _skillGapService = skillGapService;
+        _studentRepository = studentRepository;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -99,6 +105,28 @@ public class AtsController : CompanyControllerBase
         }
 
         _logger.LogInformation("Company {CompanyId} transitioned application {AppId} to {Status}", companyId.Value, id, newStatus);
+
+        // NOTIFY: Student application moved to status
+        try
+        {
+            var detail = await _applicationRepository.GetCompanyApplicationDetailAsync(id, companyId.Value, ct);
+            if (detail != null)
+            {
+                var student = await _studentRepository.GetByIdAsync(detail.StudentId, ct);
+                if (student != null)
+                {
+                    await _notificationService.CreateAsync(
+                        student.UserId,
+                        $"Your application to {detail.JobTitle} moved to {newStatus.GetShortLabel()}",
+                        "/Student/Applications",
+                        ct);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send notification for application {AppId} status update", id);
+        }
 
         return Json(new AdvanceStatusResponseDto
         {
