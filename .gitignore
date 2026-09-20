@@ -35,8 +35,23 @@ coverage/
 /scratch/
 C:\InternLinkData/
 /resumes/
+/.dotnet/
+/.temp_*/
+/tools/
+/test.html
 
-## Build Prompts & Documentation Exports
+## Build Prompts, Personal Logs & Documentation Exports
+JOB.md
+job.md
 InternLink_Build_Prompts_v3.md
 InternLink_Build_Prompts_v3.pdf
 *.pdf
+*.log
+*.log.md
+/*log*.md
+/notes*.md
+/*scratch*.md
+/*temp*.md
+/*draft*.md
+/*prompt*.md
+/*personal*.md
