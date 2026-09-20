@@ -76,9 +76,16 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
             b.ToTable("Jobs");
             b.HasKey(j => j.Id);
             b.Property(j => j.LocationType).HasConversion<byte>();
+            b.Property(j => j.Source).HasConversion<byte>();
             b.HasOne(j => j.Company)
              .WithMany(c => c.Jobs)
-             .HasForeignKey(j => j.CompanyId);
+             .HasForeignKey(j => j.CompanyId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.SetNull);
+            b.HasIndex(j => new { j.ExternalSourceName, j.ExternalJobId })
+             .IsUnique()
+             .HasFilter("[ExternalSourceName] IS NOT NULL AND [ExternalJobId] IS NOT NULL");
+            b.HasIndex(j => j.Source);
         });
 
         // 6. Resumes

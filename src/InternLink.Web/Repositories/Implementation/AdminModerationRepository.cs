@@ -276,8 +276,8 @@ public class AdminModerationRepository : IAdminModerationRepository
             SELECT 
                 j.Id AS JobId,
                 j.CompanyId,
-                c.CompanyName,
-                c.CorporateWebsite,
+                COALESCE(c.CompanyName, j.CompanyNameSnapshot, N'External') AS CompanyName,
+                COALESCE(c.CorporateWebsite, j.ExternalApplyUrl) AS CorporateWebsite,
                 j.Title,
                 j.LocationType,
                 j.DeadLine,
@@ -286,9 +286,13 @@ public class AdminModerationRepository : IAdminModerationRepository
                 j.CoreDescription,
                 j.SelectionCriteria,
                 j.CreatedAt,
-                (SELECT COUNT(1) FROM dbo.Applications a WHERE a.JobId = j.Id) AS ApplicantCount
+                (SELECT COUNT(1) FROM dbo.Applications a WHERE a.JobId = j.Id) AS ApplicantCount,
+                j.Source,
+                j.ExternalSourceName,
+                j.ExternalApplyUrl,
+                j.CompanyNameSnapshot
             FROM dbo.Jobs j
-            INNER JOIN dbo.Companies c ON j.CompanyId = c.Id
+            LEFT JOIN dbo.Companies c ON j.CompanyId = c.Id
             WHERE (@approved IS NULL OR j.IsApproved = @approved) 
               AND j.IsClosed = 0
             ORDER BY j.CreatedAt DESC";
@@ -311,7 +315,11 @@ public class AdminModerationRepository : IAdminModerationRepository
             CoreDescription = r.CoreDescription,
             SelectionCriteria = r.SelectionCriteria,
             CreatedAt = r.CreatedAt,
-            ApplicantCount = r.ApplicantCount
+            ApplicantCount = r.ApplicantCount,
+            Source = (JobSource)r.Source,
+            ExternalSourceName = r.ExternalSourceName,
+            ExternalApplyUrl = r.ExternalApplyUrl,
+            CompanyNameSnapshot = r.CompanyNameSnapshot
         }).ToList();
 
         return (items, pendingCount, approvedCount);
@@ -377,7 +385,7 @@ public class JobStatusCountRowResult
 public class AdminJobRowResult
 {
     public Guid JobId { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string? CorporateWebsite { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -389,4 +397,8 @@ public class AdminJobRowResult
     public string? SelectionCriteria { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public int ApplicantCount { get; set; }
+    public byte Source { get; set; }
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
+    public string? CompanyNameSnapshot { get; set; }
 }

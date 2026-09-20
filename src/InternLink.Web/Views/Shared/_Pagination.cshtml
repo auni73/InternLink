@@ -5,7 +5,14 @@
         return;
     }
 
-    string PageLink(int page) => $"?page={page}&pageSize={Model.PageSize}";
+    string PageLink(int page)
+    {
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Context.Request.QueryString.Value ?? string.Empty);
+        var items = query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        items["page"] = page.ToString();
+        items["pageSize"] = Model.PageSize.ToString();
+        return "?" + string.Join("&", items.Select(kv => $"{System.Net.WebUtility.UrlEncode(kv.Key)}={System.Net.WebUtility.UrlEncode(kv.Value)}"));
+    }
     var start = Math.Max(1, Model.Page - 2);
     var end = Math.Min(Model.TotalPages, Model.Page + 2);
 }

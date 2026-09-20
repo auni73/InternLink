@@ -28,14 +28,15 @@ public class StubJobRepository : IJobRepository
     public Task<IReadOnlyList<Guid>> GetApprovedOpenJobIdsAsync(CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<Guid>> GetAllJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task<IReadOnlyList<Guid>> GetIndexableJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<bool> ExistsExternalJobAsync(string externalSourceName, string externalJobId, CancellationToken ct = default) => throw new NotSupportedException();
+    public Task<Guid> CreateExternalJobAsync(Job job, IEnumerable<(Guid SkillId, int ImportanceWeight)>? skillWeights = null, CancellationToken ct = default) => throw new NotSupportedException();
 }
 
 public class StubStudentRepository : IStudentRepository
 {
     public virtual Task<Student?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<StudentSkill>> GetStudentSkillsAsync(Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
-
-    public Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken ct = default) => throw new NotSupportedException();
+    public virtual Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken ct = default) => throw new NotSupportedException();
     public Task UpdateProfileAsync(Student student, CancellationToken ct = default) => throw new NotSupportedException();
     public Task SyncStudentSkillsAsync(Guid studentId, IEnumerable<(Guid SkillId, int ProficiencyLevel)> skills, CancellationToken ct = default) => throw new NotSupportedException();
 }

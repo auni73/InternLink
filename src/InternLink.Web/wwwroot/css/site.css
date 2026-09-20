@@ -745,4 +745,27 @@ body {
     }
 }
 
+/* Source Badges */
+.bg-teal-subtle {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+}
+.text-teal {
+    color: #0d9488 !important;
+}
+.border-teal-subtle {
+    border-color: #a7f3d0 !important;
+}
+
+.bg-purple-subtle {
+    background-color: #f5f3ff !important;
+    color: #6b21a8 !important;
+}
+.text-purple {
+    color: #7c3aed !important;
+}
+.border-purple-subtle {
+    border-color: #ddd6fe !important;
+}
+
 

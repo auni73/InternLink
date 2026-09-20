@@ -4,7 +4,7 @@ namespace InternLink.Web.Services.Vectors;
 public sealed class JobVectorSource
 {
     public Guid JobId { get; init; }
-    public Guid CompanyId { get; init; }
+    public Guid? CompanyId { get; init; }
     public string Title { get; init; } = string.Empty;
     public string CoreDescription { get; init; } = string.Empty;
     public string SelectionCriteria { get; init; } = string.Empty;
@@ -20,5 +20,5 @@ public sealed class JobVectorSource
         $"{Title}\n{CoreDescription}\n{SelectionCriteria}\nSkills: {string.Join(", ", SkillNames)}";
 
     public JobVectorPayload ToPayload() =>
-        new(CompanyId, LocationType, DeadLine.ToUnixTimeSeconds(), SkillIds);
+        new(CompanyId ?? Guid.Empty, LocationType, DeadLine.ToUnixTimeSeconds(), SkillIds);
 }

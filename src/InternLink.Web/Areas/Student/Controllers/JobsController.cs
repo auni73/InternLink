@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Helpers;
+using InternLink.Web.Models.Enums;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Resume;
@@ -56,6 +57,21 @@ public class JobsController : StudentControllerBase
         filter ??= new JobSearchFilter();
         if (filter.Page < 1) filter.Page = 1;
         if (filter.PageSize < 1 || filter.PageSize > 50) filter.PageSize = 9;
+
+        if (string.Equals(filter.ExternalSourceName, "INTERNAL", StringComparison.OrdinalIgnoreCase))
+        {
+            filter.Source = JobSource.Internal;
+            filter.ExternalSourceName = null;
+        }
+        else if (string.Equals(filter.ExternalSourceName, "EXTERNAL", StringComparison.OrdinalIgnoreCase))
+        {
+            filter.Source = JobSource.External;
+            filter.ExternalSourceName = null;
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.ExternalSourceName))
+        {
+            filter.Source = JobSource.External;
+        }
 
         var studentId = await GetStudentIdAsync(ct);
         var isFtsAvailable = await _ftsCapabilityService.IsFtsAvailableAsync(ct);
@@ -117,6 +133,12 @@ public class JobsController : StudentControllerBase
         if (job is null)
         {
             return NotFound(new { error = "Job posting is not active or has expired." });
+        }
+
+        // Safety Rule: External jobs must be applied to on their external source portal
+        if (job.Source == JobSource.External)
+        {
+            return BadRequest(new { error = "This is an external job posting. Please apply directly on the source portal using the provided link." });
         }
 
         // 2. Pre-check if already applied

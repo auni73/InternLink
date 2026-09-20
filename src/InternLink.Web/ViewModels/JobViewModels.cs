@@ -7,6 +7,9 @@ public class JobSearchFilter
 {
     public string? Keyword { get; set; }
     public LocationType? LocationType { get; set; }
+    public JobSource? Source { get; set; }
+    public string? ExternalSourceName { get; set; }
+    public string? SortBy { get; set; } = "newest";
     public bool RelevantToMe { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 9;
@@ -28,6 +31,9 @@ public class JobListItemViewModel
     public LocationType LocationType { get; set; }
     public DateTimeOffset Deadline { get; set; }
     public bool HasApplied { get; set; }
+    public JobSource Source { get; set; } = JobSource.Internal;
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
     public List<JobSkillBadgeViewModel> RequiredSkills { get; set; } = new();
 
     public bool IsUrgent => (Deadline - DateTimeOffset.UtcNow).TotalHours is > 0 and < 48;
@@ -67,7 +73,7 @@ public class JobListViewModel
 public class JobDetailViewModel
 {
     public Guid Id { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public string? CorporateWebsite { get; set; }
@@ -77,6 +83,10 @@ public class JobDetailViewModel
     public string CoreDescription { get; set; } = string.Empty;
     public string SelectionCriteria { get; set; } = string.Empty;
     public bool HasApplied { get; set; }
+    public JobSource Source { get; set; } = JobSource.Internal;
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
+    public string? CompanyNameSnapshot { get; set; }
     public List<JobSkillBadgeViewModel> RequiredSkills { get; set; } = new();
     public IReadOnlyList<ResumeItemViewModel> FinalizedResumes { get; set; } = new List<ResumeItemViewModel>();
 

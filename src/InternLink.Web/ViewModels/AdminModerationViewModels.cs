@@ -81,7 +81,7 @@ public class AdminJobQueueViewModel
 public class AdminJobQueueItemViewModel
 {
     public Guid JobId { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string? CorporateWebsite { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -93,6 +93,10 @@ public class AdminJobQueueItemViewModel
     public string? SelectionCriteria { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public int ApplicantCount { get; set; }
+    public JobSource Source { get; set; } = JobSource.Internal;
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
+    public string? CompanyNameSnapshot { get; set; }
 }
 
 // =========================================================================

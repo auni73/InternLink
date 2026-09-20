@@ -21,6 +21,7 @@ This folder contains the authoritative, hand-authored T-SQL scripts for the Inte
 6. **`005_seed_reference_data.sql`**: Reference `Skills` rows shared by students and job postings.
 7. **`006_admin_rejection_reason.sql`**: Adds `Companies.AdminRejectionReason` for moderation feedback.
 8. **`007_mock_interview_sessions.sql`**: `MockInterviewSessions` table backing the persistent AI mock interview chatbot.
+9. **`008_external_jobs.sql`**: External & third-party aggregated jobs support (makes `CompanyId` nullable, adds external source metadata and filtered deduplication index).
 
 ---
 

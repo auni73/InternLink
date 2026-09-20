@@ -18,13 +18,23 @@
             </div>
             <h2 class="fw-bold mb-0 text-slate-800">Job Vacancy & Internship Moderation Queue</h2>
         </div>
-        <form asp-action="ReindexAll" method="post" class="m-0">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm">
-                <i class="bi bi-arrow-repeat"></i>
-                <span>Rebuild Semantic Index</span>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" id="btnSyncExternal" class="btn btn-outline-primary d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-cloud-arrow-down"></i>
+                <span id="syncBtnText">Sync External Jobs</span>
             </button>
-        </form>
+            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddExternalJob">
+                <i class="bi bi-plus-circle"></i>
+                <span>Add External Job</span>
+            </button>
+            <form asp-action="ReindexAll" method="post" class="m-0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Rebuild Semantic Index</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
@@ -76,6 +86,18 @@
                                 <div>
                                     <div class="d-flex align-items-center gap-2 mb-1">
                                         <h5 class="fw-bold text-slate-800 mb-0">@job.Title</h5>
+                                        @if (job.Source == JobSource.Internal)
+                                        {
+                                            <span class="badge bg-teal-subtle text-teal border border-teal-subtle">
+                                                <i class="bi bi-shield-check me-1"></i>Direct
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>@(job.ExternalSourceName ?? "External")
+                                            </span>
+                                        }
                                         <span class="badge bg-light text-dark border">
                                             <i class="bi @(job.LocationType == LocationType.Remote ? "bi-laptop" : job.LocationType == LocationType.Hybrid ? "bi-building-gear" : "bi-geo-alt") me-1"></i>
                                             @job.LocationType
@@ -168,8 +190,121 @@
     </div>
 </div>
 
+<!-- Modal: Add External Job (AI Smart-Paste & Manual Form) -->
+<div class="modal fade" id="modalAddExternalJob" tabindex="-1" aria-labelledby="modalAddExternalJobLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom px-4 py-3">
+                <div>
+                    <h5 class="modal-title fw-bold text-slate-800 mb-0" id="modalAddExternalJobLabel">
+                        <i class="bi bi-plus-circle text-primary me-2"></i>Add External Opportunity
+                    </h5>
+                    <p class="text-muted small mb-0">Ingest job circulars from newspapers, LinkedIn, or external portals.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <ul class="nav nav-tabs border-bottom px-4 pt-2 gap-2" id="externalJobModalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-semibold" id="tab-smart-paste-link" data-bs-toggle="tab" data-bs-target="#tab-smart-paste" type="button" role="tab">
+                            <i class="bi bi-magic text-primary me-1"></i>AI Smart-Paste
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-semibold" id="tab-review-link" data-bs-toggle="tab" data-bs-target="#tab-review" type="button" role="tab">
+                            <i class="bi bi-pencil-square text-success me-1"></i>Review & Publish Form
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-4">
+                    <!-- Tab 1: AI Smart-Paste -->
+                    <div class="tab-pane fade show active" id="tab-smart-paste" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-slate-800 mb-0">Raw Circular / Flyer Text</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnInsertSampleCircular">
+                                <i class="bi bi-lightning-charge me-1"></i>Try Sample Circular
+                            </button>
+                        </div>
+                        <textarea class="form-control font-monospace small mb-3" id="rawCircularText" rows="10" placeholder="Paste unstructured job circular, flyer contents, or LinkedIn post here..."></textarea>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" id="btnExtractCircular">
+                                <span class="spinner-border spinner-border-sm d-none" id="extractSpinner" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-cpu"></i>
+                                <span>Extract with Gemini AI</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Review & Publish Form -->
+                    <div class="tab-pane fade" id="tab-review" role="tabpanel">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-bold">Job Title *</label>
+                                <input type="text" class="form-control" id="extJobTitle" placeholder="e.g. Trainee Software Engineer" required />
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Company Name Snapshot *</label>
+                                <input type="text" class="form-control" id="extCompanyName" placeholder="e.g. Brain Station 23" required />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Source Portal / Circular *</label>
+                                <input type="text" class="form-control" id="extSourceName" value="Manual / Circular" required />
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">External Application URL *</label>
+                                <input type="url" class="form-control" id="extApplyUrl" placeholder="https://..." required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Location Arrangement *</label>
+                                <select class="form-select" id="extLocationType">
+                                    <option value="0">Remote</option>
+                                    <option value="1" selected>On-Site</option>
+                                    <option value="2">Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Application Deadline</label>
+                                <input type="date" class="form-control" id="extDeadline" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Role Description & Responsibilities *</label>
+                                <textarea class="form-control" id="extCoreDesc" rows="4" placeholder="Summary of role duties..." required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Selection Criteria & Prerequisites</label>
+                                <textarea class="form-control" id="extCriteria" rows="3" placeholder="Educational degree, CGPA, or prerequisites..."></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Targeted Skills (Comma Separated)</label>
+                                <input type="text" class="form-control" id="extSkillTags" placeholder="e.g. C#, ASP.NET Core, SQL Server, React, Docker" />
+                                <div class="form-text small">Skills matching the platform's catalog will be auto-linked to drive AI student recommendations.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success d-inline-flex align-items-center gap-2" id="btnSubmitExternalJob">
+                                <i class="bi bi-check-circle"></i>
+                                <span>Publish External Job</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script type="module" src="~/js/admin-moderation.js" asp-append-version="true"></script>
+    <script type="module" src="~/js/admin-external-jobs.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.toggle-desc-btn').forEach(btn => {

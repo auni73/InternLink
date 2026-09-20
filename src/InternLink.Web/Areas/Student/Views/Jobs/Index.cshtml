@@ -39,34 +39,51 @@
     <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-body p-4">
             <form method="get" asp-area="Student" asp-controller="Jobs" asp-action="Index" class="row g-3 align-items-center">
-                <div class="col-lg-5 col-md-12">
+                <div class="col-lg-3 col-md-6">
                     <div class="input-group">
                         <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" name="Keyword" value="@Model.Filter.Keyword" class="form-control border-start-0 ps-0" placeholder="Search by title, technology, or keywords..." />
+                        <input type="text" name="Keyword" value="@Model.Filter.Keyword" class="form-control border-start-0 ps-0" placeholder="Search title, tech, skill..." />
                     </div>
                 </div>
 
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-2 col-md-6">
+                    <select name="ExternalSourceName" class="form-select">
+                        <option value="">All Sources</option>
+                        <option value="INTERNAL" selected="@(Model.Filter.Source == JobSource.Internal)">InternLink Direct</option>
+                        <option value="Arbeitnow" selected="@(Model.Filter.ExternalSourceName == "Arbeitnow")">Arbeitnow (Tech & Remote)</option>
+                        <option value="BDJobs" selected="@(Model.Filter.ExternalSourceName == "BDJobs")">BDJobs (Bangladesh)</option>
+                        <option value="EXTERNAL" selected="@(Model.Filter.Source == JobSource.External && string.IsNullOrEmpty(Model.Filter.ExternalSourceName))">All External APIs</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
                     <select name="LocationType" class="form-select">
-                        <option value="">All Work Arrangements</option>
+                        <option value="">All Arrangements</option>
                         <option value="0" selected="@(Model.Filter.LocationType == LocationType.Remote)">Remote</option>
                         <option value="1" selected="@(Model.Filter.LocationType == LocationType.OnSite)">On-Site</option>
                         <option value="2" selected="@(Model.Filter.LocationType == LocationType.Hybrid)">Hybrid</option>
                     </select>
                 </div>
 
-                <div class="col-lg-2 col-md-6">
+                <div class="col-lg-2 col-md-4">
+                    <select name="SortBy" class="form-select">
+                        <option value="newest" selected="@(string.IsNullOrEmpty(Model.Filter.SortBy) || Model.Filter.SortBy == "newest")">Newest First</option>
+                        <option value="deadline" selected="@(Model.Filter.SortBy == "deadline")">Closing Soonest</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
                     <div class="form-check form-switch pt-1">
                         <input class="form-check-input" type="checkbox" name="RelevantToMe" value="true" id="relevantSwitch" @(Model.Filter.RelevantToMe ? "checked" : "") />
-                        <label class="form-check-label small fw-medium" for="relevantSwitch">Matched to My Skills</label>
+                        <label class="form-check-label small fw-medium" for="relevantSwitch">Matched Skills</label>
                     </div>
                 </div>
 
-                <div class="col-lg-2 col-md-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="bi bi-funnel me-1"></i>Filter
+                <div class="col-lg-1 col-md-12 d-flex gap-1">
+                    <button type="submit" class="btn btn-primary flex-grow-1" title="Apply Filter">
+                        <i class="bi bi-funnel"></i>
                     </button>
-                    @if (!string.IsNullOrWhiteSpace(Model.Filter.Keyword) || Model.Filter.LocationType.HasValue || Model.Filter.RelevantToMe)
+                    @if (!string.IsNullOrWhiteSpace(Model.Filter.Keyword) || Model.Filter.LocationType.HasValue || Model.Filter.Source.HasValue || !string.IsNullOrWhiteSpace(Model.Filter.ExternalSourceName) || Model.Filter.RelevantToMe || Model.Filter.SortBy == "deadline")
                     {
                         <a asp-area="Student" asp-controller="Jobs" asp-action="Index" class="btn btn-outline-secondary" title="Clear Filters">
                             <i class="bi bi-x-lg"></i>
@@ -88,9 +105,23 @@
                         <div class="card-body p-4 d-flex flex-column flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <span class="badge bg-light text-primary border mb-2">
-                                        <i class="bi bi-geo-alt me-1"></i>@job.LocationType
-                                    </span>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">
+                                        @if (job.Source == JobSource.Internal)
+                                        {
+                                            <span class="badge bg-teal-subtle text-teal border border-teal-subtle">
+                                                <i class="bi bi-shield-check me-1"></i>InternLink Direct
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>via @(job.ExternalSourceName ?? "External")
+                                            </span>
+                                        }
+                                        <span class="badge bg-light text-primary border">
+                                            <i class="bi bi-geo-alt me-1"></i>@job.LocationType
+                                        </span>
+                                    </div>
                                     <h5 class="card-title fw-bold text-slate-800 mb-1">@job.Title</h5>
                                     <div class="text-muted small fw-medium">
                                         <i class="bi bi-building me-1 text-slate-400"></i>@job.CompanyName

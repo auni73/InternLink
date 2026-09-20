@@ -97,6 +97,10 @@ public class JobRepository : IJobRepository
             {
                 Value = filter.LocationType.HasValue ? (object)(byte)filter.LocationType.Value : DBNull.Value
             },
+            new("@source", SqlDbType.TinyInt)
+            {
+                Value = filter.Source.HasValue ? (object)(byte)filter.Source.Value : DBNull.Value
+            },
             new("@studentId", SqlDbType.UniqueIdentifier)
             {
                 Value = studentId.HasValue ? (object)studentId.Value : DBNull.Value
@@ -109,7 +113,8 @@ public class JobRepository : IJobRepository
             WHERE j.IsApproved = 1 
               AND j.IsClosed = 0 
               AND j.DeadLine >= SYSDATETIMEOFFSET() 
-              AND (@lt IS NULL OR j.LocationType = @lt)";
+              AND (@lt IS NULL OR j.LocationType = @lt)
+              AND (@source IS NULL OR j.Source = @source)";
 
         if (filter.RelevantToMe && studentId.HasValue)
         {
@@ -121,8 +126,19 @@ public class JobRepository : IJobRepository
                   WHERE js.JobId = j.Id AND ss.StudentId = @studentId)";
         }
 
-        var joinClause = "INNER JOIN dbo.Companies c ON j.CompanyId = c.Id";
-        var orderByClause = "ORDER BY j.DeadLine ASC";
+        if (!string.IsNullOrWhiteSpace(filter.ExternalSourceName))
+        {
+            parameters.Add(new SqlParameter("@extSource", SqlDbType.NVarChar, 100) { Value = filter.ExternalSourceName.Trim() });
+            whereClause += " AND j.ExternalSourceName = @extSource";
+        }
+
+        var joinClause = "LEFT JOIN dbo.Companies c ON j.CompanyId = c.Id";
+        var orderByClause = filter.SortBy?.ToLowerInvariant() switch
+        {
+            "deadline" => "ORDER BY j.DeadLine ASC",
+            "oldest" => "ORDER BY j.CreatedAt ASC",
+            _ => "ORDER BY j.CreatedAt DESC, j.DeadLine ASC"
+        };
 
         if (useFts)
         {
@@ -163,13 +179,16 @@ public class JobRepository : IJobRepository
             SELECT 
                 j.Id,
                 j.Title,
-                c.CompanyName,
+                COALESCE(c.CompanyName, j.CompanyNameSnapshot, N'External') AS CompanyName,
                 c.IndustrySector,
                 j.LocationType,
                 j.DeadLine,
                 CAST(CASE WHEN @studentId IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
-                ) THEN 1 ELSE 0 END AS bit) AS HasApplied
+                ) THEN 1 ELSE 0 END AS bit) AS HasApplied,
+                j.Source,
+                j.ExternalSourceName,
+                j.ExternalApplyUrl
             FROM dbo.Jobs j
             {joinClause}
             {whereClause}
@@ -213,6 +232,9 @@ public class JobRepository : IJobRepository
             LocationType = (LocationType)r.LocationType,
             Deadline = r.DeadLine,
             HasApplied = r.HasApplied,
+            Source = (JobSource)r.Source,
+            ExternalSourceName = r.ExternalSourceName,
+            ExternalApplyUrl = r.ExternalApplyUrl,
             RequiredSkills = skillLookup.TryGetValue(r.Id, out var sk) ? sk : new List<JobSkillBadgeViewModel>()
         }).ToList();
 
@@ -232,18 +254,22 @@ public class JobRepository : IJobRepository
                 j.Id,
                 j.CompanyId,
                 j.Title,
-                c.CompanyName,
-                c.CorporateWebsite,
-                c.IndustrySector,
+                COALESCE(c.CompanyName, j.CompanyNameSnapshot, N'External') AS CompanyName,
+                COALESCE(c.CorporateWebsite, j.ExternalApplyUrl) AS CorporateWebsite,
+                COALESCE(c.IndustrySector, N'Technology') AS IndustrySector,
                 j.LocationType,
                 j.DeadLine,
                 j.CoreDescription,
                 j.SelectionCriteria,
                 CAST(CASE WHEN @studentId IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
-                ) THEN 1 ELSE 0 END AS bit) AS HasApplied
+                ) THEN 1 ELSE 0 END AS bit) AS HasApplied,
+                j.Source,
+                j.ExternalSourceName,
+                j.ExternalApplyUrl,
+                j.CompanyNameSnapshot
             FROM dbo.Jobs j
-            INNER JOIN dbo.Companies c ON j.CompanyId = c.Id
+            LEFT JOIN dbo.Companies c ON j.CompanyId = c.Id
             WHERE j.Id = @id 
               AND j.IsApproved = 1 
               AND j.IsClosed = 0 
@@ -284,6 +310,10 @@ public class JobRepository : IJobRepository
             CoreDescription = detailRow.CoreDescription,
             SelectionCriteria = detailRow.SelectionCriteria,
             HasApplied = detailRow.HasApplied,
+            Source = (JobSource)detailRow.Source,
+            ExternalSourceName = detailRow.ExternalSourceName,
+            ExternalApplyUrl = detailRow.ExternalApplyUrl,
+            CompanyNameSnapshot = detailRow.CompanyNameSnapshot,
             RequiredSkills = skills
         };
     }
@@ -609,7 +639,7 @@ public class JobRepository : IJobRepository
         SELECT 
             j.Id AS JobId,
             j.Title,
-            c.CompanyName,
+            COALESCE(c.CompanyName, j.CompanyNameSnapshot, N'External') AS CompanyName,
             j.LocationType,
             j.DeadLine,
             (SELECT COUNT(*) FROM dbo.JobSkills js WHERE js.JobId = j.Id) AS RequiredSkillCount,
@@ -627,7 +657,7 @@ public class JobRepository : IJobRepository
                 SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
             ) THEN 1 ELSE 0 END AS bit) AS HasApplied
         FROM dbo.Jobs j
-        INNER JOIN dbo.Companies c ON j.CompanyId = c.Id";
+        LEFT JOIN dbo.Companies c ON j.CompanyId = c.Id";
 
     public async Task<IReadOnlyList<RecommendationCandidate>> GetRecommendationCandidatesAsync(
         IReadOnlyList<Guid> jobIds,
@@ -703,12 +733,109 @@ public class JobRepository : IJobRepository
         TopMatchedSkillName = r.TopMatchedSkillName,
         HasApplied = r.HasApplied
     };
+
+    public async Task<bool> ExistsExternalJobAsync(string sourceName, string externalJobId, CancellationToken ct = default)
+    {
+        var sourceParam = new SqlParameter("@sourceName", SqlDbType.NVarChar, 100) { Value = sourceName };
+        var idParam = new SqlParameter("@externalJobId", SqlDbType.NVarChar, 200) { Value = externalJobId };
+
+        const string sql = @"
+            SELECT COUNT(1) AS Value
+            FROM dbo.Jobs j
+            WHERE j.ExternalSourceName = @sourceName 
+              AND j.ExternalJobId = @externalJobId";
+
+        var count = await _db.Database
+            .SqlQueryRaw<int>(sql, sourceParam, idParam)
+            .FirstOrDefaultAsync(ct);
+
+        return count > 0;
+    }
+
+    public async Task<Guid> CreateExternalJobAsync(
+        Job job, 
+        IEnumerable<(Guid SkillId, int ImportanceWeight)>? skills, 
+        CancellationToken ct = default)
+    {
+        job.Id = job.Id == Guid.Empty ? Guid.NewGuid() : job.Id;
+        job.Source = JobSource.External;
+        job.IsApproved = true;
+        job.IsClosed = false;
+        job.CreatedAt = DateTimeOffset.UtcNow;
+        job.LastSyncedAt = DateTimeOffset.UtcNow;
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        try
+        {
+            var parameters = new[]
+            {
+                new SqlParameter("@id", SqlDbType.UniqueIdentifier) { Value = job.Id },
+                new SqlParameter("@companyId", SqlDbType.UniqueIdentifier) { Value = (object?)job.CompanyId ?? DBNull.Value },
+                new SqlParameter("@title", SqlDbType.NVarChar, 200) { Value = job.Title },
+                new SqlParameter("@coreDesc", SqlDbType.NVarChar, -1) { Value = job.CoreDescription },
+                new SqlParameter("@criteria", SqlDbType.NVarChar, -1) { Value = job.SelectionCriteria ?? string.Empty },
+                new SqlParameter("@locationType", SqlDbType.TinyInt) { Value = (byte)job.LocationType },
+                new SqlParameter("@deadLine", SqlDbType.DateTimeOffset) { Value = job.DeadLine },
+                new SqlParameter("@isApproved", SqlDbType.Bit) { Value = job.IsApproved },
+                new SqlParameter("@isClosed", SqlDbType.Bit) { Value = job.IsClosed },
+                new SqlParameter("@createdAt", SqlDbType.DateTimeOffset) { Value = job.CreatedAt },
+                new SqlParameter("@source", SqlDbType.TinyInt) { Value = (byte)job.Source },
+                new SqlParameter("@externalSourceName", SqlDbType.NVarChar, 100) { Value = (object?)job.ExternalSourceName ?? DBNull.Value },
+                new SqlParameter("@externalJobId", SqlDbType.NVarChar, 200) { Value = (object?)job.ExternalJobId ?? DBNull.Value },
+                new SqlParameter("@externalApplyUrl", SqlDbType.NVarChar, 1000) { Value = (object?)job.ExternalApplyUrl ?? DBNull.Value },
+                new SqlParameter("@companyNameSnapshot", SqlDbType.NVarChar, 200) { Value = (object?)job.CompanyNameSnapshot ?? DBNull.Value },
+                new SqlParameter("@lastSyncedAt", SqlDbType.DateTimeOffset) { Value = (object?)job.LastSyncedAt ?? DBNull.Value }
+            };
+
+            const string insertJobSql = @"
+                INSERT INTO dbo.Jobs (
+                    Id, CompanyId, Title, CoreDescription, SelectionCriteria,
+                    LocationType, DeadLine, IsApproved, IsClosed, CreatedAt,
+                    Source, ExternalSourceName, ExternalJobId, ExternalApplyUrl,
+                    CompanyNameSnapshot, LastSyncedAt
+                ) VALUES (
+                    @id, @companyId, @title, @coreDesc, @criteria,
+                    @locationType, @deadLine, @isApproved, @isClosed, @createdAt,
+                    @source, @externalSourceName, @externalJobId, @externalApplyUrl,
+                    @companyNameSnapshot, @lastSyncedAt
+                )";
+
+            await _db.Database.ExecuteSqlRawAsync(insertJobSql, parameters, ct);
+
+            if (skills != null)
+            {
+                foreach (var (skillId, weight) in skills)
+                {
+                    var skillParams = new[]
+                    {
+                        new SqlParameter("@jobId", SqlDbType.UniqueIdentifier) { Value = job.Id },
+                        new SqlParameter("@skillId", SqlDbType.UniqueIdentifier) { Value = skillId },
+                        new SqlParameter("@weight", SqlDbType.Int) { Value = weight }
+                    };
+
+                    const string insertSkillSql = @"
+                        INSERT INTO dbo.JobSkills (JobId, SkillId, RequiredImportanceWeight)
+                        VALUES (@jobId, @skillId, @weight)";
+
+                    await _db.Database.ExecuteSqlRawAsync(insertSkillSql, skillParams, ct);
+                }
+            }
+
+            await transaction.CommitAsync(ct);
+            return job.Id;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(ct);
+            throw;
+        }
+    }
 }
 
 public class JobVectorSourceRowResult
 {
     public Guid JobId { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string CoreDescription { get; set; } = string.Empty;
     public string SelectionCriteria { get; set; } = string.Empty;
@@ -739,12 +866,15 @@ public class JobSearchRowResult
     public byte LocationType { get; set; }
     public DateTimeOffset DeadLine { get; set; }
     public bool HasApplied { get; set; }
+    public byte Source { get; set; }
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
 }
 
 public class JobDetailRowResult
 {
     public Guid Id { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public string? CorporateWebsite { get; set; }
@@ -754,6 +884,10 @@ public class JobDetailRowResult
     public string CoreDescription { get; set; } = string.Empty;
     public string SelectionCriteria { get; set; } = string.Empty;
     public bool HasApplied { get; set; }
+    public byte Source { get; set; }
+    public string? ExternalSourceName { get; set; }
+    public string? ExternalApplyUrl { get; set; }
+    public string? CompanyNameSnapshot { get; set; }
 }
 
 public class CompanyJobRowResult
