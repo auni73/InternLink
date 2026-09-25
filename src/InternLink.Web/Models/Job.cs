@@ -13,6 +13,7 @@ public class Job
     public DateTimeOffset DeadLine { get; set; }
     public bool IsApproved { get; set; }
     public bool IsClosed { get; set; }
+    public string? TargetDepartment { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // External Posting Metadata

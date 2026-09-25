@@ -7,6 +7,8 @@ public class Skill
     public Guid Id { get; set; }
     public string SkillName { get; set; } = string.Empty;
     public SkillDomain DomainClassification { get; set; }
+    public string DepartmentCode { get; set; } = "CSE";
+    public string CategoryName { get; set; } = "Software";
 
     // Navigation properties
     public virtual ICollection<StudentSkill> StudentSkills { get; set; } = new List<StudentSkill>();
