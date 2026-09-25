@@ -89,6 +89,9 @@ public class CompanyJobEditViewModel
     public bool IsApproved { get; set; }
     public bool IsClosed { get; set; }
 
+    [Display(Name = "Target Engineering Discipline / Major")]
+    public string? TargetDepartment { get; set; }
+
     public List<JobSkillWeightDto> SelectedSkills { get; set; } = new();
     public IReadOnlyList<Skill> AvailableSkills { get; set; } = new List<Skill>();
 }

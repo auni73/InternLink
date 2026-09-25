@@ -11,6 +11,7 @@ namespace InternLink.Web.Areas.Student.Controllers;
 public class JobsController : StudentControllerBase
 {
     private readonly IJobRepository _jobRepository;
+    private readonly IStudentRepository _studentRepository;
     private readonly IApplicationRepository _applicationRepository;
     private readonly IResumeRepository _resumeRepository;
     private readonly IResumeService _resumeService;
@@ -20,6 +21,7 @@ public class JobsController : StudentControllerBase
 
     public JobsController(
         IJobRepository jobRepository,
+        IStudentRepository studentRepository,
         IApplicationRepository applicationRepository,
         IResumeRepository resumeRepository,
         IResumeService resumeService,
@@ -28,6 +30,7 @@ public class JobsController : StudentControllerBase
         ILogger<JobsController> logger)
     {
         _jobRepository = jobRepository;
+        _studentRepository = studentRepository;
         _applicationRepository = applicationRepository;
         _resumeRepository = resumeRepository;
         _resumeService = resumeService;
@@ -74,6 +77,13 @@ public class JobsController : StudentControllerBase
         }
 
         var studentId = await GetStudentIdAsync(ct);
+        string? studentDept = null;
+        if (studentId.HasValue)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId.Value, ct);
+            studentDept = student?.Department;
+        }
+
         var isFtsAvailable = await _ftsCapabilityService.IsFtsAvailableAsync(ct);
 
         var (items, totalCount) = await _jobRepository.SearchApprovedOpenJobsAsync(
@@ -87,7 +97,8 @@ public class JobsController : StudentControllerBase
             Jobs = items,
             Filter = filter,
             TotalCount = totalCount,
-            IsFtsFallback = !isFtsAvailable && !string.IsNullOrWhiteSpace(filter.Keyword)
+            IsFtsFallback = !isFtsAvailable && !string.IsNullOrWhiteSpace(filter.Keyword),
+            StudentDepartment = studentDept
         };
 
         return View(viewModel);

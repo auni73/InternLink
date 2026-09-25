@@ -132,6 +132,13 @@ public class JobRepository : IJobRepository
             whereClause += " AND j.ExternalSourceName = @extSource";
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.Department))
+        {
+            var deptNorm = InternLink.Web.Models.EngineeringDepartments.Normalize(filter.Department);
+            parameters.Add(new SqlParameter("@targetDept", SqlDbType.NVarChar, 100) { Value = deptNorm });
+            whereClause += " AND (j.TargetDepartment IS NULL OR j.TargetDepartment = N'All' OR j.TargetDepartment = @targetDept)";
+        }
+
         var joinClause = "LEFT JOIN dbo.Companies c ON j.CompanyId = c.Id";
         var orderByClause = filter.SortBy?.ToLowerInvariant() switch
         {
@@ -186,6 +193,7 @@ public class JobRepository : IJobRepository
                 CAST(CASE WHEN @studentId IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
                 ) THEN 1 ELSE 0 END AS bit) AS HasApplied,
+                j.TargetDepartment,
                 j.Source,
                 j.ExternalSourceName,
                 j.ExternalApplyUrl
@@ -232,6 +240,7 @@ public class JobRepository : IJobRepository
             LocationType = (LocationType)r.LocationType,
             Deadline = r.DeadLine,
             HasApplied = r.HasApplied,
+            TargetDepartment = r.TargetDepartment,
             Source = (JobSource)r.Source,
             ExternalSourceName = r.ExternalSourceName,
             ExternalApplyUrl = r.ExternalApplyUrl,
@@ -261,6 +270,7 @@ public class JobRepository : IJobRepository
                 j.DeadLine,
                 j.CoreDescription,
                 j.SelectionCriteria,
+                j.TargetDepartment,
                 CAST(CASE WHEN @studentId IS NOT NULL AND EXISTS (
                     SELECT 1 FROM dbo.Applications a WHERE a.JobId = j.Id AND a.StudentId = @studentId
                 ) THEN 1 ELSE 0 END AS bit) AS HasApplied,
@@ -309,6 +319,7 @@ public class JobRepository : IJobRepository
             Deadline = detailRow.DeadLine,
             CoreDescription = detailRow.CoreDescription,
             SelectionCriteria = detailRow.SelectionCriteria,
+            TargetDepartment = detailRow.TargetDepartment,
             HasApplied = detailRow.HasApplied,
             Source = (JobSource)detailRow.Source,
             ExternalSourceName = detailRow.ExternalSourceName,
@@ -394,6 +405,7 @@ public class JobRepository : IJobRepository
             DeadLineDate = job.DeadLine.DateTime.Date,
             IsApproved = job.IsApproved,
             IsClosed = job.IsClosed,
+            TargetDepartment = job.TargetDepartment,
             SelectedSkills = selectedSkills.Select(s => new JobSkillWeightDto
             {
                 SkillId = s.SkillId,
@@ -412,8 +424,8 @@ public class JobRepository : IJobRepository
         try
         {
             const string insertJobSql = @"
-                INSERT INTO dbo.Jobs (Id, CompanyId, Title, CoreDescription, SelectionCriteria, LocationType, DeadLine, IsApproved, IsClosed, CreatedAt)
-                VALUES (@id, @companyId, @title, @desc, @crit, @loc, @deadline, 0, 0, SYSDATETIMEOFFSET())";
+                INSERT INTO dbo.Jobs (Id, CompanyId, Title, CoreDescription, SelectionCriteria, LocationType, DeadLine, IsApproved, IsClosed, TargetDepartment, CreatedAt)
+                VALUES (@id, @companyId, @title, @desc, @crit, @loc, @deadline, 0, 0, @targetDept, SYSDATETIMEOFFSET())";
 
             await _db.Database.ExecuteSqlRawAsync(insertJobSql, new object[] {
                 new SqlParameter("@id", SqlDbType.UniqueIdentifier) { Value = jobId },
@@ -422,7 +434,8 @@ public class JobRepository : IJobRepository
                 new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
                 new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = model.SelectionCriteria?.Trim() ?? string.Empty },
                 new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
-                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
+                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset },
+                new SqlParameter("@targetDept", SqlDbType.NVarChar, 100) { Value = (object?)model.TargetDepartment?.Trim() ?? DBNull.Value }
             }, ct);
 
             if (model.SelectedSkills != null && model.SelectedSkills.Count > 0)
@@ -477,7 +490,8 @@ public class JobRepository : IJobRepository
                     CoreDescription = @desc,
                     SelectionCriteria = @crit,
                     LocationType = @loc,
-                    DeadLine = @deadline
+                    DeadLine = @deadline,
+                    TargetDepartment = @targetDept
                 WHERE Id = @jobId AND CompanyId = @companyId";
 
             await _db.Database.ExecuteSqlRawAsync(updateJobSql, new object[] {
@@ -487,7 +501,8 @@ public class JobRepository : IJobRepository
                 new SqlParameter("@desc", SqlDbType.NVarChar, -1) { Value = model.CoreDescription.Trim() },
                 new SqlParameter("@crit", SqlDbType.NVarChar, -1) { Value = model.SelectionCriteria?.Trim() ?? string.Empty },
                 new SqlParameter("@loc", SqlDbType.TinyInt) { Value = (byte)model.LocationType },
-                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset }
+                new SqlParameter("@deadline", SqlDbType.DateTimeOffset) { Value = deadlineOffset },
+                new SqlParameter("@targetDept", SqlDbType.NVarChar, 100) { Value = (object?)model.TargetDepartment?.Trim() ?? DBNull.Value }
             }, ct);
 
             const string deleteSkillsSql = "DELETE FROM dbo.JobSkills WHERE JobId = @jobId";
@@ -545,7 +560,8 @@ public class JobRepository : IJobRepository
                 j.CoreDescription,
                 j.SelectionCriteria,
                 j.LocationType,
-                j.DeadLine
+                j.DeadLine,
+                j.TargetDepartment
             FROM dbo.Jobs j
             WHERE j.Id = @jobId";
 
@@ -580,6 +596,7 @@ public class JobRepository : IJobRepository
             SelectionCriteria = row.SelectionCriteria,
             LocationType = row.LocationType,
             DeadLine = row.DeadLine,
+            TargetDepartment = row.TargetDepartment,
             SkillIds = skills.Select(s => s.SkillId).ToList(),
             SkillNames = skills.Select(s => s.SkillName).ToList()
         };
@@ -841,6 +858,7 @@ public class JobVectorSourceRowResult
     public string SelectionCriteria { get; set; } = string.Empty;
     public byte LocationType { get; set; }
     public DateTimeOffset DeadLine { get; set; }
+    public string? TargetDepartment { get; set; }
 }
 
 public class RecommendationCandidateRowResult
@@ -869,6 +887,7 @@ public class JobSearchRowResult
     public byte Source { get; set; }
     public string? ExternalSourceName { get; set; }
     public string? ExternalApplyUrl { get; set; }
+    public string? TargetDepartment { get; set; }
 }
 
 public class JobDetailRowResult
@@ -888,6 +907,7 @@ public class JobDetailRowResult
     public string? ExternalSourceName { get; set; }
     public string? ExternalApplyUrl { get; set; }
     public string? CompanyNameSnapshot { get; set; }
+    public string? TargetDepartment { get; set; }
 }
 
 public class CompanyJobRowResult

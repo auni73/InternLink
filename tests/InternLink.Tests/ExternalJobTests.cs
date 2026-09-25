@@ -73,6 +73,7 @@ Full-time remote work.";
         var studentRepo = new FakeStudentRepoWithId(studentId);
         var controller = new JobsController(
             jobRepo,
+            studentRepo,
             new StubApplicationRepository(),
             new FakeResumeRepository(),
             new StubResumeService(),

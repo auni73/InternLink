@@ -33,6 +33,18 @@
                         <span class="badge bg-light text-primary border">
                             <i class="bi bi-geo-alt me-1"></i>@Model.LocationType
                         </span>
+                        @if (!string.IsNullOrWhiteSpace(Model.TargetDepartment) && Model.TargetDepartment != "All")
+                        {
+                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                                <i class="bi bi-mortarboard me-1"></i>@Model.TargetDepartment
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-light text-secondary border">
+                                <i class="bi bi-globe me-1"></i>All Engineering Disciplines
+                            </span>
+                        }
                         <span class="badge @(Model.IsUrgent ? "bg-danger-subtle text-danger border border-danger-subtle" : "bg-light text-muted border")">
                             <i class="bi @(Model.IsUrgent ? "bi-clock-fill" : "bi-calendar3") me-1"></i>
                             @Model.DeadlineFormatted

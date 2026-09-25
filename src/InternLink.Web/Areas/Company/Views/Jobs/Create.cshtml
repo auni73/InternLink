@@ -57,6 +57,19 @@
                             </div>
 
                             <div class="col-12">
+                                <label asp-for="TargetDepartment" class="form-label fw-medium">Target Engineering Discipline</label>
+                                <select asp-for="TargetDepartment" class="form-select">
+                                    <option value="All">All Disciplines / General Engineering</option>
+                                    @foreach (var dept in InternLink.Web.Models.EngineeringDepartments.All)
+                                    {
+                                        <option value="@dept">@dept (@InternLink.Web.Models.EngineeringDepartments.GetShortCode(dept))</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="TargetDepartment" class="text-danger small"></span>
+                                <div class="form-text small">Target your internship to students in a specific engineering field or keep open for all disciplines.</div>
+                            </div>
+
+                            <div class="col-12">
                                 <label asp-for="CoreDescription" class="form-label fw-medium">Role Description & Responsibilities <span class="text-danger">*</span></label>
                                 <textarea asp-for="CoreDescription" rows="6" class="form-control" placeholder="Provide a detailed overview of the role, day-to-day responsibilities, learning outcomes, and mentorship support..." required></textarea>
                                 <span asp-validation-for="CoreDescription" class="text-danger small"></span>
@@ -96,9 +109,17 @@
                                 <option value="">-- Choose a skill --</option>
                                 @if (Model.AvailableSkills != null)
                                 {
-                                    @foreach (var skill in Model.AvailableSkills)
+                                    var groupedSkills = Model.AvailableSkills
+                                        .GroupBy(s => InternLink.Web.Models.EngineeringDepartments.GetDisplayName(s.DepartmentCode))
+                                        .OrderBy(g => g.Key);
+                                    @foreach (var group in groupedSkills)
                                     {
-                                        <option value="@skill.Id" data-name="@skill.SkillName">@skill.SkillName</option>
+                                        <optgroup label="@group.Key">
+                                            @foreach (var skill in group.OrderBy(s => s.SkillName))
+                                            {
+                                                <option value="@skill.Id" data-name="@skill.SkillName">@skill.SkillName</option>
+                                            }
+                                        </optgroup>
                                     }
                                 }
                             </select>

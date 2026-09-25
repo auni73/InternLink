@@ -47,6 +47,27 @@
                 </div>
 
                 <div class="col-lg-2 col-md-6">
+                    <select name="Department" class="form-select">
+                        <option value="">All Disciplines</option>
+                        @if (!string.IsNullOrEmpty(Model.StudentDepartment))
+                        {
+                            <option value="@Model.StudentDepartment" selected="@(string.Equals(Model.Filter.Department, Model.StudentDepartment, StringComparison.OrdinalIgnoreCase))">
+                                ⭐ My Dept (@InternLink.Web.Models.EngineeringDepartments.GetShortCode(Model.StudentDepartment))
+                            </option>
+                        }
+                        @foreach (var dept in InternLink.Web.Models.EngineeringDepartments.All)
+                        {
+                            if (!string.Equals(dept, Model.StudentDepartment, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@dept" selected="@(string.Equals(Model.Filter.Department, dept, StringComparison.OrdinalIgnoreCase))">
+                                    @dept (@InternLink.Web.Models.EngineeringDepartments.GetShortCode(dept))
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
                     <select name="ExternalSourceName" class="form-select">
                         <option value="">All Sources</option>
                         <option value="INTERNAL" selected="@(Model.Filter.Source == JobSource.Internal)">InternLink Direct</option>
@@ -56,7 +77,7 @@
                     </select>
                 </div>
 
-                <div class="col-lg-2 col-md-4">
+                <div class="col-lg-2 col-md-6">
                     <select name="LocationType" class="form-select">
                         <option value="">All Arrangements</option>
                         <option value="0" selected="@(Model.Filter.LocationType == LocationType.Remote)">Remote</option>
@@ -65,25 +86,25 @@
                     </select>
                 </div>
 
-                <div class="col-lg-2 col-md-4">
+                <div class="col-lg-1 col-md-4">
                     <select name="SortBy" class="form-select">
-                        <option value="newest" selected="@(string.IsNullOrEmpty(Model.Filter.SortBy) || Model.Filter.SortBy == "newest")">Newest First</option>
-                        <option value="deadline" selected="@(Model.Filter.SortBy == "deadline")">Closing Soonest</option>
+                        <option value="newest" selected="@(string.IsNullOrEmpty(Model.Filter.SortBy) || Model.Filter.SortBy == "newest")">Newest</option>
+                        <option value="deadline" selected="@(Model.Filter.SortBy == "deadline")">Closing</option>
                     </select>
                 </div>
 
-                <div class="col-lg-2 col-md-4">
+                <div class="col-lg-1 col-md-4">
                     <div class="form-check form-switch pt-1">
                         <input class="form-check-input" type="checkbox" name="RelevantToMe" value="true" id="relevantSwitch" @(Model.Filter.RelevantToMe ? "checked" : "") />
-                        <label class="form-check-label small fw-medium" for="relevantSwitch">Matched Skills</label>
+                        <label class="form-check-label small fw-medium" for="relevantSwitch">Skills</label>
                     </div>
                 </div>
 
-                <div class="col-lg-1 col-md-12 d-flex gap-1">
+                <div class="col-lg-1 col-md-4 d-flex gap-1">
                     <button type="submit" class="btn btn-primary flex-grow-1" title="Apply Filter">
                         <i class="bi bi-funnel"></i>
                     </button>
-                    @if (!string.IsNullOrWhiteSpace(Model.Filter.Keyword) || Model.Filter.LocationType.HasValue || Model.Filter.Source.HasValue || !string.IsNullOrWhiteSpace(Model.Filter.ExternalSourceName) || Model.Filter.RelevantToMe || Model.Filter.SortBy == "deadline")
+                    @if (!string.IsNullOrWhiteSpace(Model.Filter.Keyword) || !string.IsNullOrWhiteSpace(Model.Filter.Department) || Model.Filter.LocationType.HasValue || Model.Filter.Source.HasValue || !string.IsNullOrWhiteSpace(Model.Filter.ExternalSourceName) || Model.Filter.RelevantToMe || Model.Filter.SortBy == "deadline")
                     {
                         <a asp-area="Student" asp-controller="Jobs" asp-action="Index" class="btn btn-outline-secondary" title="Clear Filters">
                             <i class="bi bi-x-lg"></i>
@@ -121,6 +142,12 @@
                                         <span class="badge bg-light text-primary border">
                                             <i class="bi bi-geo-alt me-1"></i>@job.LocationType
                                         </span>
+                                        @if (!string.IsNullOrWhiteSpace(job.TargetDepartment) && job.TargetDepartment != "All")
+                                        {
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                                                <i class="bi bi-mortarboard me-1"></i>@InternLink.Web.Models.EngineeringDepartments.GetShortCode(job.TargetDepartment)
+                                            </span>
+                                        }
                                     </div>
                                     <h5 class="card-title fw-bold text-slate-800 mb-1">@job.Title</h5>
                                     <div class="text-muted small fw-medium">
@@ -149,7 +176,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">General Software Engineering</span>
+                                        <span class="text-muted small">General Engineering & Technical Competence</span>
                                     }
                                 </div>
                             </div>

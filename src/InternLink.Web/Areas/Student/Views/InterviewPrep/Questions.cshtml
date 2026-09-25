@@ -24,6 +24,15 @@
                     <label for="questionRole" class="form-label fw-semibold">Role</label>
                     <input id="questionRole" type="text" class="form-control" maxlength="100"
                            placeholder="e.g. Backend .NET Intern" value="@Model.DefaultRole" />
+                    <div class="mt-2 d-flex flex-wrap gap-1 align-items-center">
+                        <span class="small text-muted me-1" style="font-size: 0.75rem;">Disciplines:</span>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Civil & Structural Engineering Intern'">CE</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Electrical & Power Systems Trainee'">EEE</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Mechanical Design & CAD Trainee'">ME</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Production & Supply Chain Intern'">IPE</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Textile Wet Processing Intern'">TE</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill py-0 px-2 quick-role-btn" style="font-size: 0.75rem;" onclick="document.getElementById('questionRole').value = 'Software Engineering Intern'">CSE</button>
+                    </div>
                 </div>
                 <div class="col-lg-5">
                     <label for="questionJob" class="form-label fw-semibold">

@@ -10,6 +10,7 @@ public class JobSearchFilter
     public JobSource? Source { get; set; }
     public string? ExternalSourceName { get; set; }
     public string? SortBy { get; set; } = "newest";
+    public string? Department { get; set; }
     public bool RelevantToMe { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 9;
@@ -31,6 +32,7 @@ public class JobListItemViewModel
     public LocationType LocationType { get; set; }
     public DateTimeOffset Deadline { get; set; }
     public bool HasApplied { get; set; }
+    public string? TargetDepartment { get; set; }
     public JobSource Source { get; set; } = JobSource.Internal;
     public string? ExternalSourceName { get; set; }
     public string? ExternalApplyUrl { get; set; }
@@ -68,6 +70,7 @@ public class JobListViewModel
     public int PageSize => Filter.PageSize;
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     public bool IsFtsFallback { get; set; }
+    public string? StudentDepartment { get; set; }
 }
 
 public class JobDetailViewModel
@@ -83,6 +86,7 @@ public class JobDetailViewModel
     public string CoreDescription { get; set; } = string.Empty;
     public string SelectionCriteria { get; set; } = string.Empty;
     public bool HasApplied { get; set; }
+    public string? TargetDepartment { get; set; }
     public JobSource Source { get; set; } = JobSource.Internal;
     public string? ExternalSourceName { get; set; }
     public string? ExternalApplyUrl { get; set; }

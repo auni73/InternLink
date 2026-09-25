@@ -10,6 +10,7 @@ public sealed class JobVectorSource
     public string SelectionCriteria { get; init; } = string.Empty;
     public int LocationType { get; init; }
     public DateTimeOffset DeadLine { get; init; }
+    public string? TargetDepartment { get; init; }
 
     /// <summary>Skills ordered by required importance weight, descending.</summary>
     public IReadOnlyList<Guid> SkillIds { get; init; } = [];
@@ -17,7 +18,9 @@ public sealed class JobVectorSource
     public IReadOnlyList<string> SkillNames { get; init; } = [];
 
     public string ToDocumentText() =>
-        $"{Title}\n{CoreDescription}\n{SelectionCriteria}\nSkills: {string.Join(", ", SkillNames)}";
+        string.IsNullOrWhiteSpace(TargetDepartment) || TargetDepartment == "All"
+            ? $"{Title}\n{CoreDescription}\n{SelectionCriteria}\nSkills: {string.Join(", ", SkillNames)}"
+            : $"{Title} ({TargetDepartment})\n{CoreDescription}\n{SelectionCriteria}\nSkills: {string.Join(", ", SkillNames)}";
 
     public JobVectorPayload ToPayload() =>
         new(CompanyId ?? Guid.Empty, LocationType, DeadLine.ToUnixTimeSeconds(), SkillIds);
