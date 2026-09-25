@@ -11,6 +11,7 @@ public class JobsController : CompanyControllerBase
     private readonly IJobRepository _jobRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly ISkillRepository _skillRepository;
+    private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly IJobIndexQueue _indexQueue;
     private readonly ILogger<JobsController> _logger;
 
@@ -18,12 +19,14 @@ public class JobsController : CompanyControllerBase
         IJobRepository jobRepository,
         ICompanyRepository companyRepository,
         ISkillRepository skillRepository,
+        ISubscriptionRepository subscriptionRepository,
         IJobIndexQueue indexQueue,
         ILogger<JobsController> logger)
     {
         _jobRepository = jobRepository;
         _companyRepository = companyRepository;
         _skillRepository = skillRepository;
+        _subscriptionRepository = subscriptionRepository;
         _indexQueue = indexQueue;
         _logger = logger;
     }
@@ -48,6 +51,28 @@ public class JobsController : CompanyControllerBase
     [EnsureVerifiedCompany]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
+        var companyId = await GetCompanyIdAsync(ct);
+        if (companyId is null) return NotFound("Company profile not found.");
+
+        // Monetization gate: Check active subscription
+        var sub = await _subscriptionRepository.GetActiveSubscriptionAsync(companyId.Value, ct);
+        if (sub is null || sub.IsExpired)
+        {
+            TempData["ErrorMessage"] = "You do not have an active subscription plan. Please subscribe or renew your plan via bKash to publish new vacancies.";
+            return RedirectToAction("Index", "Subscription");
+        }
+
+        // Quota check
+        if (sub.MaxActiveJobs < 900)
+        {
+            var activeCount = await _subscriptionRepository.GetActiveJobsCountAsync(companyId.Value, ct);
+            if (activeCount >= sub.MaxActiveJobs)
+            {
+                TempData["ErrorMessage"] = $"You have reached the limit of {sub.MaxActiveJobs} active vacancies for your {sub.PlanName}. Please upgrade your subscription to post more.";
+                return RedirectToAction("Index", "Subscription");
+            }
+        }
+
         var skills = await _skillRepository.GetAllAsync(ct);
         var viewModel = new CompanyJobEditViewModel
         {
@@ -67,6 +92,24 @@ public class JobsController : CompanyControllerBase
         if (companyId is null)
         {
             return NotFound("Company profile not found.");
+        }
+
+        // Monetization gate: Check active subscription
+        var sub = await _subscriptionRepository.GetActiveSubscriptionAsync(companyId.Value, ct);
+        if (sub is null || sub.IsExpired)
+        {
+            TempData["ErrorMessage"] = "You do not have an active subscription plan. Please subscribe or renew your plan via bKash to publish new vacancies.";
+            return RedirectToAction("Index", "Subscription");
+        }
+
+        if (sub.MaxActiveJobs < 900)
+        {
+            var activeCount = await _subscriptionRepository.GetActiveJobsCountAsync(companyId.Value, ct);
+            if (activeCount >= sub.MaxActiveJobs)
+            {
+                TempData["ErrorMessage"] = $"You have reached the limit of {sub.MaxActiveJobs} active vacancies for your {sub.PlanName}. Please upgrade your subscription to post more.";
+                return RedirectToAction("Index", "Subscription");
+            }
         }
 
         // Server-side strict future validation (at least tomorrow)
