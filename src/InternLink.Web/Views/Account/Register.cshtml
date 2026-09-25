@@ -60,11 +60,33 @@
                 </div>
             </div>
             <div class="auth-field mb-3">
-                <label asp-for="Department" class="form-label">Department</label>
+                <label asp-for="Department" class="form-label d-flex justify-content-between align-items-center">
+                    <span>Engineering Discipline / Major <span class="text-danger">*</span></span>
+                    <span id="deptAutoDetectBadge" class="badge bg-success-subtle text-success border border-success-subtle d-none">
+                        <i class="bi bi-magic me-1"></i>Auto-detected
+                    </span>
+                </label>
                 <div class="auth-input-wrap">
                     <i class="bi bi-mortarboard bi-lead"></i>
-                    <input asp-for="Department" class="form-control" placeholder="Computer Science & Engineering" />
+                    <select asp-for="Department" class="form-select" id="departmentSelect">
+                        <option value="">-- Select Your Department --</option>
+                        @foreach (var prog in InternLink.Web.Models.EngineeringDepartments.AllPrograms)
+                        {
+                            <option value="@prog.Name" data-code="@prog.Code" data-aust="@prog.AustDigitCode">
+                                @prog.Name (@prog.ShortName)
+                            </option>
+                        }
+                    </select>
                 </div>
+                <div class="d-flex flex-wrap gap-1 mt-2" id="quickDeptChips">
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Civil Engineering">Civil</button>
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Electrical & Electronic Engineering">EEE</button>
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Mechanical Engineering">Mechanical</button>
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Industrial & Production Engineering">IPE</button>
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Textile Engineering">Textile</button>
+                    <button type="button" class="badge btn btn-xs btn-outline-secondary py-1 px-2 border" data-val="Computer Science & Engineering">CSE</button>
+                </div>
+                <div id="deptDetectionFeedback" class="small mt-1 text-muted"></div>
                 <span asp-validation-for="Department" class="text-danger small"></span>
             </div>
         </div>
@@ -156,6 +178,83 @@
             studentRadio.addEventListener('change', toggleFields);
             companyRadio.addEventListener('change', toggleFields);
             toggleFields();
+
+            // AUST Student ID Auto-Detection & Quick Chips
+            var idInput = document.getElementById('InstitutionalId');
+            var deptSelect = document.getElementById('departmentSelect');
+            var autoBadge = document.getElementById('deptAutoDetectBadge');
+            var feedback = document.getElementById('deptDetectionFeedback');
+            var chips = document.querySelectorAll('#quickDeptChips button');
+
+            var austMap = {
+                '01': 'Architecture',
+                '02': 'Civil Engineering',
+                '03': 'Electrical & Electronic Engineering',
+                '04': 'Computer Science & Engineering',
+                '05': 'Textile Engineering',
+                '06': 'Mechanical Engineering',
+                '07': 'Industrial & Production Engineering',
+                '08': 'Business Administration'
+            };
+
+            function highlightActiveChip(dept) {
+                chips.forEach(function (btn) {
+                    if (btn.getAttribute('data-val') === dept) {
+                        btn.className = 'badge btn btn-xs btn-primary py-1 px-2 border';
+                    } else {
+                        btn.className = 'badge btn btn-xs btn-outline-secondary py-1 px-2 border';
+                    }
+                });
+            }
+
+            function checkId() {
+                if (!idInput || !deptSelect) return;
+                var val = (idInput.value || '').trim();
+                var match = val.match(/^(\d{2})[\.\-\/]?(\d{2})[\.\-\/]?(\d{2})[\.\-\/]?(\d{3,4})$/);
+                if (match) {
+                    var deptCode = match[3];
+                    var mappedDept = austMap[deptCode];
+                    if (mappedDept) {
+                        for (var i = 0; i < deptSelect.options.length; i++) {
+                            if (deptSelect.options[i].value === mappedDept) {
+                                deptSelect.selectedIndex = i;
+                                if (autoBadge) autoBadge.classList.remove('d-none');
+                                if (feedback) {
+                                    feedback.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Auto-detected <strong>' + mappedDept + '</strong> from Student ID (' + deptCode + ').</span>';
+                                }
+                                highlightActiveChip(mappedDept);
+                                return;
+                            }
+                        }
+                    }
+                }
+                if (autoBadge) autoBadge.classList.add('d-none');
+                if (feedback) feedback.innerHTML = '';
+            }
+
+            if (idInput) {
+                idInput.addEventListener('input', checkId);
+                idInput.addEventListener('blur', checkId);
+                if (idInput.value) checkId();
+            }
+
+            chips.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var target = this.getAttribute('data-val');
+                    deptSelect.value = target;
+                    highlightActiveChip(target);
+                    if (autoBadge) autoBadge.classList.add('d-none');
+                    if (feedback) feedback.innerHTML = '';
+                });
+            });
+
+            if (deptSelect) {
+                deptSelect.addEventListener('change', function () {
+                    highlightActiveChip(this.value);
+                    if (autoBadge) autoBadge.classList.add('d-none');
+                });
+                if (deptSelect.value) highlightActiveChip(deptSelect.value);
+            }
         })();
     </script>
 }

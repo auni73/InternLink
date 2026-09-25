@@ -54,8 +54,16 @@
                                 <div class="form-text small">Assigned during registration. Contact administration for updates.</div>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Department" class="form-label fw-medium">Department <span class="text-danger">*</span></label>
-                                <input asp-for="Department" class="form-control" placeholder="e.g. Computer Science & Engineering" />
+                                <label asp-for="Department" class="form-label fw-medium">Department / Engineering Discipline <span class="text-danger">*</span></label>
+                                <select asp-for="Department" class="form-select">
+                                    <option value="">-- Select Department --</option>
+                                    @foreach (var prog in InternLink.Web.Models.EngineeringDepartments.AllPrograms)
+                                    {
+                                        <option value="@prog.Name" selected="@(string.Equals(Model.Department, prog.Name, StringComparison.OrdinalIgnoreCase) || string.Equals(Model.Department, prog.ShortName, StringComparison.OrdinalIgnoreCase))">
+                                            @prog.Name (@prog.ShortName)
+                                        </option>
+                                    }
+                                </select>
                                 <span asp-validation-for="Department" class="text-danger small"></span>
                             </div>
 
