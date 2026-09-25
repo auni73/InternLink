@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InternLink.Web.Helpers;
+using InternLink.Web.Models.Enums;
 using InternLink.Web.Repositories.Interface;
 using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Resume;
@@ -10,6 +11,7 @@ namespace InternLink.Web.Areas.Student.Controllers;
 public class JobsController : StudentControllerBase
 {
     private readonly IJobRepository _jobRepository;
+    private readonly IStudentRepository _studentRepository;
     private readonly IApplicationRepository _applicationRepository;
     private readonly IResumeRepository _resumeRepository;
     private readonly IResumeService _resumeService;
@@ -19,6 +21,7 @@ public class JobsController : StudentControllerBase
 
     public JobsController(
         IJobRepository jobRepository,
+        IStudentRepository studentRepository,
         IApplicationRepository applicationRepository,
         IResumeRepository resumeRepository,
         IResumeService resumeService,
@@ -27,6 +30,7 @@ public class JobsController : StudentControllerBase
         ILogger<JobsController> logger)
     {
         _jobRepository = jobRepository;
+        _studentRepository = studentRepository;
         _applicationRepository = applicationRepository;
         _resumeRepository = resumeRepository;
         _resumeService = resumeService;
@@ -57,7 +61,29 @@ public class JobsController : StudentControllerBase
         if (filter.Page < 1) filter.Page = 1;
         if (filter.PageSize < 1 || filter.PageSize > 50) filter.PageSize = 9;
 
+        if (string.Equals(filter.ExternalSourceName, "INTERNAL", StringComparison.OrdinalIgnoreCase))
+        {
+            filter.Source = JobSource.Internal;
+            filter.ExternalSourceName = null;
+        }
+        else if (string.Equals(filter.ExternalSourceName, "EXTERNAL", StringComparison.OrdinalIgnoreCase))
+        {
+            filter.Source = JobSource.External;
+            filter.ExternalSourceName = null;
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.ExternalSourceName))
+        {
+            filter.Source = JobSource.External;
+        }
+
         var studentId = await GetStudentIdAsync(ct);
+        string? studentDept = null;
+        if (studentId.HasValue)
+        {
+            var student = await _studentRepository.GetByIdAsync(studentId.Value, ct);
+            studentDept = student?.Department;
+        }
+
         var isFtsAvailable = await _ftsCapabilityService.IsFtsAvailableAsync(ct);
 
         var (items, totalCount) = await _jobRepository.SearchApprovedOpenJobsAsync(
@@ -71,7 +97,8 @@ public class JobsController : StudentControllerBase
             Jobs = items,
             Filter = filter,
             TotalCount = totalCount,
-            IsFtsFallback = !isFtsAvailable && !string.IsNullOrWhiteSpace(filter.Keyword)
+            IsFtsFallback = !isFtsAvailable && !string.IsNullOrWhiteSpace(filter.Keyword),
+            StudentDepartment = studentDept
         };
 
         return View(viewModel);
@@ -117,6 +144,12 @@ public class JobsController : StudentControllerBase
         if (job is null)
         {
             return NotFound(new { error = "Job posting is not active or has expired." });
+        }
+
+        // Safety Rule: External jobs must be applied to on their external source portal
+        if (job.Source == JobSource.External)
+        {
+            return BadRequest(new { error = "This is an external job posting. Please apply directly on the source portal using the provided link." });
         }
 
         // 2. Pre-check if already applied

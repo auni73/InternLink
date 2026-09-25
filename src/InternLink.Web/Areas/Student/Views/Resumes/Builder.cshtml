@@ -151,9 +151,19 @@
                             <label class="form-label small fw-semibold">Select Skill</label>
                             <select id="skillPickerSelect" class="form-select form-select-sm">
                                 <option value="">-- Choose a recognized skill --</option>
-                                @foreach (var skill in Model.AvailableSkills)
-                                {
-                                    <option value="@skill.Id">@skill.SkillName (@skill.DomainClassification)</option>
+                                @{
+                                    var groupedSkills = Model.AvailableSkills
+                                        .GroupBy(s => InternLink.Web.Models.EngineeringDepartments.GetDisplayName(s.DepartmentCode))
+                                        .OrderBy(g => g.Key);
+                                    foreach (var group in groupedSkills)
+                                    {
+                                        <optgroup label="@group.Key">
+                                            @foreach (var skill in group.OrderBy(s => s.SkillName))
+                                            {
+                                                <option value="@skill.Id">@skill.SkillName</option>
+                                            }
+                                        </optgroup>
+                                    }
                                 }
                             </select>
                         </div>

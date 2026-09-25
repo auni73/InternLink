@@ -11,17 +11,20 @@ public class InterviewPrepController : StudentControllerBase
     private readonly IInterviewPrepService _interviewPrep;
     private readonly IStudentRepository _students;
     private readonly IJobRepository _jobs;
+    private readonly InternLink.Web.Services.Notification.INotificationService _notificationService;
     private readonly ILogger<InterviewPrepController> _logger;
 
     public InterviewPrepController(
         IInterviewPrepService interviewPrep,
         IStudentRepository students,
         IJobRepository jobs,
+        InternLink.Web.Services.Notification.INotificationService notificationService,
         ILogger<InterviewPrepController> logger)
     {
         _interviewPrep = interviewPrep;
         _students = students;
         _jobs = jobs;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -189,12 +192,29 @@ public class InterviewPrepController : StudentControllerBase
         }
 
         _logger.LogInformation("Student {StudentId} ended mock interview {SessionId}.", studentId.Value, sessionId);
+
+        var reportUrl = Url.Action(nameof(Report), new { sessionId }) ?? $"/Student/InterviewPrep/Mock/{sessionId}/Report";
+
+        // NOTIFY: Student that mock interview report is ready
+        try
+        {
+            await _notificationService.CreateAsync(
+                CurrentUserId,
+                "Your mock interview report is ready",
+                reportUrl,
+                ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send notification for mock interview report {SessionId}", sessionId);
+        }
+
         return Json(new
         {
             report.AccuracySummary,
             report.LogicGaps,
             report.ImprovementSuggestions,
-            reportUrl = Url.Action(nameof(Report), new { sessionId })
+            reportUrl
         });
     }
 

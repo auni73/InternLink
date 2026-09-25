@@ -40,9 +40,7 @@
                         <span class="role-badge" title="Signed-in role">@role</span>
                     }
 
-                    <button type="button" class="btn btn-link text-body position-relative p-1" title="Notifications" aria-label="Notifications">
-                        <i class="bi bi-bell"></i>
-                    </button>
+                    <partial name="_NotificationBell" />
 
                     <div class="dropdown">
                         <button class="btn btn-link text-body dropdown-toggle d-flex align-items-center gap-2 text-decoration-none"
@@ -96,6 +94,10 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/toasts.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (isAuthenticated)
+    {
+        <script type="module" src="~/js/notifications.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

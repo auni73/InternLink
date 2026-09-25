@@ -88,15 +88,32 @@ public class ResumeService : IResumeService
         var student = await _studentRepository.GetByIdAsync(studentId, ct);
         var resume = await _resumeRepository.CreateAsync(studentId, ct);
 
-        // Prepopulate personal-info from student profile if available
+        // Prepopulate personal-info & university education from student profile if available
         if (student != null)
         {
+            var deptName = !string.IsNullOrWhiteSpace(student.Department)
+                ? InternLink.Web.Models.EngineeringDepartments.Normalize(student.Department)
+                : "Engineering";
+
             var initialData = new ResumeDataDto
             {
                 PersonalInfo = new PersonalInfoStepDto
                 {
                     FullName = $"{student.FirstName} {student.LastName}".Trim(),
                     Summary = student.Biography
+                },
+                Education = new List<EducationEntryDto>
+                {
+                    new EducationEntryDto
+                    {
+                        Institution = "Ahsanullah University of Science and Technology (AUST)",
+                        Degree = $"B.Sc. in {deptName}",
+                        FieldOfStudy = deptName,
+                        StartDate = DateTime.UtcNow.AddYears(-3).ToString("yyyy"),
+                        EndDate = "Present",
+                        IsCurrent = true,
+                        Gpa = student.CGPA > 0 ? student.CGPA.ToString("0.00") : null
+                    }
                 }
             };
 

@@ -41,4 +41,8 @@ public interface IJobRepository
         Guid studentId,
         int take,
         CancellationToken ct = default);
+
+    // External / Third-party job support
+    Task<bool> ExistsExternalJobAsync(string sourceName, string externalJobId, CancellationToken ct = default);
+    Task<Guid> CreateExternalJobAsync(Job job, IEnumerable<(Guid SkillId, int ImportanceWeight)>? skills, CancellationToken ct = default);
 }

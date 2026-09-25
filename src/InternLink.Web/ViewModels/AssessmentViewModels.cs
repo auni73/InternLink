@@ -7,13 +7,30 @@ public class SkillAssessmentListItemViewModel
     public Guid SkillId { get; set; }
     public string SkillName { get; set; } = string.Empty;
     public byte DomainClassification { get; set; }
-    public string DomainName => DomainClassification switch
+    public string DepartmentCode { get; set; } = "CSE";
+    public string CategoryName { get; set; } = "General";
+
+    public string DomainName => !string.IsNullOrWhiteSpace(CategoryName) && CategoryName != "General" && CategoryName != "Software"
+        ? CategoryName
+        : DomainClassification switch
+        {
+            0 => "Backend",
+            1 => "Frontend",
+            2 => "DevOps",
+            3 => "Soft Skills",
+            _ => "General"
+        };
+
+    public string DepartmentDisplayName => DepartmentCode switch
     {
-        0 => "Backend",
-        1 => "Frontend",
-        2 => "DevOps",
-        3 => "Soft Skills",
-        _ => "General"
+        "CSE" => "Computer Science & Engineering",
+        "CE" => "Civil Engineering",
+        "EEE" => "Electrical & Electronic Engineering",
+        "ME" => "Mechanical Engineering",
+        "IPE" => "Industrial & Production Engineering",
+        "TE" => "Textile Engineering",
+        "GEN" => "General Engineering",
+        _ => DepartmentCode
     };
 
     public bool IsVerified { get; set; }
@@ -25,6 +42,8 @@ public class SkillAssessmentListItemViewModel
 public class StudentAssessmentsViewModel
 {
     public IReadOnlyList<SkillAssessmentListItemViewModel> Skills { get; set; } = Array.Empty<SkillAssessmentListItemViewModel>();
+    public string StudentDepartment { get; set; } = string.Empty;
+    public string ActiveFilter { get; set; } = "all";
     public int TotalVerifiedCount => Skills.Count(s => s.IsVerified);
     public int TotalSkillsCount => Skills.Count;
 }

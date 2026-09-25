@@ -99,6 +99,7 @@ builder.Services.AddScoped<IAdminModerationRepository, AdminModerationRepository
 builder.Services.AddScoped<IAIHistoryRepository, AIHistoryRepository>();
 builder.Services.AddScoped<IMockInterviewRepository, MockInterviewRepository>();
 builder.Services.AddScoped<ISkillGapRepository, SkillGapRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // AI gateway: rotating key pool is a singleton so cooldowns are shared across every request.
 builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
@@ -139,6 +140,15 @@ builder.Services.AddScoped<InternLink.Web.Services.Resume.IResumeAnalysisService
 builder.Services.AddScoped<InternLink.Web.Services.CoverLetter.ICoverLetterService, InternLink.Web.Services.CoverLetter.CoverLetterService>();
 builder.Services.AddScoped<InternLink.Web.Services.InterviewPrep.IInterviewPrepService, InternLink.Web.Services.InterviewPrep.InterviewPrepService>();
 builder.Services.AddScoped<InternLink.Web.Services.SkillGap.ISkillGapService, InternLink.Web.Services.SkillGap.SkillGapService>();
+builder.Services.AddScoped<InternLink.Web.Services.Notification.INotificationService, InternLink.Web.Services.Notification.NotificationService>();
+
+// External Job Ingestion & AI Smart-Paste Circular Extraction
+builder.Services.AddHttpClient<InternLink.Web.Services.Jobs.IExternalJobIngestionService, InternLink.Web.Services.Jobs.ExternalJobIngestionService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddScoped<InternLink.Web.Services.Jobs.IExternalJobParseService, InternLink.Web.Services.Jobs.ExternalJobParseService>();
+builder.Services.AddHostedService<InternLink.Web.Services.Jobs.JobIngestionBackgroundService>();
 
 // Full-Text Search capability service
 builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, InternLink.Web.Helpers.FtsCapabilityService>();

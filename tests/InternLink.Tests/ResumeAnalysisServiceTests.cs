@@ -296,5 +296,7 @@ public class ResumeAnalysisServiceTests
         public Task<IReadOnlyList<Guid>> GetIndexableJobIdsByCompanyUserIdAsync(Guid companyUserId, CancellationToken ct = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<RecommendationCandidate>> GetRecommendationCandidatesAsync(IReadOnlyList<Guid> jobIds, Guid studentId, CancellationToken ct = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<RecommendationCandidate>> GetSkillOverlapRankedJobsAsync(Guid studentId, int take, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<bool> ExistsExternalJobAsync(string externalSourceName, string externalJobId, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<Guid> CreateExternalJobAsync(Job job, IEnumerable<(Guid SkillId, int ImportanceWeight)>? skillWeights = null, CancellationToken ct = default) => throw new NotSupportedException();
     }
 }

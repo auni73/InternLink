@@ -9,6 +9,7 @@ public class AssessmentsController : StudentControllerBase
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly ISkillRepository _skillRepository;
+    private readonly IStudentRepository _studentRepository;
     private readonly IAssessmentQuestionProvider _questionProvider;
     private readonly IAssessmentSessionService _sessionService;
     private readonly ILogger<AssessmentsController> _logger;
@@ -16,19 +17,21 @@ public class AssessmentsController : StudentControllerBase
     public AssessmentsController(
         IAssessmentRepository assessmentRepository,
         ISkillRepository skillRepository,
+        IStudentRepository studentRepository,
         IAssessmentQuestionProvider questionProvider,
         IAssessmentSessionService sessionService,
         ILogger<AssessmentsController> logger)
     {
         _assessmentRepository = assessmentRepository;
         _skillRepository = skillRepository;
+        _studentRepository = studentRepository;
         _questionProvider = questionProvider;
         _sessionService = sessionService;
         _logger = logger;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken ct)
+    public async Task<IActionResult> Index([FromQuery] string? filter, CancellationToken ct)
     {
         var studentId = await GetStudentIdAsync(ct);
         if (studentId is null)
@@ -36,10 +39,13 @@ public class AssessmentsController : StudentControllerBase
             return NotFound();
         }
 
+        var student = await _studentRepository.GetByIdAsync(studentId.Value, ct);
         var skills = await _assessmentRepository.GetStudentSkillAssessmentsAsync(studentId.Value, ct);
         var viewModel = new StudentAssessmentsViewModel
         {
-            Skills = skills
+            Skills = skills,
+            StudentDepartment = student?.Department ?? string.Empty,
+            ActiveFilter = string.IsNullOrWhiteSpace(filter) ? "my-dept" : filter.ToLowerInvariant().Trim()
         };
 
         return View(viewModel);

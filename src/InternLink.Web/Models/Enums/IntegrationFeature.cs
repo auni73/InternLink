@@ -8,5 +8,6 @@ public enum IntegrationFeature : byte
     CoverLetter = 3,
     QuestionBank = 4,
     MockInterview = 5,
-    SkillGap = 6
+    SkillGap = 6,
+    JobIngestionParsing = 7
 }

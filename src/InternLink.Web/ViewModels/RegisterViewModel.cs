@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using InternLink.Web.Models;
 
 namespace InternLink.Web.ViewModels;
 
@@ -74,7 +75,21 @@ public class RegisterViewModel : IValidatableObject
             if (string.IsNullOrWhiteSpace(InstitutionalId))
                 yield return new ValidationResult("Institutional ID is required.", new[] { nameof(InstitutionalId) });
             if (string.IsNullOrWhiteSpace(Department))
-                yield return new ValidationResult("Department is required.", new[] { nameof(Department) });
+            {
+                if (EngineeringDepartments.TryParseFromAustId(InstitutionalId, out var detectedDept, out _))
+                {
+                    Department = detectedDept;
+                }
+                else
+                {
+                    yield return new ValidationResult("Please select your academic engineering department.", new[] { nameof(Department) });
+                }
+            }
+            else
+            {
+                Department = EngineeringDepartments.Normalize(Department);
+            }
+
             if (CGPA is null)
                 yield return new ValidationResult("CGPA is required.", new[] { nameof(CGPA) });
             else if (CGPA < 0.00m || CGPA > 4.00m)

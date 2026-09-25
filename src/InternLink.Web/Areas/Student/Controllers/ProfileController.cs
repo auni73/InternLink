@@ -88,7 +88,7 @@ public class ProfileController : StudentControllerBase
         existing.FirstName = model.FirstName.Trim();
         existing.LastName = model.LastName.Trim();
         existing.CGPA = model.CGPA;
-        existing.Department = model.Department.Trim();
+        existing.Department = InternLink.Web.Models.EngineeringDepartments.Normalize(model.Department);
         existing.Biography = model.Biography?.Trim();
         existing.Interests = model.Interests?.Trim();
 
