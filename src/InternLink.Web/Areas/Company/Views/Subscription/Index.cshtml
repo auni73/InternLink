@@ -1,0 +1,363 @@
+@model InternLink.Web.ViewModels.CompanySubscriptionDashboardViewModel
+@{
+    ViewData["Title"] = "Subscription & Billing";
+    var sub = Model.CurrentSubscription;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-slate-800 mb-1">
+                <i class="bi bi-credit-card-2-front text-primary me-2"></i>Subscription & Billing
+            </h2>
+            <p class="text-muted mb-0">Manage employer subscription tiers, view active vacancy quotas, and pay via bKash MFS.</p>
+        </div>
+        <div>
+            <a href="#plansSection" class="btn btn-primary shadow-sm">
+                <i class="bi bi-arrow-up-circle me-1"></i>Upgrade / Renew Plan
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Current Subscription Hero Card -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-semibold">Current Subscription Overview</h5>
+                    @if (sub != null)
+                    {
+                        <span class="badge @sub.StatusBadgeClass px-3 py-2 rounded-pill">
+                            <i class="bi bi-shield-check me-1"></i>@sub.StatusLabel
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+                            No Active Subscription
+                        </span>
+                    }
+                </div>
+                <div class="card-body p-4">
+                    @if (sub != null && !sub.IsExpired)
+                    {
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-7">
+                                <span class="text-muted small text-uppercase fw-bold letter-spacing-1">Current Active Plan</span>
+                                <h3 class="fw-bold text-slate-800 mb-1">@sub.PlanName</h3>
+                                <p class="text-muted small mb-3">
+                                    Valid from <strong>@sub.StartDate.ToString("dd MMM yyyy")</strong> to <strong>@sub.EndDate.ToString("dd MMM yyyy")</strong>
+                                </p>
+
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between small fw-medium text-slate-700 mb-1">
+                                        <span>Active Job Slots Quota</span>
+                                        <span>@Model.ActiveJobsCount / @(sub.MaxActiveJobs >= 900 ? "Unlimited" : sub.MaxActiveJobs.ToString()) Used</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        @{
+                                            var pct = sub.MaxActiveJobs >= 900 ? 20 : Math.Min(100, (int)((double)Model.ActiveJobsCount / sub.MaxActiveJobs * 100));
+                                            var barColor = pct >= 90 ? "bg-danger" : pct >= 60 ? "bg-warning" : "bg-primary";
+                                        }
+                                        <div class="progress-bar @barColor" role="progressbar" style="width: @pct%;" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5 text-center border-start">
+                                <div class="p-3">
+                                    <div class="display-4 fw-bold @(sub.DaysRemaining <= 7 ? "text-danger" : "text-primary") mb-0">
+                                        @sub.DaysRemaining
+                                    </div>
+                                    <span class="text-uppercase fw-semibold text-muted small">Days Remaining</span>
+                                    <div class="mt-3">
+                                        <a href="#plansSection" class="btn btn-sm @(sub.DaysRemaining <= 7 ? "btn-danger" : "btn-outline-primary") w-100">
+                                            <i class="bi bi-arrow-repeat me-1"></i>Extend Subscription
+                                        </a>
+                                    </div>
+                                    <div class="form-text small mt-1">Renewals extend cumulatively without losing days.</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <div class="display-6 text-muted mb-3"><i class="bi bi-hourglass-bottom"></i></div>
+                            <h5 class="fw-bold text-slate-800">No Active Subscription Plan</h5>
+                            <p class="text-muted small mb-3">
+                                You currently have no active subscription. Subscribing unlocks internship postings and candidate tracking.
+                            </p>
+                            <a href="#plansSection" class="btn btn-primary px-4 shadow-sm">
+                                <i class="bi bi-cart-check me-1"></i>Select a Subscription Plan
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-3 h-100 bg-light-subtle">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-semibold">bKash MFS Instant Pay</h5>
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="badge p-2 rounded-3 text-white fw-bold fs-6" style="background-color: #D12053;">
+                                bKash
+                            </span>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-slate-800">Official bKash PGW</h6>
+                                <span class="small text-muted">Dev Sandbox Enabled</span>
+                            </div>
+                        </div>
+                        <p class="small text-muted mb-2">
+                            Pay instantly with bKash digital wallet. Supports instant account activation, automated invoice generation, and rollover renewal.
+                        </p>
+                        <div class="border rounded p-2 bg-white small mb-3">
+                            <i class="bi bi-info-circle text-primary me-1"></i>
+                            <strong>Test Sandbox Account:</strong><br />
+                            • Wallet: <code>01770618575</code><br />
+                            • OTP: <code>123456</code> | PIN: <code>12121</code>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="#plansSection" class="btn text-white fw-medium shadow-sm" style="background-color: #D12053;">
+                            <i class="bi bi-wallet2 me-1"></i>Subscribe with bKash
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#manualPaymentModal">
+                            <i class="bi bi-bank me-1"></i>Offline / Bank Transfer Ref
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Plans Pricing Grid -->
+    <section id="plansSection" class="mb-5">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-slate-800 mb-1">Employer Subscription Plans</h3>
+            <p class="text-muted">Choose the optimal recruitment capacity for your engineering organization.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            @foreach (var plan in Model.AvailablePlans)
+            {
+                var isGrowth = plan.Code == "GROWTH";
+                var isCurrentPlan = sub != null && sub.PlanId == plan.Id && !sub.IsExpired;
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 shadow-sm rounded-3 @(isGrowth ? "border-primary border-2 position-relative" : "border") d-flex flex-column">
+                        @if (isGrowth)
+                        {
+                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-primary px-3 py-2 shadow-sm">
+                                ⭐ Most Popular
+                            </span>
+                        }
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="fw-bold text-slate-800 mb-0">@plan.Name</h5>
+                                @if (isCurrentPlan)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Current</span>
+                                }
+                            </div>
+                            <p class="text-muted small mb-3">@plan.Description</p>
+
+                            <div class="my-3">
+                                <span class="display-5 fw-bold text-slate-900">@plan.FormattedPrice</span>
+                                <span class="text-muted small">/ @plan.FormattedCycle</span>
+                            </div>
+
+                            <div class="badge bg-light text-primary border py-2 mb-4">
+                                <i class="bi bi-briefcase me-1"></i>@plan.FormattedJobSlots
+                            </div>
+
+                            <ul class="list-unstyled small mb-4 flex-grow-1">
+                                @foreach (var feat in plan.Features)
+                                {
+                                    <li class="mb-2 d-flex align-items-start">
+                                        <i class="bi bi-check2 text-success fs-6 me-2 mt-n1"></i>
+                                        <span>@feat</span>
+                                    </li>
+                                }
+                            </ul>
+
+                            <form asp-action="PayBkash" method="post" class="mt-auto">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="planId" value="@plan.Id" />
+                                @if (plan.Price == 0)
+                                {
+                                    <button type="submit" class="btn btn-outline-primary w-100 fw-medium">
+                                        Activate Free Trial
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn text-white w-100 fw-medium shadow-sm d-flex align-items-center justify-content-center gap-2" style="background-color: #D12053;">
+                                        <i class="bi bi-wallet2"></i>
+                                        <span>Pay @plan.FormattedPrice via bKash</span>
+                                    </button>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Payment Transaction History -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="card-title mb-0 fw-semibold">Payment & Invoicing History</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.PaymentHistory != null && Model.PaymentHistory.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Invoice #</th>
+                                <th>Plan</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>bKash TrxID / Ref</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var trx in Model.PaymentHistory)
+                            {
+                                <tr>
+                                    <td class="ps-4 small text-muted">@trx.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                    <td class="fw-semibold">@trx.InvoiceNumber</td>
+                                    <td>@trx.PlanName</td>
+                                    <td>
+                                        @if (trx.PaymentMethod.Contains("bKash", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge text-white px-2 py-1" style="background-color: #D12053;">bKash</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark border">@trx.PaymentMethod</span>
+                                        }
+                                    </td>
+                                    <td class="fw-bold">৳@trx.Amount.ToString("N0")</td>
+                                    <td class="small font-monospace">@(trx.BkashTrxId ?? trx.CustomerReference ?? "—")</td>
+                                    <td>
+                                        <span class="badge @trx.StatusBadgeClass">@trx.Status</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if (trx.Status == InternLink.Web.Models.Enums.PaymentTransactionStatus.Completed)
+                                        {
+                                            <a asp-action="Receipt" asp-route-invoiceNumber="@trx.InvoiceNumber" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-receipt me-1"></i>Receipt
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-receipt display-6 text-slate-300"></i>
+                    <p class="small mt-2 mb-0">No past transactions found. Invoices and receipts will appear here.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Offline / Bank Transfer Submission -->
+<div class="modal fade" id="manualPaymentModal" tabindex="-1" aria-labelledby="manualPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form asp-action="SubmitManualPayment" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold" id="manualPaymentModalLabel">
+                        <i class="bi bi-bank me-2 text-primary"></i>Offline / Bank Transfer Verification
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        If your company paid via direct bank deposit or counter bKash transfer, enter your transaction details below for administrative verification and activation.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Target Subscription Plan *</label>
+                        <select name="PlanId" class="form-select" required>
+                            @foreach (var plan in Model.AvailablePlans.Where(p => p.Price > 0))
+                            {
+                                <option value="@plan.Id">@plan.Name — @plan.FormattedPrice (@plan.FormattedCycle)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Payment Channel *</label>
+                        <select name="PaymentMethod" class="form-select" required>
+                            <option value="bKash Send Money">bKash Merchant / Personal Send-Money</option>
+                            <option value="Bank Wire / Electronic Fund Transfer">Bank Electronic Transfer / BEFTN / NPSB</option>
+                            <option value="Direct Bank Cash Deposit">Direct Bank Branch Cash Deposit</option>
+                            <option value="Corporate Pay Order / Cheque">Corporate Pay Order / Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Transaction ID / Deposit Slip Number *</label>
+                        <input type="text" name="ReferenceNumber" class="form-control" placeholder="e.g. 9J47A839KL or DEPOSIT-SLIP-102" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Sender Phone or Bank Account (Optional)</label>
+                        <input type="text" name="CustomerPhoneOrEmail" class="form-control" placeholder="e.g. 017xxxxxxxx or City Bank A/C 12345" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Additional Notes / Reference</label>
+                        <textarea name="Notes" rows="2" class="form-control" placeholder="Any additional information to help our billing team verify your deposit..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary shadow-sm">Submit for Verification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
