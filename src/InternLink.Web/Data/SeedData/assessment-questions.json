@@ -1228,5 +1228,675 @@
         "Explanation": "Story points gauge relative complexity, effort, and risk rather than absolute calendar hours."
       }
     ]
+  },
+  {
+    "SkillName": "AutoCAD & Civil 3D",
+    "Questions": [
+      {
+        "QuestionId": "acad-1",
+        "QuestionText": "In AutoCAD, which command is used to join disconnected lines, arcs, or polylines into a single contiguous 2D polyline?",
+        "Options": ["JOIN (or PEDIT Join)", "GROUP", "BLOCK", "UNION"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The JOIN command (or PEDIT > Join) fuses collinear or endpoint-connected lines, arcs, and polylines into a unified continuous polyline."
+      },
+      {
+        "QuestionId": "acad-2",
+        "QuestionText": "In Civil 3D, what core dynamic object represents existing or proposed ground terrain for contouring and volume calculations?",
+        "Options": ["Surface (TIN Surface)", "Feature Line", "Corridor", "Alignment"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A TIN (Triangulated Irregular Network) Surface in Civil 3D represents 3D ground topography used for cut/fill earthwork and contour analysis."
+      },
+      {
+        "QuestionId": "acad-3",
+        "QuestionText": "What is the primary role of an 'Alignment' in Civil 3D road and highway design?",
+        "Options": [
+          "Defines the horizontal centerline, baseline, or corridor geometry of a linear route",
+          "Calculates soil bearing capacity",
+          "Sets up printer paper dimensions",
+          "Controls 3D rendering lighting"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "An alignment defines the horizontal 2D geometry (tangents, spirals, and circular curves) along the path of a road, railway, or pipeline."
+      },
+      {
+        "QuestionId": "acad-4",
+        "QuestionText": "In AutoCAD drafting, what is the key advantage of using Paper Space (Layouts) with Viewports rather than Model Space for plotting?",
+        "Options": [
+          "It allows scaling, title blocks, and annotations at multiple designated drawing scales without changing 1:1 real-world model geometry",
+          "It renders 3D models with ray tracing",
+          "It compresses drawing DWG file size",
+          "It locks layers permanently"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Paper Space enables professional sheet layout, title blocks, and viewports showing 1:1 model geometry scaled to standard engineering ratios."
+      },
+      {
+        "QuestionId": "acad-5",
+        "QuestionText": "In civil road corridor modeling, what component defines the cross-sectional lane, curb, shoulder, and ditch template applied along an alignment?",
+        "Options": ["Assembly & Subassemblies", "Profile View", "Grading Group", "Parcel"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "An Assembly consists of parametric subassemblies (lanes, curbs, daylight slopes) applied along an alignment and profile to sweep a 3D corridor."
+      }
+    ]
+  },
+  {
+    "SkillName": "Structural Mechanics & Analysis",
+    "Questions": [
+      {
+        "QuestionId": "struc-1",
+        "QuestionText": "For a simply supported beam with span L carrying a uniformly distributed load w across its entire span, what is the maximum bending moment?",
+        "Options": ["(w * L^2) / 8", "(w * L) / 2", "(w * L^2) / 12", "(w * L^2) / 4"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "For a simply supported beam under full UDL w, the maximum bending moment occurs at midspan and is exactly M_max = wL^2 / 8."
+      },
+      {
+        "QuestionId": "struc-2",
+        "QuestionText": "In 2D plane trusses, which equation states the static determinacy criterion relating members (m) and joints (j)?",
+        "Options": ["m = 2j - 3", "m = 3j - 6", "m = 2j + 3", "m = j - 2"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "For a stable 2D truss with 3 support reactions, static determinacy requires m = 2j - 3, where m is the number of members and j is the number of joints."
+      },
+      {
+        "QuestionId": "struc-3",
+        "QuestionText": "According to the Euler column formula, what is the critical buckling load (P_cr) for an ideal pin-ended column of length L and flexural rigidity EI?",
+        "Options": ["(pi^2 * E * I) / L^2", "(2 * pi * E * I) / L", "(4 * pi^2 * E * I) / L^2", "(pi * E * I) / (2 * L^2)"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Euler's buckling formula for pinned-pinned boundary conditions is P_cr = (pi^2 * EI) / L^2."
+      },
+      {
+        "QuestionId": "struc-4",
+        "QuestionText": "In beam shear and moment diagrams, at what point does the bending moment reach a local maximum or minimum?",
+        "Options": [
+          "Where the shear force curve crosses zero (V = 0)",
+          "At the pinned support only",
+          "Where deflection is maximum",
+          "At points of inflection"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Since dM/dx = V(x), the first derivative of the bending moment is the shear force; thus, moment extrema occur where shear V = 0."
+      },
+      {
+        "QuestionId": "struc-5",
+        "QuestionText": "What does a 'point of contraflexure' (or inflection point) represent along a deflected structural beam?",
+        "Options": [
+          "The point where the bending moment changes sign from positive to negative (M = 0)",
+          "The location of maximum shear force",
+          "The point of maximum vertical deflection",
+          "The centroid of the cross-section"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A point of contraflexure occurs where curvature changes direction, which corresponds to zero bending moment (M = 0)."
+      }
+    ]
+  },
+  {
+    "SkillName": "Reinforced Concrete Design",
+    "Questions": [
+      {
+        "QuestionId": "rcd-1",
+        "QuestionText": "In ACI / BNBC limit state concrete design, why is an under-reinforced beam section deliberately preferred over an over-reinforced section?",
+        "Options": [
+          "Tension steel yields first, giving noticeable deflections and warning cracks prior to ductile failure",
+          "It uses less cement paste",
+          "Concrete crushes before steel yields, saving reinforcement steel",
+          "It eliminates the need for shear stirrups"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Under-reinforced design ensures tensile steel yields before concrete reaches its ultimate compressive strain (0.003), providing ductile warning before collapse."
+      },
+      {
+        "QuestionId": "rcd-2",
+        "QuestionText": "What is the primary structural purpose of transverse steel (stirrups/ties) in reinforced concrete beams?",
+        "Options": [
+          "To resist diagonal tension shear stresses and prevent shear failure",
+          "To carry primary sagging bending moments",
+          "To increase concrete curing speed",
+          "To make the beam waterproof"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Concrete has low tensile strength; vertical or inclined stirrups span across potential 45-degree diagonal tension shear cracks to carry shear forces."
+      },
+      {
+        "QuestionId": "rcd-3",
+        "QuestionText": "What is the standard assumed maximum usable compressive strain of unconfined concrete (epsilon_u) according to ACI 318?",
+        "Options": ["0.003", "0.001", "0.02", "0.05"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "ACI 318 prescribes an ultimate extreme concrete compressive strain of epsilon_c = 0.003 for rectangular stress block analysis."
+      },
+      {
+        "QuestionId": "rcd-4",
+        "QuestionText": "Why is concrete cover over reinforcing rebar critical in reinforced concrete structures?",
+        "Options": [
+          "Protects steel from corrosion/carbonation, ensures bond stress transfer, and provides fire resistance rating",
+          "Reduces the overall self-weight of the member",
+          "Allows concrete to cure without water",
+          "Eliminates shrinkage cracking completely"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Concrete clear cover provides barrier protection against moisture/chemical corrosion, protects steel during fires, and allows adequate development of bond stress."
+      },
+      {
+        "QuestionId": "rcd-5",
+        "QuestionText": "What is 'development length' (L_d) of a reinforcing rebar in concrete?",
+        "Options": [
+          "The embedded rebar length required to develop its full yield strength without pull-out bond failure",
+          "The maximum distance between rebar splices",
+          "The total span of the structural beam",
+          "The radius of the 90-degree rebar bend"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Development length is the minimum embedded length necessary to transfer stresses between rebar and surrounding concrete by bond without slip."
+      }
+    ]
+  },
+  {
+    "SkillName": "Circuit Analysis & Design",
+    "Questions": [
+      {
+        "QuestionId": "circ-1",
+        "QuestionText": "According to Kirchhoff's Current Law (KCL), what is the algebraic sum of currents entering any node in an electrical circuit?",
+        "Options": ["Zero (0)", "Equal to source voltage", "Infinity", "Dependent on load resistance"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "KCL is based on conservation of electric charge: the sum of currents entering a node must equal the sum of currents exiting, summing to zero."
+      },
+      {
+        "QuestionId": "circ-2",
+        "QuestionText": "In Thevenin's theorem, any linear bilateral two-terminal network can be replaced by which equivalent circuit?",
+        "Options": [
+          "A single independent voltage source (V_th) in series with a resistor (R_th)",
+          "A single independent current source (I_N) in parallel with a resistor (R_N)",
+          "A capacitor in series with an inductor",
+          "An ideal transformer"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Thevenin's theorem reduces any linear two-terminal circuit to an open-circuit voltage source V_th in series with Thevenin resistance R_th."
+      },
+      {
+        "QuestionId": "circ-3",
+        "QuestionText": "For maximum power transfer from a source with internal resistance R_s to a resistive load R_L in a DC circuit, what condition must hold?",
+        "Options": ["R_L = R_s", "R_L = 2 * R_s", "R_L = 0 (short circuit)", "R_L -> infinity (open circuit)"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Maximum power transfer occurs when the load resistance equals the internal Thevenin source resistance (R_L = R_th = R_s)."
+      },
+      {
+        "QuestionId": "circ-4",
+        "QuestionText": "What is the impedance Z of a series RLC circuit at resonance frequency omega_0?",
+        "Options": [
+          "Z = R (purely resistive and minimum impedance)",
+          "Z = infinity (open circuit)",
+          "Z = 0",
+          "Z = omega * L"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "At series resonance, inductive reactance cancels capacitive reactance (omega*L = 1/(omega*C)), leaving total impedance purely real and minimal: Z = R."
+      },
+      {
+        "QuestionId": "circ-5",
+        "QuestionText": "In an ideal operational amplifier (Op-Amp) with negative feedback, what are the two golden rules governing its input terminals?",
+        "Options": [
+          "Differential input voltage V_d = 0 (virtual short) and input terminal currents I_+ = I_- = 0",
+          "Gain is 0 and output impedance is infinite",
+          "Inputs draw 1A and output voltage is fixed at 5V",
+          "Inputs oscillate at 50 Hz"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Ideal op-amps have infinite input impedance (drawing zero input current) and infinite open-loop gain (driving V_+ - V_- = 0 under negative feedback)."
+      }
+    ]
+  },
+  {
+    "SkillName": "Power System Analysis",
+    "Questions": [
+      {
+        "QuestionId": "pwr-1",
+        "QuestionText": "In power flow (load flow) studies using Newton-Raphson, how is a generator bus (PV bus) characterized?",
+        "Options": [
+          "Real power (P) and voltage magnitude (|V|) are specified; reactive power (Q) and voltage angle (delta) are calculated",
+          "Real power (P) and reactive power (Q) are specified",
+          "Voltage magnitude and angle are fixed to 1.0 per unit and 0 degrees",
+          "Current and impedance are specified"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "At a PV (generator) bus, active power P and voltage magnitude |V| are held constant by governor and excitation control; Q and delta are state variables."
+      },
+      {
+        "QuestionId": "pwr-2",
+        "QuestionText": "Which type of symmetrical component transformation is used to analyze unbalanced faults (such as single line-to-ground faults) in 3-phase systems?",
+        "Options": ["Fortescue Symmetrical Components (Positive, Negative, and Zero sequence)", "Fourier Series", "Laplace Transform", "Z-Transform"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Fortescue's symmetrical components decompose unbalanced 3-phase voltages/currents into positive, negative, and zero sequence balanced networks."
+      },
+      {
+        "QuestionId": "pwr-3",
+        "QuestionText": "What causes the Ferranti effect on long, lightly loaded or open-ended AC transmission lines?",
+        "Options": [
+          "Line charging capacitance causes receiving-end voltage to rise above sending-end voltage",
+          "Corona discharge losses",
+          "High line resistance causing overheating",
+          "Skin effect at 50 Hz"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Under no-load or light-load conditions, the charging current flowing through the line's series inductance causes receiving-end voltage V_R > V_S."
+      },
+      {
+        "QuestionId": "pwr-4",
+        "QuestionText": "What is the primary function of a Distance Relay (Impedance Relay) in high-voltage transmission protection?",
+        "Options": [
+          "Measures the ratio of voltage to current (V/I = Z) to detect faults within specific line distance zones",
+          "Measures power factor at the substation",
+          "Counts lightning strikes on overhead earth wires",
+          "Regulates generator frequency"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Distance relays measure line impedance Z = V/I from the relay location to the fault; if Z drops below the zone threshold, the relay trips."
+      },
+      {
+        "QuestionId": "pwr-5",
+        "QuestionText": "In AC power transmission, what device is commonly installed in substations to improve power factor and reduce reactive power penalty?",
+        "Options": ["Shunt Capacitor Bank", "Series Resistor", "Current Transformer", "Isolator Switch"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Shunt capacitor banks supply leading reactive power (vars) locally, compensating lagging inductive motor loads and boosting system voltage."
+      }
+    ]
+  },
+  {
+    "SkillName": "SolidWorks & CAD Design",
+    "Questions": [
+      {
+        "QuestionId": "sw-1",
+        "QuestionText": "In SolidWorks 2D sketching, what color indicates that a sketch is 'Fully Defined' with all necessary geometric relations and dimensions?",
+        "Options": ["Black", "Blue", "Red", "Yellow"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "In SolidWorks, under-defined entities are blue, fully defined sketches turn black, over-defined errors turn red, and conflicting relations turn yellow."
+      },
+      {
+        "QuestionId": "sw-2",
+        "QuestionText": "Which SolidWorks feature is used to create a 3D solid by sweeping a 2D profile around a centerline axis of revolution?",
+        "Options": ["Revolved Boss/Base", "Extruded Boss/Base", "Lofted Boss/Base", "Swept Boss/Base"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Revolved Boss/Base creates axisymmetric parts (such as shafts, pulleys, and cylinders) by rotating a closed sketch contour around an axis."
+      },
+      {
+        "QuestionId": "sw-3",
+        "QuestionText": "In SolidWorks assembly modeling, which mate type aligns two cylindrical faces so that their axes of rotation coincide?",
+        "Options": ["Concentric Mate", "Coincident Mate", "Parallel Mate", "Tangent Mate"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A Concentric mate forces the central axes of two cylindrical or circular faces to remain collinear."
+      },
+      {
+        "QuestionId": "sw-4",
+        "QuestionText": "What is the difference between a Top-Down and Bottom-Up assembly modeling approach in SolidWorks?",
+        "Options": [
+          "Bottom-up creates individual parts separately before mating them; top-down builds parts directly inside the assembly referencing other components",
+          "Bottom-up is for 2D drawings only",
+          "Top-down cannot use mates",
+          "Bottom-up does not support Bill of Materials (BOM)"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Bottom-up design starts with standalone part files assembled together; top-down (in-context) designs parts within the assembly to adapt to neighboring geometry."
+      },
+      {
+        "QuestionId": "sw-5",
+        "QuestionText": "What does the 'Shell' feature do in SolidWorks mechanical modeling?",
+        "Options": [
+          "Hollows out a solid part, leaving thin walls of specified thickness and optionally removing selected faces",
+          "Wraps a 2D sketch onto a curved face",
+          "Performs structural stress analysis",
+          "Combines multiple solid bodies into one"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Shell tool removes internal volume from a solid body while keeping a constant uniform wall thickness, commonly used in plastic injection mold design."
+      }
+    ]
+  },
+  {
+    "SkillName": "Thermodynamics & Heat Transfer",
+    "Questions": [
+      {
+        "QuestionId": "thermo-1",
+        "QuestionText": "What does the First Law of Thermodynamics state for a closed thermodynamic system undergoing a cycle?",
+        "Options": [
+          "The net heat added equals the net work done (Energy can neither be created nor destroyed, dU = dQ - dW)",
+          "Entropy always increases",
+          "Heat always flows from cold to hot spontaneously",
+          "Absolute zero can be reached in finite steps"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The First Law expresses conservation of energy: the change in internal energy dU equals heat added dQ minus work done by the system dW."
+      },
+      {
+        "QuestionId": "thermo-2",
+        "QuestionText": "Which theoretical thermodynamic cycle represents the maximum possible thermal efficiency operating between two thermal reservoirs at temperatures T_H and T_L?",
+        "Options": ["Carnot Cycle (eta = 1 - T_L / T_H)", "Rankine Cycle", "Otto Cycle", "Brayton Cycle"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Carnot cycle, consisting of two reversible isothermal and two reversible adiabatic processes, establishes the upper theoretical efficiency limit."
+      },
+      {
+        "QuestionId": "thermo-3",
+        "QuestionText": "According to Fourier's Law of Heat Conduction, heat transfer rate Q_dot is proportional to which quantity?",
+        "Options": [
+          "Negative temperature gradient (-dT/dx) and surface area normal to heat flow",
+          "The square of fluid velocity",
+          "Absolute temperature to the 4th power",
+          "Convective heat transfer coefficient only"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Fourier's Law states Q_dot = -k * A * (dT/dx), where k is thermal conductivity, A is cross-sectional area, and dT/dx is temperature gradient."
+      },
+      {
+        "QuestionId": "thermo-4",
+        "QuestionText": "Which dimensionless number in fluid convection represents the ratio of convective to conductive heat transfer across a boundary?",
+        "Options": ["Nusselt Number (Nu)", "Reynolds Number (Re)", "Prandtl Number (Pr)", "Mach Number (Ma)"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Nusselt number Nu = h * L / k represents the enhancement of heat transfer through a fluid layer as a result of convection relative to conduction."
+      },
+      {
+        "QuestionId": "thermo-5",
+        "QuestionText": "In thermal radiation, which law states that total emissive power of a blackbody is proportional to the fourth power of its absolute temperature (E_b = sigma * T^4)?",
+        "Options": ["Stefan-Boltzmann Law", "Wien's Displacement Law", "Planck's Law", "Kirchhoff's Law of Radiation"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Stefan-Boltzmann Law states that the total radiant energy emitted per unit area of a blackbody is directly proportional to T^4."
+      }
+    ]
+  },
+  {
+    "SkillName": "Supply Chain & Logistics Management",
+    "Questions": [
+      {
+        "QuestionId": "scm-1",
+        "QuestionText": "What does the 'Bullwhip Effect' describe in industrial supply chain operations?",
+        "Options": [
+          "The amplification of demand variability as one moves upstream from customer to supplier",
+          "The speed of container shipping across oceans",
+          "The depreciation of factory machinery over time",
+          "Price discounting for bulk raw material purchases"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Bullwhip Effect occurs when small fluctuations in retail demand cause increasingly large swings in demand forecasts upstream at wholesalers and manufacturers."
+      },
+      {
+        "QuestionId": "scm-2",
+        "QuestionText": "In inventory control, what does the Economic Order Quantity (EOQ) formula minimize?",
+        "Options": [
+          "The total sum of annual inventory ordering costs and inventory holding/carrying costs",
+          "The shipping freight cost only",
+          "Factory labor wages",
+          "Product selling price"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The EOQ model balances fixed order setup costs with inventory carrying costs to determine the optimal batch size that minimizes total inventory cost."
+      },
+      {
+        "QuestionId": "scm-3",
+        "QuestionText": "What is the primary operational objective of a Cross-Docking facility in warehouse logistics?",
+        "Options": [
+          "Unload inbound goods from trucks and transfer them directly onto outbound trucks with little to no storage time",
+          "Hold inventory for long-term speculative seasonal sales",
+          "Manufacture goods on assembly lines",
+          "Perform chemical inspection testing"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Cross-docking streamlines logistics by routing arriving shipments immediately to departing vehicles, minimizing warehouse dwell time and handling costs."
+      },
+      {
+        "QuestionId": "scm-4",
+        "QuestionText": "What do the letters 'ABC' represent in inventory classification analysis?",
+        "Options": [
+          "Pareto categorization of inventory items based on annual monetary value (A = High value, B = Moderate, C = Low value)",
+          "Air, Boat, and Cargo shipping classes",
+          "Asset, Balance, and Cost accounting",
+          "Assembly, Bonding, and Coating stages"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "ABC inventory analysis applies the 80/20 Pareto rule to focus tight inventory management controls on high-value (Class A) SKUs."
+      },
+      {
+        "QuestionId": "scm-5",
+        "QuestionText": "In international trade logistics, what does Incoterm 'FOB' (Free on Board) designate regarding risk transfer?",
+        "Options": [
+          "Risk transfers from seller to buyer as soon as goods are loaded safely on board the vessel at the port of origin",
+          "Seller pays all freight and insurance to the buyer's destination warehouse",
+          "Buyer pays before manufacturing begins",
+          "Goods are exempt from customs tariffs"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Under FOB Incoterms, the seller clears goods for export and bears risk until items pass the ship's rail at the named port of departure."
+      }
+    ]
+  },
+  {
+    "SkillName": "Lean Manufacturing & Six Sigma",
+    "Questions": [
+      {
+        "QuestionId": "lean-1",
+        "QuestionText": "In Six Sigma methodology, what is the maximum allowable defect rate for a process operating at a 6-sigma quality level?",
+        "Options": ["3.4 defects per million opportunities (DPMO)", "66,807 DPMO", "6.0% defect rate", "Zero defects under all conditions"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "With a standard 1.5-sigma process shift, a Six Sigma quality level allows at most 3.4 defects per million opportunities (99.99966% yield)."
+      },
+      {
+        "QuestionId": "lean-2",
+        "QuestionText": "What do the letters in the core Six Sigma process improvement framework 'DMAIC' stand for?",
+        "Options": [
+          "Define, Measure, Analyze, Improve, Control",
+          "Design, Manufacture, Assemble, Inspect, Calibrate",
+          "Detect, Monitor, Allocate, Investigate, Correct",
+          "Deploy, Manage, Audit, Integrate, Conclude"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "DMAIC is the standard 5-phase data-driven improvement cycle used for optimizing existing manufacturing and business processes."
+      },
+      {
+        "QuestionId": "lean-3",
+        "QuestionText": "In Toyota Production System (Lean), what does the Japanese term 'Muda' refer to?",
+        "Options": ["Waste (any activity that consumes resources without creating value for the customer)", "Overburden", "Unevenness", "Continuous improvement"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Muda means waste; Lean identifies 7 primary wastes (TIMWOOD: Transportation, Inventory, Motion, Waiting, Overproduction, Overprocessing, Defects)."
+      },
+      {
+        "QuestionId": "lean-4",
+        "QuestionText": "What is the function of a 'Poka-Yoke' mechanism on an industrial production line?",
+        "Options": [
+          "Mistake-proofing device designed to prevent human error or make defects physically impossible to pass",
+          "A tool for calculating employee overtime bonuses",
+          "A conveyor belt speed controller",
+          "An inventory reordering signaling card"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Poka-Yoke refers to mistake-proofing mechanisms (like asymmetric connectors or safety switches) that prevent errors before they become defects."
+      },
+      {
+        "QuestionId": "lean-5",
+        "QuestionText": "What does a 'Value Stream Map' (VSM) illustrate in industrial process analysis?",
+        "Options": [
+          "The complete visual flow of materials and information required to bring a product from raw materials to customer delivery",
+          "A balance sheet of company stock value",
+          "A blueprint of plant electrical wiring",
+          "A graph of machine motor vibration"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Value Stream Mapping diagrams every value-added and non-value-added step in the lifecycle of a product to identify and eliminate bottlenecks."
+      }
+    ]
+  },
+  {
+    "SkillName": "Yarn Manufacturing Technology",
+    "Questions": [
+      {
+        "QuestionId": "yarn-1",
+        "QuestionText": "In spinning blowroom operations, what is the primary objective of the opening and cleaning sequence?",
+        "Options": [
+          "Open compressed cotton bales into small tufts and extract trash, leaf, and seed particles",
+          "Impart high twist into continuous filaments",
+          "Dye the fibers with reactive dyes",
+          "Weave yarn into woven fabric"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The blowroom opens dense, compressed cotton bales into small fiber tufts and cleans foreign matter (leaf, dust, seed coats) with minimal fiber rupture."
+      },
+      {
+        "QuestionId": "yarn-2",
+        "QuestionText": "Why is the Carding machine historically known as the 'Heart of the Spinning Mill'?",
+        "Options": [
+          "It individualizes fibers, removes neps and remaining fine impurities, and produces the carded sliver",
+          "It spins the yarn directly onto bobbins",
+          "It generates the power for all machines",
+          "It packs yarn into shipping cartons"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Carding performs fiber-to-fiber separation using wire clothing, removes micro-neps and short fibers, and forms the first coherent sliver."
+      },
+      {
+        "QuestionId": "yarn-3",
+        "QuestionText": "In indirect English Cotton Count (Ne), what does a 30 Ne count mean?",
+        "Options": [
+          "There are 30 hanks of 840 yards each that weigh exactly 1 pound",
+          "The yarn weighs 30 grams per kilometer",
+          "The yarn diameter is 30 millimeters",
+          "The yarn has 30 turns per inch of twist"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "In English count (Ne), count = (Length in hanks of 840 yds) / (Weight in lbs); thus 30 Ne means 30 * 840 yards weigh 1 lb (higher Ne = finer yarn)."
+      },
+      {
+        "QuestionId": "yarn-4",
+        "QuestionText": "What additional quality step distinguishes 'Combed Yarn' from standard 'Carded Yarn' in staple fiber spinning?",
+        "Options": [
+          "The combing process extracts short fibers and parallelizes long fibers, yielding smoother, stronger, and higher-tenacity yarn",
+          "Combing applies synthetic sizing wax",
+          "Combed yarn is blended with polyester",
+          "Combed yarn skips ring spinning"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Combing removes short fibers below a pre-set staple length, aligns long fibers, and eliminates neps, producing premium-grade combed cotton yarn."
+      },
+      {
+        "QuestionId": "yarn-5",
+        "QuestionText": "On a Ring Spinning frame, what component rotates around the ring flange to impart twist and wind yarn onto the bobbin cop?",
+        "Options": ["Traveler", "Apron", "Spindle Tape", "Lappet Guide"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The traveler is dragged around the circular ring by the spinning spindle, simultaneously inserting twist into the yarn and guiding it onto the bobbin."
+      }
+    ]
+  },
+  {
+    "SkillName": "Textile Wet Processing (Dyeing & Printing)",
+    "Questions": [
+      {
+        "QuestionId": "wet-1",
+        "QuestionText": "Which chemical dye class is most universally used in the textile industry for dyeing 100% cellulosic cotton fabrics with excellent wash fastness?",
+        "Options": ["Reactive Dyes", "Disperse Dyes", "Basic Dyes", "Cationic Dyes"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Reactive dyes form strong covalent chemical bonds with the hydroxyl (-OH) groups of cellulosic cotton fiber under alkaline conditions."
+      },
+      {
+        "QuestionId": "wet-2",
+        "QuestionText": "What is the primary objective of the 'Mercerization' treatment of cotton textiles using cold concentrated sodium hydroxide (NaOH)?",
+        "Options": [
+          "Increases tensile strength, enhances dye affinity, and imparts permanent silk-like luster",
+          "Bleaches the fabric to pure white",
+          "Removes sizing starch from warps",
+          "Waterproofs the garment"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Mercerizing swells cotton fibers from a flat ribbon into round cylindrical shapes, de-twisting them and dramatically enhancing luster, strength, and dye uptake."
+      },
+      {
+        "QuestionId": "wet-3",
+        "QuestionText": "Which dye class requires high temperature and pressure (HTHP at 130°C) or carrier chemical methods to dye 100% hydrophobic polyester fabrics?",
+        "Options": ["Disperse Dyes", "Direct Dyes", "Acid Dyes", "Vat Dyes"],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Polyester is tightly packed and non-polar; disperse dyes are non-ionic molecules that diffuse into the opened polymer matrix at HTHP (130°C)."
+      },
+      {
+        "QuestionId": "wet-4",
+        "QuestionText": "What is the fundamental difference between textile dyeing and textile printing?",
+        "Options": [
+          "Dyeing imparts uniform solid color across the entire fabric substrate; printing applies color patterns to localized pre-designed areas",
+          "Printing does not use dyes or pigments",
+          "Dyeing is only done on garments",
+          "Printing is only done on yarn"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Dyeing produces a uniform, overall solid shade through immersion; printing applies localized colorful graphics using screens or digital nozzles."
+      },
+      {
+        "QuestionId": "wet-5",
+        "QuestionText": "What does a textile 'Color Fastness to Washing' rating of Grade 5 on the standard grey scale indicate?",
+        "Options": [
+          "Excellent fastness with zero detectable color change or staining",
+          "Severe color fading and bleeding",
+          "The fabric shrank by 5%",
+          "The dye was completely washed out"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "On the ISO grey scale for color change, Grade 5 represents no visible alteration (best), while Grade 1 represents severe degradation."
+      }
+    ]
+  },
+  {
+    "SkillName": "Engineering Project Management",
+    "Questions": [
+      {
+        "QuestionId": "epm-1",
+        "QuestionText": "In Project Management Critical Path Method (CPM), what is the definition of the 'Critical Path'?",
+        "Options": [
+          "The longest sequence of dependent activities through the project network that has zero total float/slack",
+          "The path that costs the most money",
+          "The sequence of activities assigned to the lead engineer",
+          "The shortest path through the network"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The critical path is the longest duration path from start to finish; any delay on a critical path activity directly delays overall project completion."
+      },
+      {
+        "QuestionId": "epm-2",
+        "QuestionText": "What does a Cost Performance Index (CPI) of 1.15 in Earned Value Management (EVM) indicate?",
+        "Options": [
+          "The project is under budget (earning $1.15 of value for every $1.00 spent)",
+          "The project is 15% over budget",
+          "The project is ahead of schedule",
+          "The project scope has increased by 15%"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "CPI = Earned Value (EV) / Actual Cost (AC). A CPI > 1.0 means the project is performing cost-effectively and coming in under planned budget."
+      },
+      {
+        "QuestionId": "epm-3",
+        "QuestionText": "What is a 'Work Breakdown Structure' (WBS) in engineering project management?",
+        "Options": [
+          "A hierarchical decomposition of the total project scope into smaller, deliverable-oriented work packages",
+          "A log of machinery breakdowns on site",
+          "A graph showing employee turnover",
+          "An architectural wiring schematic"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "A WBS breaks down the entire project deliverable into modular, manageable work packages for estimation, scheduling, and accountability."
+      },
+      {
+        "QuestionId": "epm-4",
+        "QuestionText": "What is the primary risk mitigation purpose of a Project Risk Register?",
+        "Options": [
+          "To systematically identify, assess probability/impact, track ownership, and outline response strategies for project risks",
+          "To record workplace injury insurance claims",
+          "To store passwords for project software",
+          "To audit tax payments to the government"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "The Risk Register logs identified project uncertainties, ranks their risk score (Probability x Impact), and pre-defines proactive mitigation actions."
+      },
+      {
+        "QuestionId": "epm-5",
+        "QuestionText": "What does the term 'Scope Creep' signify during an engineering contract?",
+        "Options": [
+          "The uncontrolled expansion of project deliverables and requirements without adjustments to time, cost, or resources",
+          "Progressively completing tasks ahead of schedule",
+          "A slow conveyor belt on an assembly line",
+          "A decrease in budget allocated by the client"
+        ],
+        "CorrectOptionIndex": 0,
+        "Explanation": "Scope creep happens when new features, requirements, or client requests are added without formalized change control, budget increase, or deadline revision."
+      }
+    ]
   }
 ]

@@ -27,14 +27,16 @@ public class AssessmentRepository : IAssessmentRepository
                 s.Id AS SkillId,
                 s.SkillName,
                 s.DomainClassification,
+                ISNULL(s.DepartmentCode, N'CSE') AS DepartmentCode,
+                ISNULL(s.CategoryName, N'General') AS CategoryName,
                 CAST(CASE WHEN MAX(a.AchievedScore) >= 70 THEN 1 ELSE 0 END AS bit) AS IsVerified,
                 MAX(a.AchievedScore) AS BestScore,
                 COUNT(a.Id) AS AttemptsCount,
                 MAX(a.EarnedDate) AS LastAttemptDate
             FROM dbo.Skills s
             LEFT JOIN dbo.Assessments a ON s.Id = a.SkillId AND a.StudentId = @studentId
-            GROUP BY s.Id, s.SkillName, s.DomainClassification
-            ORDER BY s.DomainClassification ASC, s.SkillName ASC";
+            GROUP BY s.Id, s.SkillName, s.DomainClassification, s.DepartmentCode, s.CategoryName
+            ORDER BY s.DepartmentCode ASC, s.CategoryName ASC, s.SkillName ASC";
 
         var rows = await _db.Database
             .SqlQueryRaw<SkillAssessmentRowResult>(sql, studentIdParam)
@@ -45,6 +47,8 @@ public class AssessmentRepository : IAssessmentRepository
             SkillId = r.SkillId,
             SkillName = r.SkillName,
             DomainClassification = r.DomainClassification,
+            DepartmentCode = r.DepartmentCode,
+            CategoryName = r.CategoryName,
             IsVerified = r.IsVerified,
             BestScore = r.BestScore,
             AttemptsCount = r.AttemptsCount,
@@ -109,6 +113,8 @@ public class SkillAssessmentRowResult
     public Guid SkillId { get; set; }
     public string SkillName { get; set; } = string.Empty;
     public byte DomainClassification { get; set; }
+    public string DepartmentCode { get; set; } = "CSE";
+    public string CategoryName { get; set; } = "General";
     public bool IsVerified { get; set; }
     public int? BestScore { get; set; }
     public int AttemptsCount { get; set; }

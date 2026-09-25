@@ -57,6 +57,37 @@
         </div>
     </div>
 
+    <!-- Department Filter Tabs -->
+    @{
+        var myDeptCode = InternLink.Web.Models.EngineeringDepartments.GetDepartmentCode(Model.StudentDepartment);
+    }
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span class="small fw-bold text-muted text-uppercase tracking-wider">Filter by Discipline:</span>
+                <div class="btn-group btn-group-sm flex-wrap" role="group" id="deptFilterGroup">
+                    <button type="button" class="btn btn-outline-primary active" data-filter-dept="all">
+                        All Skills (@Model.Skills.Count)
+                    </button>
+                    @if (!string.IsNullOrEmpty(myDeptCode) && myDeptCode != "GEN")
+                    {
+                        var myDeptCount = Model.Skills.Count(s => s.DepartmentCode == myDeptCode || s.DepartmentCode == "GEN");
+                        <button type="button" class="btn btn-outline-primary" data-filter-dept="@myDeptCode">
+                            <i class="bi bi-star-fill text-warning me-1"></i>My Department (@myDeptCode)
+                        </button>
+                    }
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="CE">Civil (CE)</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="EEE">EEE</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="ME">Mechanical (ME)</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="IPE">IPE</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="TE">Textile (TE)</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="CSE">CSE</button>
+                    <button type="button" class="btn btn-outline-primary" data-filter-dept="GEN">General Engineering</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Skills List Grouped by Domain -->
     @if (Model.Skills != null && Model.Skills.Count > 0)
     {
@@ -64,7 +95,7 @@
 
         @foreach (var group in groupedSkills)
         {
-            <div class="mb-4">
+            <div class="mb-4 skill-domain-group">
                 <h5 class="fw-bold text-slate-700 mb-3 border-bottom pb-2">
                     <i class="bi bi-tag-fill text-primary me-2"></i>@group.Key
                 </h5>
@@ -72,13 +103,16 @@
                 <div class="row g-3">
                     @foreach (var skill in group)
                     {
-                        <div class="col-md-6 col-lg-4">
+                        <div class="col-md-6 col-lg-4 skill-card-wrapper" data-dept="@skill.DepartmentCode">
                             <div class="card h-100 shadow-sm border rounded-3 transition-hover d-flex flex-column">
                                 <div class="card-body p-4 d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <h5 class="fw-bold text-slate-800 mb-1">@skill.SkillName</h5>
-                                            <span class="badge bg-light text-muted border small">@skill.DomainName</span>
+                                            <div class="d-flex gap-1 flex-wrap">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">@skill.DepartmentCode</span>
+                                                <span class="badge bg-light text-muted border small">@skill.DomainName</span>
+                                            </div>
                                         </div>
                                         <div>
                                             @if (skill.IsVerified)
@@ -138,3 +172,37 @@
         }
     }
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterBtns = document.querySelectorAll('#deptFilterGroup button');
+            const cards = document.querySelectorAll('.skill-card-wrapper');
+            const domainGroups = document.querySelectorAll('.skill-domain-group');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const dept = this.getAttribute('data-filter-dept');
+
+                    cards.forEach(card => {
+                        const cardDept = card.getAttribute('data-dept');
+                        if (dept === 'all' || cardDept === dept || (dept !== 'GEN' && cardDept === 'GEN')) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Hide empty domain groups
+                    domainGroups.forEach(group => {
+                        const visibleCards = group.querySelectorAll('.skill-card-wrapper:not([style*="display: none"])');
+                        group.style.display = visibleCards.length > 0 ? '' : 'none';
+                    });
+                });
+            });
+        });
+    </script>
+}
