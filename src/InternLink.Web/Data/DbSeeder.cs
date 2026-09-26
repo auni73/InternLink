@@ -42,6 +42,9 @@ public static class DbSeeder
                 logger.LogDebug("Identity role already exists, skipping: {Role}", roleName);
             }
         }
+
+        var rolesAfterSeeding = await roleManager.Roles.Select(r => r.Name).ToListAsync();
+        logger.LogInformation("Identity roles after seeding: {Roles}", string.Join(", ", rolesAfterSeeding));
     }
 
     public static async Task SeedDevelopmentDataAsync(

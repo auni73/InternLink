@@ -114,7 +114,7 @@ public class AccountController : Controller
                     _logger.LogError(roleEx, "AddToRoleAsync threw an exception for {Email}. Rolling back.", model.Email);
                     await transaction.RollbackAsync(ct);
                     // Ensure user is removed even if rollback doesn't cover the UserManager's internal save.
-                    await _userManager.DeleteAsync(user);
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
                     createResult = IdentityResult.Failed(new IdentityError
                     {
                         Code = "RoleAssignmentFailed",
@@ -129,7 +129,7 @@ public class AccountController : Controller
                         model.Email,
                         string.Join(", ", roleResult.Errors.Select(e => e.Description)));
                     await transaction.RollbackAsync(ct);
-                    await _userManager.DeleteAsync(user);
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
                     createResult = roleResult;
                     return;
                 }

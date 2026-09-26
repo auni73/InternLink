@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using InternLink.Web.Models;
@@ -5,7 +6,7 @@ using InternLink.Web.Models.Enums;
 
 namespace InternLink.Web.Data;
 
-public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
+public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IDataProtectionKeyContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -29,6 +30,10 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     public DbSet<MockInterviewSession> MockInterviewSessions => Set<MockInterviewSession>();
     public DbSet<SchemaVersion> SchemaVersions => Set<SchemaVersion>();
 
+    // Required by IDataProtectionKeyContext — keys are persisted here so they
+    // survive container restarts and re-deployments on Render.
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -46,6 +51,9 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>
             b.ToTable("SchemaVersions");
             b.HasKey(s => s.ScriptName);
         });
+
+        // DataProtectionKeys: explicit table name to match 010_data_protection_keys.sql
+        builder.Entity<DataProtectionKey>(b => b.ToTable("DataProtectionKeys"));
 
         // 3. Students
         builder.Entity<Student>(b =>

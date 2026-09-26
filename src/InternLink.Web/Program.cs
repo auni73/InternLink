@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -66,6 +67,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
     });
 });
+
+// Persist Data Protection keys to Azure SQL so they survive Render container
+// restarts and re-deployments. Without this, every new container generates fresh
+// keys and cannot decrypt cookies/antiforgery tokens from the previous instance.
+builder.Services.AddDataProtection()
+    .SetApplicationName("InternLink")          // stable name: must never change
+    .PersistKeysToDbContext<ApplicationDbContext>();
 
 // 3. Configure ASP.NET Core Identity with AppUser & AppRole (Guid keys)
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
