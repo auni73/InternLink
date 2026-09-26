@@ -1,0 +1,49 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?Set SA_PASSWORD in .env}
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD
+        - /opt/mssql-tools18/bin/sqlcmd
+        - -C
+        - -S
+        - localhost
+        - -U
+        - sa
+        - -P
+        - ${SA_PASSWORD:?Set SA_PASSWORD in .env}
+        - -Q
+        - SELECT 1
+        - -b
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: src/InternLink.Web/Dockerfile
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      SA_PASSWORD: ""
+    ports:
+      - "${WEB_HTTP_BIND:-127.0.0.1}:${WEB_HTTP_PORT:-8080}:8080"
+    volumes:
+      - resume-data:/app/data/resumes
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+volumes:
+  sqlserver-data:
+  resume-data:

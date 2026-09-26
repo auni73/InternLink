@@ -19,6 +19,7 @@
 secrets.json
 appsettings.Development.local.json
 appsettings.local.json
+.env
 
 ## OS Generated files
 .DS_Store
