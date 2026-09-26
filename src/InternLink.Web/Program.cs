@@ -241,8 +241,12 @@ using (var scope = app.Services.CreateScope())
 
     // Seed demo accounts and showcase data in EVERY environment (including Production).
     // Idempotent: existing accounts are preserved and updated with proper roles.
+    // This block is NOT gated by IsDevelopment() — it runs unconditionally.
+    logger.LogInformation("Startup: Invoking DbSeeder.SeedDemoDataAsync (Environment={Env})",
+        app.Environment.EnvironmentName);
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
     await DbSeeder.SeedDemoDataAsync(db, userManager, roleManager, logger);
+    logger.LogInformation("Startup: DbSeeder.SeedDemoDataAsync completed.");
 }
 
 // 6. Configure the HTTP request pipeline.

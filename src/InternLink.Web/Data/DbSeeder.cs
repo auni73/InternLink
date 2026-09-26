@@ -11,6 +11,18 @@ public static class DbSeeder
     // Keep this in sync with: Program.cs policies, [Authorize(Roles=...)], AddToRoleAsync calls.
     private static readonly string[] RequiredRoles = ["Admin", "Counselor", "Company", "Student"];
 
+    // Canonical demo accounts. This is the single source of truth.
+    // The Quick Test Login buttons in Login.cshtml reference these same emails/passwords.
+    private static readonly (string Email, string Password, string Role)[] DemoAccounts =
+    [
+        ("admin@internlink.test",      "Admin123!",     "Admin"),
+        ("counselor@internlink.test",   "Counselor123!", "Counselor"),
+        ("techcorp@internlink.test",    "Company123!",   "Company"),
+        ("cloudscale@internlink.test",  "Company123!",   "Company"),
+        ("datawave@internlink.test",    "Company123!",   "Company"),
+        ("student@internlink.test",     "Student123!",   "Student"),
+    ];
+
     /// <summary>
     /// Ensures all application-required Identity roles exist.
     /// Safe to call on every deployment/startup in every environment — idempotent.
@@ -57,45 +69,22 @@ public static class DbSeeder
         RoleManager<AppRole> roleManager, 
         ILogger logger)
     {
-        logger.LogInformation("Ensuring demo accounts and showcase data...");
+        logger.LogInformation("Demo account seeding started. Environment: {Env}, Accounts to ensure: {Count}",
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "(not set)",
+            DemoAccounts.Length);
 
-        // 1. Admin Demo Account
-        await EnsureDemoAccountAsync(
-            userManager,
-            "admin@internlink.test",
-            "Admin123!",
-            "Admin",
-            logger);
+        // Ensure every demo account exists with correct properties and role.
+        var seededUsers = new Dictionary<string, AppUser>();
+        foreach (var (email, password, role) in DemoAccounts)
+        {
+            var user = await EnsureDemoAccountAsync(userManager, email, password, role, logger);
+            seededUsers[email] = user;
+        }
 
-        // 2. Counselor Demo Account
-        await EnsureDemoAccountAsync(
-            userManager,
-            "counselor@internlink.test",
-            "Counselor123!",
-            "Counselor",
-            logger);
-
-        // 3. Company Demo Accounts
-        var company1User = await EnsureDemoAccountAsync(
-            userManager,
-            "techcorp@internlink.test",
-            "Company123!",
-            "Company",
-            logger);
-
-        var company2User = await EnsureDemoAccountAsync(
-            userManager,
-            "cloudscale@internlink.test",
-            "Company123!",
-            "Company",
-            logger);
-
-        var company3User = await EnsureDemoAccountAsync(
-            userManager,
-            "datawave@internlink.test",
-            "Company123!",
-            "Company",
-            logger);
+        var company1User = seededUsers["techcorp@internlink.test"];
+        var company2User = seededUsers["cloudscale@internlink.test"];
+        var company3User = seededUsers["datawave@internlink.test"];
+        var studentUser  = seededUsers["student@internlink.test"];
 
         // 4. Ensure Company Entities
         var company1 = await db.Companies.FirstOrDefaultAsync(c => c.UserId == company1User.Id);
@@ -152,13 +141,7 @@ public static class DbSeeder
             logger.LogInformation("Created Company entity for {Email}", company3User.Email);
         }
 
-        // 5. Student Demo Account
-        var studentUser = await EnsureDemoAccountAsync(
-            userManager,
-            "student@internlink.test",
-            "Student123!",
-            "Student",
-            logger);
+        // Student user was already ensured above via the DemoAccounts loop.
 
         // 6. Fetch Reference Skills for Job/Student Associations
         var skills = await db.Skills.ToListAsync();
@@ -280,7 +263,54 @@ public static class DbSeeder
             logger.LogInformation("Seeded realistic showcase jobs.");
         }
 
-        logger.LogInformation("Demo accounts and showcase data ensured successfully.");
+        // ── POST-SEEDING VERIFICATION ──────────────────────────────────────────
+        // Re-query every demo account from the database and confirm it actually exists
+        // with the correct properties. If any verification fails, throw so the app
+        // refuses to start — making the failure impossible to miss in Render logs.
+        logger.LogInformation("Verifying all demo accounts in the database...");
+        int verified = 0;
+        foreach (var (email, _, expectedRole) in DemoAccounts)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user is null)
+            {
+                logger.LogCritical("VERIFICATION FAILED: Demo account {Email} was NOT found in dbo.AspNetUsers after seeding.", email);
+                throw new InvalidOperationException(
+                    $"Demo account '{email}' does not exist in the database after seeding. " +
+                    $"The UserManager may be connected to a different database than expected.");
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                logger.LogCritical("VERIFICATION FAILED: Demo account {Email} has EmailConfirmed=false.", email);
+                throw new InvalidOperationException($"Demo account '{email}' has EmailConfirmed=false.");
+            }
+
+            if (!user.IsActive)
+            {
+                logger.LogCritical("VERIFICATION FAILED: Demo account {Email} has IsActive=false.", email);
+                throw new InvalidOperationException($"Demo account '{email}' has IsActive=false.");
+            }
+
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                logger.LogCritical("VERIFICATION FAILED: Demo account {Email} has NULL PasswordHash.", email);
+                throw new InvalidOperationException($"Demo account '{email}' has a null PasswordHash.");
+            }
+
+            if (!await userManager.IsInRoleAsync(user, expectedRole))
+            {
+                logger.LogCritical("VERIFICATION FAILED: Demo account {Email} is NOT in role {Role}.", email, expectedRole);
+                throw new InvalidOperationException(
+                    $"Demo account '{email}' is not in role '{expectedRole}'.");
+            }
+
+            logger.LogInformation("Verified demo account in database: {Email} (Role={Role}, EmailConfirmed={EC}, IsActive={IA})",
+                email, expectedRole, user.EmailConfirmed, user.IsActive);
+            verified++;
+        }
+
+        logger.LogInformation("Demo account seeding completed successfully. Verified {Count} accounts.", verified);
     }
 
     /// <summary>
@@ -314,6 +344,8 @@ public static class DbSeeder
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
+            logger.LogInformation("Creating demo account: {Email}", email);
+
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
             {
@@ -321,6 +353,8 @@ public static class DbSeeder
                 logger.LogError("Failed to create demo account {Email}: {Errors}", email, errors);
                 throw new InvalidOperationException($"Failed to create demo account '{email}': {errors}");
             }
+
+            logger.LogInformation("Created demo account: {Email} (Id={Id})", email, user.Id);
 
             var roleResult = await userManager.AddToRoleAsync(user, roleName);
             if (!roleResult.Succeeded)
@@ -330,7 +364,7 @@ public static class DbSeeder
                 throw new InvalidOperationException($"Failed to assign role '{roleName}' to demo account '{email}': {errors}");
             }
 
-            logger.LogInformation("Ensured demo account: {Email}", email);
+            logger.LogInformation("Assigned role {Role} to {Email}", roleName, email);
         }
         else
         {
@@ -367,7 +401,7 @@ public static class DbSeeder
                 }
             }
 
-            logger.LogInformation("Ensured demo account: {Email}", email);
+            logger.LogInformation("Demo account already exists: {Email} (Id={Id})", email, user.Id);
         }
 
         return user;
