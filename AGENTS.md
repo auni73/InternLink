@@ -1,7 +1,7 @@
 # AGENTS.md — Standing Context for AI Coding Agents
 
 ## 1. Project Summary
-- **Project**: InternLink — AI-powered university career & internship portal (CSE 3200 & CSE 3224, AUST).
+- **Project**: InternLink — AI-powered university career & internship portal (CSE 3200 & CSE 3224, AUST), with supported Docker Compose deployment for the web app and SQL Server.
 - **User Roles**: Student, Company, Admin, Counselor.
 
 ## 2. Architecture Overview
@@ -26,7 +26,7 @@ Single ASP.NET Core MVC app (.NET 8, Razor Views, Bootstrap 5, vanilla JS fetch 
 ```
 
 ## 3. Data-Access Conventions (CRITICAL)
-- **Schema Truth**: Lives ONLY in `db/scripts/*.sql`, numbered (`000_`, `001_`...), run once, recorded in `SchemaVersions`. NEVER run `dotnet ef migrations`.
+- **Schema Truth**: Lives ONLY in `db/scripts/*.sql`, numbered (`000_`, `001_`...), applied at app startup by `DatabaseMigrationRunner`, and recorded in `SchemaVersions`. NEVER run `dotnet ef migrations`.
 - **Hand-Written Parameterized T-SQL**: Repositories (`Repositories/Implementation`) execute hand-written T-SQL:
   - Reads: `db.Jobs.FromSql($"SELECT j.* FROM Jobs j WHERE j.Id = {id}")` (auto-parameterized) or `FromSqlRaw` with explicit `SqlParameter`.
   - Writes: `ExecuteSql` / `ExecuteSqlRaw`. NEVER string-concatenate unparameterized user input into SQL.
@@ -67,11 +67,12 @@ Single ASP.NET Core MVC app (.NET 8, Razor Views, Bootstrap 5, vanilla JS fetch 
 - Gates: `dotnet build` + `dotnet test` + prompt checklist pass before merge.
 
 ## 8. Strictly Prohibited ("Do Not" List)
-- Do NOT add Docker or CI/CD pipeline files.
+- Do NOT add CI/CD pipeline files.
+- Docker Compose is supported for the app and SQL Server. Keep deployment files aligned with `DOCKER.md`; Qdrant remains external.
 - Do NOT add EF Core migrations or alter `DbContext` expecting schema to auto-create.
 - Do NOT introduce jQuery, React, npm, or external JS build toolchains.
 - Do NOT call LLM/embedding APIs synchronously (`.Result` or `.Wait()`).
-- Do NOT store secrets outside `dotnet user-secrets`.
+- Do NOT commit secrets. Use `dotnet user-secrets` for local development and the git-ignored `.env` path for Docker/deployment configuration; never add real values to tracked files.
 - Do NOT bypass repositories from controllers or expose domain entities in views.
 - Do NOT swallow exceptions silently.
 

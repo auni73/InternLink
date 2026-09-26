@@ -1,6 +1,8 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Net;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,6 +20,31 @@ using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Vectors;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    var configuredProxies = builder.Configuration
+        .GetSection("ForwardedHeaders:KnownProxies")
+        .Get<string[]>() ?? [];
+    if (configuredProxies.Length > 0)
+    {
+        options.KnownProxies.Clear();
+        foreach (var proxy in configuredProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var address))
+            {
+                options.KnownProxies.Add(address);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Invalid forwarded-header proxy IP address: {proxy}");
+            }
+        }
+    }
+});
+
+builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
 // 1. Add services to the container. AutoValidateAntiforgeryToken makes every POST antiforgery-protected by default.
 builder.Services.AddControllersWithViews(options =>
@@ -196,47 +223,25 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// 5. Startup Sanity Probe and Development Seeding (Development only)
-if (app.Environment.IsDevelopment())
+// Ensure the database exists from master, then apply the numbered SQL scripts in every environment.
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+    await DatabaseMigrationRunner.BootstrapDatabaseAsync(connectionString, app.Environment.ContentRootPath, logger);
+    await DatabaseMigrationRunner.ApplyPendingScriptsAsync(db, app.Environment.ContentRootPath, logger);
 
-    try
+    if (app.Environment.IsDevelopment())
     {
-        if (await db.Database.CanConnectAsync())
-        {
-            var appliedScriptsCount = await db.Database
-                .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM dbo.SchemaVersions")
-                .FirstOrDefaultAsync();
-
-            if (appliedScriptsCount == 0)
-            {
-                logger.LogWarning("SchemaVersions table is empty. Please run db/scripts in order (see db/scripts/README.md).");
-            }
-            else
-            {
-                logger.LogInformation("Database connection successful. Applied schema scripts count: {Count}", appliedScriptsCount);
-                
-                // Seed development data (roles, admin, counselor, companies, jobs, student)
-                await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
-            }
-        }
-        else
-        {
-            logger.LogError("Database connection failed. Ensure SQL Server is running and run db/scripts in order — see db/scripts/README.md");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database initialization/seeding probe failed. Run db/scripts in order — see db/scripts/README.md");
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+        await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
     }
 }
 
 // 6. Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -260,5 +265,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHealthChecks("/health");
 
 app.Run();

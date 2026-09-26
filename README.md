@@ -6,6 +6,10 @@ InternLink is an AI-powered university career & internship portal built with ASP
 
 ## Environment Setup
 
+InternLink supports Docker Compose for the web app and SQL Server; see [DOCKER.md](DOCKER.md)
+for local startup and deployment configuration. The app applies the hand-authored
+`db/scripts/*.sql` files at startup. Qdrant remains an external Qdrant Cloud dependency.
+
 ### Configuration Contract
 
 | Config Key | Required For | Where to Get the Value | Prompt First Consuming |
@@ -50,6 +54,28 @@ dotnet user-secrets set "Qdrant:ApiKey" "your-qdrant-api-key"
 # Set local database connection string (if different from appsettings default)
 dotnet user-secrets set "ConnectionStrings:InternLinkDb" "Server=.\SQLEXPRESS;Database=InternLink;Trusted_Connection=True;TrustServerCertificate=True"
 ```
+
+---
+
+### Environment Variables for Container / Deployment Use
+
+For **containerized** (Docker) or **deployed** environments where `dotnet user-secrets` is unavailable, InternLink supports configuration via environment variables using ASP.NET Core's built-in `Section__Key` convention.
+
+1. Copy the template:
+   ```bash
+   cp .env.example .env
+   ```
+2. Fill in real values in `.env` — see the comments inside for guidance on each key.
+3. **Do NOT commit `.env`** — it is git-ignored.
+
+> [!IMPORTANT]
+> The `.env` connection string **must use SQL Authentication** (`User Id=...;Password=...`), not
+> Windows Trusted/Integrated auth. Trusted auth has no equivalent across separate Linux containers
+> or remote deployments. See the comments in `.env.example` for details.
+
+`dotnet user-secrets` remains the **primary** local development secret store and is completely
+unaffected by this addition. When both are present, environment variables override user-secrets
+in ASP.NET Core's default configuration precedence.
 
 ---
 

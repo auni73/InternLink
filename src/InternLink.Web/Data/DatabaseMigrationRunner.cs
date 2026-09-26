@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace InternLink.Web.Data;
@@ -9,6 +10,46 @@ public static class DatabaseMigrationRunner
         @"^\s*GO\s*$",
         RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
+    public static async Task BootstrapDatabaseAsync(
+        string connectionString,
+        string contentRootPath,
+        ILogger logger,
+        CancellationToken ct = default)
+    {
+        var scriptsDir = FindScriptsDirectory(contentRootPath);
+        if (scriptsDir is null)
+        {
+            throw new DirectoryNotFoundException("Database scripts directory was not found.");
+        }
+
+        var bootstrapPath = Path.Combine(scriptsDir, "000_create_database.sql");
+        if (!File.Exists(bootstrapPath))
+        {
+            throw new FileNotFoundException("Database bootstrap script was not found.", bootstrapPath);
+        }
+
+        var masterConnectionString = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = "master"
+        }.ConnectionString;
+
+        logger.LogInformation("Ensuring the InternLink database exists using the master catalog.");
+        await using var connection = new SqlConnection(masterConnectionString);
+        await connection.OpenAsync(ct);
+
+        var script = await File.ReadAllTextAsync(bootstrapPath, ct);
+        foreach (var batch in GoBatchRegex.Split(script))
+        {
+            if (string.IsNullOrWhiteSpace(batch))
+            {
+                continue;
+            }
+
+            await using var command = new SqlCommand(batch, connection);
+            await command.ExecuteNonQueryAsync(ct);
+        }
+    }
+
     public static async Task ApplyPendingScriptsAsync(
         ApplicationDbContext db, 
         string contentRootPath, 
@@ -17,27 +58,10 @@ public static class DatabaseMigrationRunner
     {
         try
         {
-            var scriptsDir = Path.Combine(contentRootPath, "..", "..", "db", "scripts");
-            if (!Directory.Exists(scriptsDir))
+            var scriptsDir = FindScriptsDirectory(contentRootPath);
+            if (scriptsDir is null)
             {
-                // Fallback search up directory tree
-                var current = new DirectoryInfo(contentRootPath);
-                while (current != null)
-                {
-                    var candidate = Path.Combine(current.FullName, "db", "scripts");
-                    if (Directory.Exists(candidate))
-                    {
-                        scriptsDir = candidate;
-                        break;
-                    }
-                    current = current.Parent;
-                }
-            }
-
-            if (!Directory.Exists(scriptsDir))
-            {
-                logger.LogWarning("Database scripts directory not found. Skipping auto-migration.");
-                return;
+                throw new DirectoryNotFoundException("Database scripts directory was not found.");
             }
 
             var applied = (await db.Database
@@ -82,7 +106,16 @@ public static class DatabaseMigrationRunner
                         continue;
                     }
 
-                    await db.Database.ExecuteSqlRawAsync(trimmed, ct);
+                    var connection = db.Database.GetDbConnection();
+                    if (connection.State != System.Data.ConnectionState.Open)
+                    {
+                        await connection.OpenAsync(ct);
+                    }
+
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = trimmed;
+                    command.CommandTimeout = 120;
+                    await command.ExecuteNonQueryAsync(ct);
                 }
 
                 logger.LogInformation("Successfully executed {ScriptName}.", scriptName);
@@ -93,5 +126,22 @@ public static class DatabaseMigrationRunner
             logger.LogError(ex, "Error while checking or applying pending SQL schema scripts.");
             throw;
         }
+    }
+
+    private static string? FindScriptsDirectory(string contentRootPath)
+    {
+        var current = new DirectoryInfo(contentRootPath);
+        while (current is not null)
+        {
+            var candidate = Path.Combine(current.FullName, "db", "scripts");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
     }
 }
