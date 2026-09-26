@@ -238,9 +238,14 @@ public class AccountController : Controller
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user is null)
         {
+            _logger.LogWarning("Login attempt for non-existent email: {Email}", model.Email);
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View(model);
         }
+
+        _logger.LogInformation(
+            "Login attempt for {Email}: EmailConfirmed={EmailConfirmed}, IsActive={IsActive}, LockoutEnd={LockoutEnd}",
+            user.Email, user.EmailConfirmed, user.IsActive, user.LockoutEnd);
 
         // Suspension is checked before anything else.
         if (!user.IsActive)
@@ -249,18 +254,25 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // Auto-confirm email for any user that still has EmailConfirmed = false.
+        // This is a showcase/demo deployment — real email verification is not required.
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+            _logger.LogInformation("Auto-confirmed email for {Email} at login time.", user.Email);
+        }
+
         // Password check only — no auth cookie is issued here. OTP must pass first.
         var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
+
+        _logger.LogInformation(
+            "CheckPasswordSignInAsync result for {Email}: Succeeded={Succeeded}, IsLockedOut={IsLockedOut}, IsNotAllowed={IsNotAllowed}, RequiresTwoFactor={RequiresTwoFactor}",
+            user.Email, result.Succeeded, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
 
         if (result.IsLockedOut)
         {
             ModelState.AddModelError(string.Empty, "This account is locked due to multiple failed attempts. Try again in 15 minutes.");
-            return View(model);
-        }
-
-        if (result.IsNotAllowed)
-        {
-            ModelState.AddModelError(string.Empty, "You must confirm your email address before signing in.");
             return View(model);
         }
 
