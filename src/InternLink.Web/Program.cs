@@ -135,6 +135,7 @@ builder.Services.AddScoped<IAIHistoryRepository, AIHistoryRepository>();
 builder.Services.AddScoped<IMockInterviewRepository, MockInterviewRepository>();
 builder.Services.AddScoped<ISkillGapRepository, SkillGapRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
 // AI gateway: rotating key pool is a singleton so cooldowns are shared across every request.
 builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
@@ -184,6 +185,14 @@ builder.Services.AddHttpClient<InternLink.Web.Services.Jobs.IExternalJobIngestio
 });
 builder.Services.AddScoped<InternLink.Web.Services.Jobs.IExternalJobParseService, InternLink.Web.Services.Jobs.ExternalJobParseService>();
 builder.Services.AddHostedService<InternLink.Web.Services.Jobs.JobIngestionBackgroundService>();
+
+// bKash MFS Payment Gateway
+builder.Services.Configure<InternLink.Web.Services.Payment.BkashConfig>(
+    builder.Configuration.GetSection(InternLink.Web.Services.Payment.BkashConfig.SectionName));
+builder.Services.AddHttpClient<InternLink.Web.Services.Payment.IBkashPaymentService, InternLink.Web.Services.Payment.BkashPaymentService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Full-Text Search capability service
 builder.Services.AddSingleton<InternLink.Web.Helpers.IFtsCapabilityService, InternLink.Web.Helpers.FtsCapabilityService>();

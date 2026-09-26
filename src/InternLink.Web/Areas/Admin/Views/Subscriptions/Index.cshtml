@@ -1,0 +1,440 @@
+@model InternLink.Web.ViewModels.AdminMonetizationDashboardViewModel
+@{
+    ViewData["Title"] = "Monetization & Plans";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-slate-800 mb-1">
+                <i class="bi bi-cash-stack text-primary me-2"></i>Monetization & Subscriptions
+            </h2>
+            <p class="text-muted mb-0">Platform revenue analytics, offline payment verification queue, and company tier management.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#manualGrantModal">
+                <i class="bi bi-gift me-1"></i>Grant Plan to Employer
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-primary-subtle text-primary rounded-3 fs-3">
+                        <i class="bi bi-currency-exchange"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Total Revenue</div>
+                        <div class="fs-4 fw-bold text-slate-800">৳@Model.TotalRevenueBdt.ToString("N0")</div>
+                        <span class="small text-success"><i class="bi bi-arrow-up-right me-1"></i>All bKash & Bank</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-success-subtle text-success rounded-3 fs-3">
+                        <i class="bi bi-building-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Active Subscriptions</div>
+                        <div class="fs-4 fw-bold text-slate-800">@Model.ActiveSubscriptionsCount</div>
+                        <span class="small text-muted">Currently posting jobs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 fs-3">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Expiring in 7 Days</div>
+                        <div class="fs-4 fw-bold text-slate-800">@Model.ExpiringSoonCount</div>
+                        <span class="small text-warning-emphasis">Awaiting renewal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-3 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-info-subtle text-info-emphasis rounded-3 fs-3">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Pending Approvals</div>
+                        <div class="fs-4 fw-bold text-slate-800">@Model.PendingApprovalsCount</div>
+                        <span class="small text-info-emphasis">Offline/mail slips</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabbed Navigation -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-white border-bottom py-2">
+            <ul class="nav nav-tabs card-header-tabs" id="monetizationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-medium py-3" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvalsTab" type="button" role="tab">
+                        <i class="bi bi-check2-circle me-1"></i>Pending Approvals
+                        @if (Model.PendingApprovalsCount > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill ms-1">@Model.PendingApprovalsCount</span>
+                        }
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium py-3" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companiesTab" type="button" role="tab">
+                        <i class="bi bi-buildings me-1"></i>Company Subscriptions Roster
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium py-3" id="ledger-tab" data-bs-toggle="tab" data-bs-target="#ledgerTab" type="button" role="tab">
+                        <i class="bi bi-receipt me-1"></i>Payment Audit Ledger
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium py-3" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plansTab" type="button" role="tab">
+                        <i class="bi bi-tags me-1"></i>Plan Catalog & Rates
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content" id="monetizationTabsContent">
+                <!-- TAB 1: Pending Approvals Queue -->
+                <div class="tab-pane fade show active p-4" id="approvalsTab" role="tabpanel">
+                    @if (Model.PendingRequests != null && Model.PendingRequests.Count > 0)
+                    {
+                        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center gap-2 mb-4">
+                            <i class="bi bi-info-circle-fill fs-5"></i>
+                            <div>The following companies have submitted offline payment references (bank wire / counter bKash). Verify the funds and click <strong>Approve & Activate</strong> to grant access.</div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Submitted</th>
+                                        <th>Company</th>
+                                        <th>Target Plan</th>
+                                        <th>Amount</th>
+                                        <th>Channel & Ref #</th>
+                                        <th>Sender Contact</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var req in Model.PendingRequests)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 small text-muted">@req.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                            <td>
+                                                <div class="fw-bold text-slate-800">@req.CompanyName</div>
+                                                <div class="small text-muted">@req.ContactEmail</div>
+                                            </td>
+                                            <td><span class="badge bg-light text-dark border">@req.PlanName</span></td>
+                                            <td class="fw-bold text-slate-900">৳@req.Amount.ToString("N0")</td>
+                                            <td>
+                                                <div class="small fw-semibold">@req.PaymentMethod</div>
+                                                <div class="small font-monospace text-primary">@req.CustomerReference</div>
+                                            </td>
+                                            <td class="small text-muted">@(req.PayerMsisdn ?? "—")</td>
+                                            <td class="text-end pe-3">
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <form asp-action="ApproveRequest" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="transactionId" value="@req.TransactionId" />
+                                                        <button type="submit" class="btn btn-sm btn-success shadow-sm">
+                                                            <i class="bi bi-check-circle me-1"></i>Approve & Activate
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal" data-trx-id="@req.TransactionId" data-company-name="@req.CompanyName">
+                                                        <i class="bi bi-x-circle me-1"></i>Reject
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-all display-6 text-success"></i>
+                            <h6 class="fw-bold text-slate-800 mt-2 mb-1">Queue Clear</h6>
+                            <p class="small mb-0">No pending offline payment verification requests right now.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- TAB 2: Company Subscriptions Roster -->
+                <div class="tab-pane fade p-4" id="companiesTab" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-uppercase">
+                                <tr>
+                                    <th class="ps-3">Company</th>
+                                    <th>Sector</th>
+                                    <th>Current Plan</th>
+                                    <th>Days Left</th>
+                                    <th>Valid Until</th>
+                                    <th>Job Quota Used</th>
+                                    <th>Total Paid</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var comp in Model.CompanySubscriptions)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-slate-800">@comp.CompanyName</div>
+                                            <div class="small text-muted">@comp.ContactEmail</div>
+                                        </td>
+                                        <td><span class="badge bg-light text-secondary border">@comp.IndustrySector</span></td>
+                                        <td>
+                                            @if (comp.DaysRemaining > 0)
+                                            {
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@comp.PlanName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-muted border">No Active Plan</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (comp.DaysRemaining > 7)
+                                            {
+                                                <span class="badge bg-success-subtle text-success">@comp.DaysRemaining days</span>
+                                            }
+                                            else if (comp.DaysRemaining > 0)
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning-emphasis">@comp.DaysRemaining days</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger">Expired</span>
+                                            }
+                                        </td>
+                                        <td class="small text-muted">@(comp.EndDate?.ToLocalTime().ToString("dd MMM yyyy") ?? "—")</td>
+                                        <td class="small">
+                                            <span class="fw-semibold">@comp.ActiveJobsCount</span> / @(comp.MaxActiveJobs >= 900 ? "Unlimited" : comp.MaxActiveJobs.ToString())
+                                        </td>
+                                        <td class="fw-bold text-slate-800">৳@comp.TotalPaidBdt.ToString("N0")</td>
+                                        <td class="text-end pe-3">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#manualGrantModal" data-company-id="@comp.CompanyId" data-company-name="@comp.CompanyName">
+                                                <i class="bi bi-plus-circle me-1"></i>Grant Plan
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Payment Audit Ledger -->
+                <div class="tab-pane fade p-4" id="ledgerTab" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-uppercase">
+                                <tr>
+                                    <th class="ps-3">Date</th>
+                                    <th>Invoice #</th>
+                                    <th>Company</th>
+                                    <th>Plan</th>
+                                    <th>Method</th>
+                                    <th>Amount</th>
+                                    <th>TrxID / Reference</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var trx in Model.Transactions)
+                                {
+                                    <tr>
+                                        <td class="ps-3 small text-muted">@trx.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                        <td class="fw-semibold font-monospace small">@trx.InvoiceNumber</td>
+                                        <td class="fw-medium text-slate-800">@trx.CompanyName</td>
+                                        <td>@trx.PlanName</td>
+                                        <td>
+                                            @if (trx.PaymentMethod.Contains("bKash", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <span class="badge text-white px-2" style="background-color: #D12053;">bKash</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark border">@trx.PaymentMethod</span>
+                                            }
+                                        </td>
+                                        <td class="fw-bold">৳@trx.Amount.ToString("N0")</td>
+                                        <td class="small font-monospace text-primary">@(trx.BkashTrxId ?? trx.CustomerReference ?? "—")</td>
+                                        <td><span class="badge @trx.StatusBadgeClass">@trx.Status</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Plan Catalog -->
+                <div class="tab-pane fade p-4" id="plansTab" role="tabpanel">
+                    <div class="row g-3">
+                        @foreach (var plan in Model.Plans)
+                        {
+                            <div class="col-md-3">
+                                <div class="card h-100 border p-3 rounded-3">
+                                    <h6 class="fw-bold mb-1">@plan.Name</h6>
+                                    <div class="display-6 fw-bold text-slate-800 my-2">@plan.FormattedPrice</div>
+                                    <div class="badge bg-light text-primary border py-2 mb-3">@plan.FormattedJobSlots &bull; @plan.FormattedCycle</div>
+                                    <p class="small text-muted mb-0">@plan.Description</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Manual Plan Grant -->
+<div class="modal fade" id="manualGrantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form asp-action="ManualGrant" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-gift me-2 text-primary"></i>Grant Subscription Plan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Target Company *</label>
+                        <select name="CompanyId" id="grantCompanySelect" class="form-select" required>
+                            @foreach (var c in Model.CompanySubscriptions)
+                            {
+                                <option value="@c.CompanyId">@c.CompanyName (@c.ContactEmail)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Subscription Plan *</label>
+                        <select name="PlanId" class="form-select" required>
+                            @foreach (var p in Model.Plans)
+                            {
+                                <option value="@p.Id">@p.Name — @p.FormattedJobSlots (@p.FormattedCycle)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Validity Duration (Days) *</label>
+                        <input type="number" name="Days" class="form-control" value="30" min="1" max="1000" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Reason / Audit Notes</label>
+                        <textarea name="Notes" rows="2" class="form-control" placeholder="e.g. AUST Strategic Partner complimentary promo or bank check deposit..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary shadow-sm">Grant Subscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reject Request -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form asp-action="RejectRequest" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TransactionId" id="rejectTrxId" />
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold text-danger">
+                        <i class="bi bi-x-circle me-2"></i>Reject Payment Request
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Please state the reason for rejecting this payment request for <strong id="rejectCompanyName"></strong>. The company will be notified.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Rejection Reason *</label>
+                        <textarea name="Reason" rows="3" class="form-control" placeholder="e.g. Transaction ID could not be found in our bank statement..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger shadow-sm">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rejectModal = document.getElementById('rejectModal');
+            if (rejectModal) {
+                rejectModal.addEventListener('show.bs.modal', (e) => {
+                    const btn = e.relatedTarget;
+                    document.getElementById('rejectTrxId').value = btn.getAttribute('data-trx-id');
+                    document.getElementById('rejectCompanyName').textContent = btn.getAttribute('data-company-name');
+                });
+            }
+
+            const manualGrantModal = document.getElementById('manualGrantModal');
+            if (manualGrantModal) {
+                manualGrantModal.addEventListener('show.bs.modal', (e) => {
+                    const btn = e.relatedTarget;
+                    const compId = btn ? btn.getAttribute('data-company-id') : null;
+                    if (compId) {
+                        document.getElementById('grantCompanySelect').value = compId;
+                    }
+                });
+            }
+        });
+    </script>
+}

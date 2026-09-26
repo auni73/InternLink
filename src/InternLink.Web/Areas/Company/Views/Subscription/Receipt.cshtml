@@ -1,0 +1,114 @@
+@model InternLink.Web.ViewModels.PaymentTransactionDto
+@{
+    ViewData["Title"] = $"Receipt #{Model.InvoiceNumber}";
+    var currentSub = ViewBag.CurrentSubscription as InternLink.Web.ViewModels.CompanySubscriptionDto;
+}
+
+<div class="container py-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Billing
+        </a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print Receipt
+            </button>
+            <a asp-action="Index" class="btn btn-primary shadow-sm">
+                <i class="bi bi-check-lg me-1"></i>Done
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable Receipt Card -->
+    <div class="card shadow border rounded-4 p-4 p-md-5 bg-white">
+        <!-- Top Banner -->
+        <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
+            <div>
+                <h3 class="fw-bold text-slate-800 mb-1">
+                    <span class="text-primary">Intern</span>Link
+                </h3>
+                <div class="text-muted small">AI-Powered University Career & Internship Portal</div>
+                <div class="text-muted small">Ahsanullah University of Science and Technology (AUST)</div>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-success-subtle text-success border border-success-subtle fs-6 px-3 py-2 rounded-pill mb-2">
+                    <i class="bi bi-check-circle-fill me-1"></i>Paid Successfully
+                </span>
+                <div class="fw-bold fs-5 text-slate-800">Invoice: @Model.InvoiceNumber</div>
+                <div class="text-muted small">Date: @Model.CreatedAt.ToLocalTime().ToString("dd MMMM yyyy, hh:mm tt")</div>
+            </div>
+        </div>
+
+        <!-- Billed To & Payment Summary -->
+        <div class="row g-4 mb-4">
+            <div class="col-sm-6">
+                <span class="text-uppercase small fw-bold text-muted letter-spacing-1">Billed To</span>
+                <h5 class="fw-bold text-slate-800 mb-1 mt-1">@Model.CompanyName</h5>
+                <div class="text-muted small">Authorized Employer Account</div>
+                <div class="text-muted small">Payment Method: <strong>@Model.PaymentMethod</strong></div>
+            </div>
+            <div class="col-sm-6 text-sm-end">
+                <span class="text-uppercase small fw-bold text-muted letter-spacing-1">Transaction Details</span>
+                <div class="mt-1 small">
+                    <div class="text-muted">bKash Transaction ID / Ref:</div>
+                    <div class="fw-bold font-monospace fs-6 text-primary">@(Model.BkashTrxId ?? Model.CustomerReference ?? "—")</div>
+                    @if (!string.IsNullOrEmpty(Model.PayerMsisdn))
+                    {
+                        <div class="text-muted">Payer Account: @Model.PayerMsisdn</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Itemized Table -->
+        <div class="table-responsive mb-4">
+            <table class="table border-bottom">
+                <thead class="table-light">
+                    <tr>
+                        <th class="py-3">Description</th>
+                        <th class="py-3 text-center">Billing Period</th>
+                        <th class="py-3 text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="py-3">
+                            <div class="fw-bold text-slate-800">@Model.PlanName</div>
+                            <div class="text-muted small">Employer subscription capacity & vacancy posting allocation</div>
+                        </td>
+                        <td class="py-3 text-center small text-muted">
+                            @if (currentSub != null)
+                            {
+                                <span>@currentSub.StartDate.ToString("dd MMM yyyy") — @currentSub.EndDate.ToString("dd MMM yyyy")</span>
+                            }
+                            else
+                            {
+                                <span>30 Days</span>
+                            }
+                        </td>
+                        <td class="py-3 text-end fw-bold text-slate-800">
+                            ৳@Model.Amount.ToString("N2")
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" class="text-end fw-bold pt-3 fs-6">Total Paid (BDT):</td>
+                        <td class="text-end fw-bold pt-3 fs-5 text-primary">৳@Model.Amount.ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Note & Verification Footer -->
+        <div class="p-3 bg-light rounded-3 text-muted small mb-4">
+            <i class="bi bi-info-circle text-primary me-1"></i>
+            This is a computer-generated tax invoice and payment confirmation. All digital recruitment access and vacancy publishing rights are activated immediately upon receipt of this confirmation.
+        </div>
+
+        <div class="text-center text-muted small border-top pt-3">
+            <div>InternLink &bull; Ahsanullah University of Science and Technology (AUST)</div>
+            <div>Support: support@internlink.edu.bd &bull; Dhaka, Bangladesh</div>
+        </div>
+    </div>
+</div>

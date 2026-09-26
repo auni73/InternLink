@@ -29,6 +29,9 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>, I
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<MockInterviewSession> MockInterviewSessions => Set<MockInterviewSession>();
     public DbSet<SchemaVersion> SchemaVersions => Set<SchemaVersion>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public DbSet<CompanySubscription> CompanySubscriptions => Set<CompanySubscription>();
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
 
     // Required by IDataProtectionKeyContext — keys are persisted here so they
     // survive container restarts and re-deployments on Render.
@@ -239,6 +242,49 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, Guid>, I
             b.HasOne(m => m.Job)
              .WithMany()
              .HasForeignKey(m => m.JobId);
+        });
+
+        // 18. SubscriptionPlans
+        builder.Entity<SubscriptionPlan>(b =>
+        {
+            b.ToTable("SubscriptionPlans");
+            b.HasKey(p => p.Id);
+            b.Property(p => p.Price).HasPrecision(18, 2);
+        });
+
+        // 19. CompanySubscriptions
+        builder.Entity<CompanySubscription>(b =>
+        {
+            b.ToTable("CompanySubscriptions");
+            b.HasKey(s => s.Id);
+            b.Property(s => s.Status).HasConversion<byte>();
+            b.HasOne(s => s.Company)
+             .WithMany()
+             .HasForeignKey(s => s.CompanyId);
+            b.HasOne(s => s.Plan)
+             .WithMany(p => p.Subscriptions)
+             .HasForeignKey(s => s.PlanId);
+            b.HasOne(s => s.ApprovedByAdmin)
+             .WithMany()
+             .HasForeignKey(s => s.ApprovedByAdminId);
+        });
+
+        // 20. PaymentTransactions
+        builder.Entity<PaymentTransaction>(b =>
+        {
+            b.ToTable("PaymentTransactions");
+            b.HasKey(t => t.Id);
+            b.Property(t => t.Amount).HasPrecision(18, 2);
+            b.Property(t => t.Status).HasConversion<byte>();
+            b.HasOne(t => t.Company)
+             .WithMany()
+             .HasForeignKey(t => t.CompanyId);
+            b.HasOne(t => t.Plan)
+             .WithMany(p => p.Transactions)
+             .HasForeignKey(t => t.PlanId);
+            b.HasOne(t => t.Subscription)
+             .WithMany(s => s.Transactions)
+             .HasForeignKey(t => t.SubscriptionId);
         });
     }
 }
