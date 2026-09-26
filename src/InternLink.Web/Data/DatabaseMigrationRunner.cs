@@ -19,37 +19,54 @@ public static class DatabaseMigrationRunner
         logger.LogInformation(
             "Connecting directly to the existing InternLink database.");
 
-        await using var connection = new SqlConnection(connectionString);
-        await connection.OpenAsync(ct);
+        const int maxRetries = 5;
+        int delayMs = 2000;
 
-        const string createSchemaVersionsSql = """
-        IF NOT EXISTS (
-            SELECT 1
-            FROM sys.tables
-            WHERE name = N'SchemaVersions'
-              AND schema_id = SCHEMA_ID(N'dbo')
-        )
-        BEGIN
-            CREATE TABLE dbo.SchemaVersions (
-                ScriptName NVARCHAR(200) NOT NULL,
-                AppliedAt DATETIMEOFFSET NOT NULL
-                    CONSTRAINT DF_SchemaVersions_AppliedAt
-                    DEFAULT SYSDATETIMEOFFSET(),
-                CONSTRAINT PK_SchemaVersions
-                    PRIMARY KEY CLUSTERED (ScriptName)
-            );
-        END
-        """;
+        for (int i = 0; i <= maxRetries; i++)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync(ct);
 
-        await using var command = new SqlCommand(
-            createSchemaVersionsSql,
-            connection);
+                const string createSchemaVersionsSql = """
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM sys.tables
+                    WHERE name = N'SchemaVersions'
+                      AND schema_id = SCHEMA_ID(N'dbo')
+                )
+                BEGIN
+                    CREATE TABLE dbo.SchemaVersions (
+                        ScriptName NVARCHAR(200) NOT NULL,
+                        AppliedAt DATETIMEOFFSET NOT NULL
+                            CONSTRAINT DF_SchemaVersions_AppliedAt
+                            DEFAULT SYSDATETIMEOFFSET(),
+                        CONSTRAINT PK_SchemaVersions
+                            PRIMARY KEY CLUSTERED (ScriptName)
+                    );
+                END
+                """;
 
-        command.CommandTimeout = 120;
-        await command.ExecuteNonQueryAsync(ct);
+                await using var command = new SqlCommand(
+                    createSchemaVersionsSql,
+                    connection);
 
-        logger.LogInformation(
-            "InternLink database is ready. SchemaVersions table verified.");
+                command.CommandTimeout = 120;
+                await command.ExecuteNonQueryAsync(ct);
+
+                logger.LogInformation(
+                    "InternLink database is ready. SchemaVersions table verified.");
+                
+                return;
+            }
+            catch (SqlException ex) when (i < maxRetries)
+            {
+                logger.LogWarning(ex, "Transient SQL error {Number} connecting to database. Retrying {RetryCount}/{MaxRetries} in {DelayMs}ms...", ex.Number, i + 1, maxRetries, delayMs);
+                await Task.Delay(delayMs, ct);
+                delayMs *= 2;
+            }
+        }
     }
 
     public static async Task ApplyPendingScriptsAsync(
@@ -113,15 +130,32 @@ public static class DatabaseMigrationRunner
                     }
 
                     var connection = db.Database.GetDbConnection();
-                    if (connection.State != System.Data.ConnectionState.Open)
+                    
+                    const int maxRetries = 3;
+                    int delayMs = 1000;
+                    for (int i = 0; i <= maxRetries; i++)
                     {
-                        await connection.OpenAsync(ct);
-                    }
+                        try
+                        {
+                            if (connection.State != System.Data.ConnectionState.Open)
+                            {
+                                await connection.OpenAsync(ct);
+                            }
 
-                    await using var command = connection.CreateCommand();
-                    command.CommandText = trimmed;
-                    command.CommandTimeout = 120;
-                    await command.ExecuteNonQueryAsync(ct);
+                            await using var command = connection.CreateCommand();
+                            command.CommandText = trimmed;
+                            command.CommandTimeout = 120;
+                            await command.ExecuteNonQueryAsync(ct);
+                            
+                            break;
+                        }
+                        catch (SqlException ex) when (i < maxRetries)
+                        {
+                            logger.LogWarning(ex, "Transient SQL error {Number} during script execution. Retrying {RetryCount}/{MaxRetries} in {DelayMs}ms...", ex.Number, i + 1, maxRetries, delayMs);
+                            await Task.Delay(delayMs, ct);
+                            delayMs *= 2;
+                        }
+                    }
                 }
 
                 logger.LogInformation("Successfully executed {ScriptName}.", scriptName);
