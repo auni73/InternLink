@@ -7,6 +7,43 @@ namespace InternLink.Web.Data;
 
 public static class DbSeeder
 {
+    // The canonical set of roles this application uses.
+    // Keep this in sync with: Program.cs policies, [Authorize(Roles=...)], AddToRoleAsync calls.
+    private static readonly string[] RequiredRoles = ["Admin", "Counselor", "Company", "Student"];
+
+    /// <summary>
+    /// Ensures all application-required Identity roles exist.
+    /// Safe to call on every deployment/startup in every environment — idempotent.
+    /// Must run after the database schema is ready and before any request can arrive.
+    /// </summary>
+    public static async Task SeedRequiredRolesAsync(
+        RoleManager<AppRole> roleManager,
+        ILogger logger)
+    {
+        foreach (var roleName in RequiredRoles)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                var result = await roleManager.CreateAsync(new AppRole(roleName));
+                if (result.Succeeded)
+                {
+                    logger.LogInformation("Created required Identity role: {Role}", roleName);
+                }
+                else
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    logger.LogError("Failed to create required Identity role '{Role}': {Errors}", roleName, errors);
+                    throw new InvalidOperationException(
+                        $"Could not create required Identity role '{roleName}': {errors}");
+                }
+            }
+            else
+            {
+                logger.LogDebug("Identity role already exists, skipping: {Role}", roleName);
+            }
+        }
+    }
+
     public static async Task SeedDevelopmentDataAsync(
         ApplicationDbContext db, 
         UserManager<AppUser> userManager, 
@@ -22,17 +59,7 @@ public static class DbSeeder
 
         logger.LogInformation("Starting development database seeding...");
 
-        // 2. Seed Identity Roles
-        string[] roles = ["Admin", "Counselor", "Company", "Student"];
-        foreach (var role in roles)
-        {
-            if (!await roleManager.RoleExistsAsync(role))
-            {
-                await roleManager.CreateAsync(new AppRole(role));
-                logger.LogInformation("Created role: {Role}", role);
-            }
-        }
-
+        // Roles are already ensured by SeedRequiredRolesAsync (called unconditionally at startup).
         // 3. Seed Admin User
         var adminEmail = "admin@internlink.test";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
