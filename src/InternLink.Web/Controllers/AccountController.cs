@@ -76,8 +76,8 @@ public class AccountController : Controller
         {
             UserName = model.Email,
             Email = model.Email,
-            // Development convenience: skip the email-confirmation step entirely.
-            EmailConfirmed = _env.IsDevelopment(),
+            // Auto-confirm email so showcase / demo accounts are immediately usable without requiring external SMTP
+            EmailConfirmed = true,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -187,28 +187,9 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // In Development the account is already confirmed — go straight to sign-in.
-        if (_env.IsDevelopment())
-        {
-            TempData["OtpInfo"] = "Account created and auto-confirmed (Development). You can sign in now.";
-            return RedirectToAction(nameof(Login));
-        }
-
-        // Email confirmation is required before sign-in (SignIn.RequireConfirmedEmail = true).
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var confirmationLink = Url.Action(
-            nameof(ConfirmEmail),
-            "Account",
-            new { userId = user.Id, token },
-            Request.Scheme);
-
-        await _emailSender.SendAsync(
-            user.Email!,
-            "Confirm your InternLink account",
-            $"Please confirm your account by clicking this link: <a href=\"{confirmationLink}\">Confirm email</a>",
-            ct);
-
-        return RedirectToAction(nameof(RegisterConfirmation));
+        // Account is auto-confirmed for the showcase/demo experience — go straight to sign-in.
+        TempData["OtpInfo"] = "Account created successfully. You can sign in now.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
@@ -309,14 +290,11 @@ public class AccountController : Controller
 
         var model = new VerifyOtpViewModel { ReturnUrl = returnUrl };
 
-        // Development convenience: pre-fill the code captured by DevEmailSender.
-        if (_env.IsDevelopment())
+        // Pre-fill the OTP code captured by DevOtpStore if available (showcase / dev experience).
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user?.Email is not null)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user?.Email is not null)
-            {
-                model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
-            }
+            model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
         }
 
         return View(model);
