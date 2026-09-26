@@ -100,9 +100,42 @@ public class AccountController : Controller
                     return;
                 }
 
+                // Assign the role. If the role doesn't exist this throws InvalidOperationException.
+                // We catch it here to ensure the transaction is rolled back and the user row is removed.
+                IdentityResult roleResult;
+                try
+                {
+                    roleResult = await _userManager.AddToRoleAsync(
+                        user,
+                        model.Role == RegistrationRole.Student ? "Student" : "Company");
+                }
+                catch (Exception roleEx)
+                {
+                    _logger.LogError(roleEx, "AddToRoleAsync threw an exception for {Email}. Rolling back.", model.Email);
+                    await transaction.RollbackAsync(ct);
+                    // Ensure user is removed even if rollback doesn't cover the UserManager's internal save.
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
+                    createResult = IdentityResult.Failed(new IdentityError
+                    {
+                        Code = "RoleAssignmentFailed",
+                        Description = "Registration could not be completed. Please try again."
+                    });
+                    return;
+                }
+
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("AddToRoleAsync failed for {Email}: {Errors}",
+                        model.Email,
+                        string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    await transaction.RollbackAsync(ct);
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
+                    createResult = roleResult;
+                    return;
+                }
+
                 if (model.Role == RegistrationRole.Student)
                 {
-                    await _userManager.AddToRoleAsync(user, "Student");
                     _db.Students.Add(new Student
                     {
                         UserId = user.Id,
@@ -116,7 +149,6 @@ public class AccountController : Controller
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, "Company");
                     _db.Companies.Add(new Company
                     {
                         UserId = user.Id,

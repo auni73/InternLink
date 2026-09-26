@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -66,6 +67,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
     });
 });
+
+// Persist Data Protection keys to Azure SQL so they survive Render container
+// restarts and re-deployments. Without this, every new container generates fresh
+// keys and cannot decrypt cookies/antiforgery tokens from the previous instance.
+builder.Services.AddDataProtection()
+    .SetApplicationName("InternLink")          // stable name: must never change
+    .PersistKeysToDbContext<ApplicationDbContext>();
 
 // 3. Configure ASP.NET Core Identity with AppUser & AppRole (Guid keys)
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
@@ -231,10 +239,14 @@ using (var scope = app.Services.CreateScope())
     await DatabaseMigrationRunner.BootstrapDatabaseAsync(connectionString, app.Environment.ContentRootPath, logger);
     await DatabaseMigrationRunner.ApplyPendingScriptsAsync(db, app.Environment.ContentRootPath, logger);
 
+    // Seed the four required Identity roles in EVERY environment (including Production).
+    // Idempotent: existing roles are skipped. Must run before any registration request arrives.
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+    await DbSeeder.SeedRequiredRolesAsync(roleManager, logger);
+
     if (app.Environment.IsDevelopment())
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
         await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
     }
 }
