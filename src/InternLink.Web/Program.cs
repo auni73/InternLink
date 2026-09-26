@@ -239,11 +239,10 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
     await DbSeeder.SeedRequiredRolesAsync(roleManager, logger);
 
-    if (app.Environment.IsDevelopment())
-    {
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-        await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
-    }
+    // Seed demo accounts and showcase data in EVERY environment (including Production).
+    // Idempotent: existing accounts are preserved and updated with proper roles.
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    await DbSeeder.SeedDemoDataAsync(db, userManager, roleManager, logger);
 }
 
 // 6. Configure the HTTP request pipeline.
