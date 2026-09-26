@@ -84,7 +84,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
     options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedEmail = false;
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
@@ -205,14 +205,16 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddSingleton<PendingLoginTokenService>();
 builder.Services.AddSingleton<DevOtpStore>();
 
-// Email sender: write OTP codes/links to console in Development, send via MailKit SMTP otherwise.
-if (builder.Environment.IsDevelopment())
+// Email sender: write OTP codes/links to console and capture in DevOtpStore (showcase/demo mode).
+// If SMTP is explicitly configured with a host, use MailKitEmailSender.
+var smtpHost = builder.Configuration["Smtp:Host"];
+if (!string.IsNullOrWhiteSpace(smtpHost))
 {
-    builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
+    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
 }
 else
 {
-    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
+    builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
 }
 
 // Fixed-window rate limiting on the auth POST endpoints (Login/VerifyOtp/ResendOtp): 10/min/IP.
