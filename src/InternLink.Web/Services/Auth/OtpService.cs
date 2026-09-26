@@ -14,12 +14,18 @@ public sealed class OtpService : IOtpService
     private readonly IOtpRepository _repository;
     private readonly IEmailSender _emailSender;
     private readonly TimeProvider _timeProvider;
+    private readonly DevOtpStore? _devOtpStore;
 
-    public OtpService(IOtpRepository repository, IEmailSender emailSender, TimeProvider timeProvider)
+    public OtpService(
+        IOtpRepository repository,
+        IEmailSender emailSender,
+        TimeProvider timeProvider,
+        DevOtpStore? devOtpStore = null)
     {
         _repository = repository;
         _emailSender = emailSender;
         _timeProvider = timeProvider;
+        _devOtpStore = devOtpStore;
     }
 
     public async Task SendAsync(Guid userId, string email, CancellationToken ct = default)
@@ -81,6 +87,9 @@ public sealed class OtpService : IOtpService
     {
         var now = _timeProvider.GetUtcNow();
         var code = GenerateCode();
+
+        // Capture code in DevOtpStore so the showcase/demo experience can pre-fill it.
+        _devOtpStore?.Set(email, code);
 
         var otp = new OtpCode
         {

@@ -205,17 +205,10 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddSingleton<PendingLoginTokenService>();
 builder.Services.AddSingleton<DevOtpStore>();
 
-// Email sender: write OTP codes/links to console and capture in DevOtpStore (showcase/demo mode).
-// If SMTP is explicitly configured with a host, use MailKitEmailSender.
-var smtpHost = builder.Configuration["Smtp:Host"];
-if (!string.IsNullOrWhiteSpace(smtpHost))
-{
-    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
-}
-else
-{
-    builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
-}
+// Email sender: always use DevEmailSender for the showcase/demo experience.
+// OTP codes are captured in DevOtpStore and auto-filled on the VerifyOtp page.
+// MailKitEmailSender is never used — no functional SMTP server is available on Render.
+builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
 
 // Fixed-window rate limiting on the auth POST endpoints (Login/VerifyOtp/ResendOtp): 10/min/IP.
 builder.Services.AddRateLimiter(options =>
