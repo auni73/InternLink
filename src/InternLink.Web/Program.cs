@@ -1,6 +1,9 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using System.Net;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,6 +21,31 @@ using InternLink.Web.Services.Recommendation;
 using InternLink.Web.Services.Vectors;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    var configuredProxies = builder.Configuration
+        .GetSection("ForwardedHeaders:KnownProxies")
+        .Get<string[]>() ?? [];
+    if (configuredProxies.Length > 0)
+    {
+        options.KnownProxies.Clear();
+        foreach (var proxy in configuredProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var address))
+            {
+                options.KnownProxies.Add(address);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Invalid forwarded-header proxy IP address: {proxy}");
+            }
+        }
+    }
+});
+
+builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
 // 1. Add services to the container. AutoValidateAntiforgeryToken makes every POST antiforgery-protected by default.
 builder.Services.AddControllersWithViews(options =>
@@ -40,6 +68,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     });
 });
 
+// Persist Data Protection keys to Azure SQL so they survive Render container
+// restarts and re-deployments. Without this, every new container generates fresh
+// keys and cannot decrypt cookies/antiforgery tokens from the previous instance.
+builder.Services.AddDataProtection()
+    .SetApplicationName("InternLink")          // stable name: must never change
+    .PersistKeysToDbContext<ApplicationDbContext>();
+
 // 3. Configure ASP.NET Core Identity with AppUser & AppRole (Guid keys)
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
@@ -49,7 +84,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
     options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedEmail = false;
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
@@ -179,15 +214,10 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddSingleton<PendingLoginTokenService>();
 builder.Services.AddSingleton<DevOtpStore>();
 
-// Email sender: write OTP codes/links to console in Development, send via MailKit SMTP otherwise.
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
-}
-else
-{
-    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
-}
+// Email sender: always use DevEmailSender for the showcase/demo experience.
+// OTP codes are captured in DevOtpStore and auto-filled on the VerifyOtp page.
+// MailKitEmailSender is never used — no functional SMTP server is available on Render.
+builder.Services.AddSingleton<IEmailSender, DevEmailSender>();
 
 // Fixed-window rate limiting on the auth POST endpoints (Login/VerifyOtp/ResendOtp): 10/min/IP.
 builder.Services.AddRateLimiter(options =>
@@ -205,50 +235,32 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// 5. Startup Sanity Probe and Development Seeding (Development only)
-if (app.Environment.IsDevelopment())
+// Ensure the database exists from master, then apply the numbered SQL scripts in every environment.
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    await DatabaseMigrationRunner.BootstrapDatabaseAsync(connectionString, app.Environment.ContentRootPath, logger);
+    await DatabaseMigrationRunner.ApplyPendingScriptsAsync(db, app.Environment.ContentRootPath, logger);
+
+    // Seed the four required Identity roles in EVERY environment (including Production).
+    // Idempotent: existing roles are skipped. Must run before any registration request arrives.
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+    await DbSeeder.SeedRequiredRolesAsync(roleManager, logger);
 
-    try
-    {
-        if (await db.Database.CanConnectAsync())
-        {
-            // Automatically execute any pending hand-authored scripts from db/scripts in numeric order
-            await DatabaseMigrationRunner.ApplyPendingScriptsAsync(db, app.Environment.ContentRootPath, logger);
-
-            var appliedScriptsCount = await db.Database
-                .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM dbo.SchemaVersions")
-                .FirstOrDefaultAsync();
-
-            if (appliedScriptsCount == 0)
-            {
-                logger.LogWarning("SchemaVersions table is empty. Please run db/scripts in order (see db/scripts/README.md).");
-            }
-            else
-            {
-                logger.LogInformation("Database connection successful. Applied schema scripts count: {Count}", appliedScriptsCount);
-                
-                // Seed development data (roles, admin, counselor, companies, jobs, student)
-                await DbSeeder.SeedDevelopmentDataAsync(db, userManager, roleManager, logger);
-            }
-        }
-        else
-        {
-            logger.LogError("Database connection failed. Ensure SQL Server is running and run db/scripts in order — see db/scripts/README.md");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database initialization/seeding probe failed. Run db/scripts in order — see db/scripts/README.md");
-    }
+    // Seed demo accounts and showcase data in EVERY environment (including Production).
+    // Idempotent: existing accounts are preserved and updated with proper roles.
+    // This block is NOT gated by IsDevelopment() — it runs unconditionally.
+    logger.LogInformation("Startup: Invoking DbSeeder.SeedDemoDataAsync (Environment={Env})",
+        app.Environment.EnvironmentName);
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    await DbSeeder.SeedDemoDataAsync(db, userManager, roleManager, logger);
+    logger.LogInformation("Startup: DbSeeder.SeedDemoDataAsync completed.");
 }
 
 // 6. Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -272,5 +284,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHealthChecks("/health");
 
 app.Run();

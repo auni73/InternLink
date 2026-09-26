@@ -76,8 +76,8 @@ public class AccountController : Controller
         {
             UserName = model.Email,
             Email = model.Email,
-            // Development convenience: skip the email-confirmation step entirely.
-            EmailConfirmed = _env.IsDevelopment(),
+            // Auto-confirm email so showcase / demo accounts are immediately usable without requiring external SMTP
+            EmailConfirmed = true,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -100,9 +100,42 @@ public class AccountController : Controller
                     return;
                 }
 
+                // Assign the role. If the role doesn't exist this throws InvalidOperationException.
+                // We catch it here to ensure the transaction is rolled back and the user row is removed.
+                IdentityResult roleResult;
+                try
+                {
+                    roleResult = await _userManager.AddToRoleAsync(
+                        user,
+                        model.Role == RegistrationRole.Student ? "Student" : "Company");
+                }
+                catch (Exception roleEx)
+                {
+                    _logger.LogError(roleEx, "AddToRoleAsync threw an exception for {Email}. Rolling back.", model.Email);
+                    await transaction.RollbackAsync(ct);
+                    // Ensure user is removed even if rollback doesn't cover the UserManager's internal save.
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
+                    createResult = IdentityResult.Failed(new IdentityError
+                    {
+                        Code = "RoleAssignmentFailed",
+                        Description = "Registration could not be completed. Please try again."
+                    });
+                    return;
+                }
+
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("AddToRoleAsync failed for {Email}: {Errors}",
+                        model.Email,
+                        string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    await transaction.RollbackAsync(ct);
+                    try { await _userManager.DeleteAsync(user); } catch { /* Rollback already removed row from DB */ }
+                    createResult = roleResult;
+                    return;
+                }
+
                 if (model.Role == RegistrationRole.Student)
                 {
-                    await _userManager.AddToRoleAsync(user, "Student");
                     _db.Students.Add(new Student
                     {
                         UserId = user.Id,
@@ -116,7 +149,6 @@ public class AccountController : Controller
                 }
                 else
                 {
-                    await _userManager.AddToRoleAsync(user, "Company");
                     _db.Companies.Add(new Company
                     {
                         UserId = user.Id,
@@ -155,28 +187,9 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // In Development the account is already confirmed — go straight to sign-in.
-        if (_env.IsDevelopment())
-        {
-            TempData["OtpInfo"] = "Account created and auto-confirmed (Development). You can sign in now.";
-            return RedirectToAction(nameof(Login));
-        }
-
-        // Email confirmation is required before sign-in (SignIn.RequireConfirmedEmail = true).
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var confirmationLink = Url.Action(
-            nameof(ConfirmEmail),
-            "Account",
-            new { userId = user.Id, token },
-            Request.Scheme);
-
-        await _emailSender.SendAsync(
-            user.Email!,
-            "Confirm your InternLink account",
-            $"Please confirm your account by clicking this link: <a href=\"{confirmationLink}\">Confirm email</a>",
-            ct);
-
-        return RedirectToAction(nameof(RegisterConfirmation));
+        // Account is auto-confirmed for the showcase/demo experience — go straight to sign-in.
+        TempData["OtpInfo"] = "Account created successfully. You can sign in now.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
@@ -225,9 +238,14 @@ public class AccountController : Controller
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user is null)
         {
+            _logger.LogWarning("Login attempt for non-existent email: {Email}", model.Email);
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View(model);
         }
+
+        _logger.LogInformation(
+            "Login attempt for {Email}: EmailConfirmed={EmailConfirmed}, IsActive={IsActive}, LockoutEnd={LockoutEnd}",
+            user.Email, user.EmailConfirmed, user.IsActive, user.LockoutEnd);
 
         // Suspension is checked before anything else.
         if (!user.IsActive)
@@ -236,18 +254,25 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // Auto-confirm email for any user that still has EmailConfirmed = false.
+        // This is a showcase/demo deployment — real email verification is not required.
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+            _logger.LogInformation("Auto-confirmed email for {Email} at login time.", user.Email);
+        }
+
         // Password check only — no auth cookie is issued here. OTP must pass first.
         var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
+
+        _logger.LogInformation(
+            "CheckPasswordSignInAsync result for {Email}: Succeeded={Succeeded}, IsLockedOut={IsLockedOut}, IsNotAllowed={IsNotAllowed}, RequiresTwoFactor={RequiresTwoFactor}",
+            user.Email, result.Succeeded, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor);
 
         if (result.IsLockedOut)
         {
             ModelState.AddModelError(string.Empty, "This account is locked due to multiple failed attempts. Try again in 15 minutes.");
-            return View(model);
-        }
-
-        if (result.IsNotAllowed)
-        {
-            ModelState.AddModelError(string.Empty, "You must confirm your email address before signing in.");
             return View(model);
         }
 
@@ -277,14 +302,11 @@ public class AccountController : Controller
 
         var model = new VerifyOtpViewModel { ReturnUrl = returnUrl };
 
-        // Development convenience: pre-fill the code captured by DevEmailSender.
-        if (_env.IsDevelopment())
+        // Pre-fill the OTP code captured by DevOtpStore if available (showcase / dev experience).
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user?.Email is not null)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user?.Email is not null)
-            {
-                model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
-            }
+            model.Code = _devOtpStore.Get(user.Email) ?? string.Empty;
         }
 
         return View(model);

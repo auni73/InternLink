@@ -8,7 +8,16 @@
     <h1><i class="bi bi-shield-lock"></i>Enter your code</h1>
     <p class="auth-subtitle">We emailed you a 6-digit verification code. It expires in 5 minutes.</p>
 
-        @if (TempData["OtpInfo"] is string info)
+        @if (!string.IsNullOrEmpty(Model.Code))
+        {
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
+                <div class="small">
+                    <strong>Showcase Demo Mode:</strong> Verification code auto-filled below (<strong>@Model.Code</strong>). Click <strong>Verify</strong> to proceed!
+                </div>
+            </div>
+        }
+        else if (TempData["OtpInfo"] is string info)
         {
             <div class="alert alert-info">@info</div>
         }
