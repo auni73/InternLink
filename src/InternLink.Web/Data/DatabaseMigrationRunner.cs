@@ -11,49 +11,51 @@ public static class DatabaseMigrationRunner
         RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
     public static async Task BootstrapDatabaseAsync(
-        string connectionString,
-        string contentRootPath,
-        ILogger logger,
-        CancellationToken ct = default)
+    string connectionString,
+    string contentRootPath,
+    ILogger logger,
+    CancellationToken ct = default)
     {
-        var scriptsDir = FindScriptsDirectory(contentRootPath);
-        if (scriptsDir is null)
-        {
-            throw new DirectoryNotFoundException("Database scripts directory was not found.");
-        }
+        logger.LogInformation(
+            "Connecting directly to the existing InternLink database.");
 
-        var bootstrapPath = Path.Combine(scriptsDir, "000_create_database.sql");
-        if (!File.Exists(bootstrapPath))
-        {
-            throw new FileNotFoundException("Database bootstrap script was not found.", bootstrapPath);
-        }
-
-        var masterConnectionString = new SqlConnectionStringBuilder(connectionString)
-        {
-            InitialCatalog = "master"
-        }.ConnectionString;
-
-        logger.LogInformation("Ensuring the InternLink database exists using the master catalog.");
-        await using var connection = new SqlConnection(masterConnectionString);
+        await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync(ct);
 
-        var script = await File.ReadAllTextAsync(bootstrapPath, ct);
-        foreach (var batch in GoBatchRegex.Split(script))
-        {
-            if (string.IsNullOrWhiteSpace(batch))
-            {
-                continue;
-            }
+        const string createSchemaVersionsSql = """
+        IF NOT EXISTS (
+            SELECT 1
+            FROM sys.tables
+            WHERE name = N'SchemaVersions'
+              AND schema_id = SCHEMA_ID(N'dbo')
+        )
+        BEGIN
+            CREATE TABLE dbo.SchemaVersions (
+                ScriptName NVARCHAR(200) NOT NULL,
+                AppliedAt DATETIMEOFFSET NOT NULL
+                    CONSTRAINT DF_SchemaVersions_AppliedAt
+                    DEFAULT SYSDATETIMEOFFSET(),
+                CONSTRAINT PK_SchemaVersions
+                    PRIMARY KEY CLUSTERED (ScriptName)
+            );
+        END
+        """;
 
-            await using var command = new SqlCommand(batch, connection);
-            await command.ExecuteNonQueryAsync(ct);
-        }
+        await using var command = new SqlCommand(
+            createSchemaVersionsSql,
+            connection);
+
+        command.CommandTimeout = 120;
+        await command.ExecuteNonQueryAsync(ct);
+
+        logger.LogInformation(
+            "InternLink database is ready. SchemaVersions table verified.");
     }
 
     public static async Task ApplyPendingScriptsAsync(
-        ApplicationDbContext db, 
-        string contentRootPath, 
-        ILogger logger, 
+        ApplicationDbContext db,
+        string contentRootPath,
+        ILogger logger,
         CancellationToken ct = default)
     {
         try
@@ -70,6 +72,10 @@ public static class DatabaseMigrationRunner
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var sqlFiles = Directory.GetFiles(scriptsDir, "*.sql")
+                .Where(f => !string.Equals(
+                    Path.GetFileName(f),
+                    "000_create_database.sql",
+                    StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
